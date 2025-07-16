@@ -11,6 +11,7 @@ from openai import AzureOpenAI
 import pathlib
 from collections import defaultdict
 wandb.init(mode="disabled")
+import glob
 
 from sklearn.metrics import f1_score
 from scipy.stats import pearsonr
@@ -750,7 +751,14 @@ if __name__ == "__main__":
     for lang in ALL_LANGUAGES:
         # Prepare the output file
         if args.output_file is None:
-            out_json = f"llm_track_ab_results/results_{safe_model}_{args.task}_{lang}.json"
+            var_name = main_config["variant"]
+            topk_main = main_config["top_k"]
+            n_shot_main = args.n_shot if args.n_shot is not None else main_config["n_shot"]
+
+            out_json = (
+                f"llm_track_ab_results/results_{safe_model}_{args.task}_{lang}_"
+                f"{n_shot_main}shot_{var_name}_topk{topk_main}.json"
+            )
         else:
             out_json = args.output_file
 
@@ -841,6 +849,9 @@ if __name__ == "__main__":
             "task": args.task,
             "language": lang,
             "model_name": model_name,
+            "n_shot": n_shot_main,
+            "prompt_variant": var_name,
+            "top_k": topk_main,
             "main_result": main_res,
             "ablation": ablation_res
         }
@@ -850,12 +861,23 @@ if __name__ == "__main__":
         with open(out_json, "w", encoding="utf-8") as f:
             json.dump(final_output, f, indent=4)
         print(f"\nAll done! Wrote results to {out_json}\n")
+        print(f"  → Metadata: prompt_variant={var_name}, n_shot={n_shot_main}, top_k={topk_main}")
         if args.output_file is None and lang == ALL_LANGUAGES[-1]:
             combined_results = []
+
             for lang_code in ALL_LANGUAGES:
-                lang_path = f"llm_track_ab_results/results_{safe_model}_{args.task}_{lang_code}.json"
-                if os.path.exists(lang_path):
-                    with open(lang_path, "r", encoding="utf-8") as f:
+                # Pattern to match all variants of the filename for this language, task, and model
+                pattern = f"llm_track_ab_results/results_{safe_model}_{args.task}_{lang_code}_*.json"
+                
+                # Find all matching files
+                matching_files = glob.glob(pattern)
+                
+                if not matching_files:
+                    print(f"No result files found for language {lang_code} with pattern {pattern}")
+                    continue
+                
+                for filepath in matching_files:
+                    with open(filepath, "r", encoding="utf-8") as f:
                         combined_results.append(json.load(f))
             final_path = f"llm_track_ab_results/final_bothTasks_{safe_model}.json"
             with open(final_path, "w", encoding="utf-8") as f:

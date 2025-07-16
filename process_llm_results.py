@@ -238,12 +238,14 @@ def collect_english_vs_native(all_files):
 ###############################################################################
 # 4. Main Results Tables for 'binary' & 'intensity'
 ###############################################################################
-def collect_main_results(all_files, task="binary"):
+def collect_main_results(all_files, task="binary", n_shot=None, prompt_variant=None, top_k=None):
     """
-    For each file whose task matches (binary or intensity),
-    extract the main_result->macro_f1 value. (Each file is for one language.)
-    Build a table with rows = languages and columns = models.
-    Multiply by 100 and round.
+    Extract main_result (macro_f1 or avg_pearson) filtered by optional metadata:
+      - n_shot (int)
+      - prompt_variant (str)
+      - top_k (int)
+
+    Builds table with rows=languages, columns=models.
     """
     all_langs = set()
     data_by_model = {}
@@ -251,6 +253,14 @@ def collect_main_results(all_files, task="binary"):
     for path in all_files:
         data = load_data(path)
         if not data or data.get("task") != task:
+            continue
+
+        # Check metadata filters if specified
+        if n_shot is not None and data.get("n_shot") != n_shot:
+            continue
+        if prompt_variant is not None and data.get("prompt_variant") != prompt_variant:
+            continue
+        if top_k is not None and data.get("top_k") != top_k:
             continue
 
         model_name = get_short_model_name_from_data(data)
@@ -277,7 +287,7 @@ def collect_main_results(all_files, task="binary"):
             val = data_by_model[model].get(lang, float('nan'))
             row.append(val)
         matrix.append(row)
-    
+
     df = pd.DataFrame(matrix, index=sorted_langs, columns=sorted_models)
     df = df * 100
     df = df.round(2)
@@ -325,6 +335,21 @@ def main():
         f.write(df_main_binary.to_latex(float_format="%.2f"))
     with open("llm_track_ab_results/table_main_intensity.tex", "w") as f:
         f.write(df_main_intensity.to_latex(float_format="%.2f"))
+    # Example 1: zero-shot (n_shot=0), prompt_variant "v1", top_k=1 for binary task
+    df_main_binary_0shot_v1 = collect_main_results(
+        all_files, task="binary", n_shot=0, prompt_variant="v1", top_k=1
+    )
+    df_main_binary_0shot_v1.to_csv("llm_track_ab_results/table_main_binary_0shot_v1.csv", float_format="%.2f")
+    with open("llm_track_ab_results/table_main_binary_0shot_v1.tex", "w") as f:
+        f.write(df_main_binary_0shot_v1.to_latex(float_format="%.2f"))
+
+    # Example 2: 4-shot (n_shot=4), prompt_variant "v2", top_k=1 for binary task
+    df_main_binary_4shot_v2 = collect_main_results(
+        all_files, task="binary", n_shot=4, prompt_variant="v2", top_k=1
+    )
+    df_main_binary_4shot_v2.to_csv("llm_track_ab_results/table_main_binary_4shot_v2.csv", float_format="%.2f")
+    with open("llm_track_ab_results/table_main_binary_4shot_v2.tex", "w") as f:
+        f.write(df_main_binary_4shot_v2.to_latex(float_format="%.2f"))
 
     print("All tables have been saved to CSV and LaTeX files in llm_track_ab_results/.")
     # 6. Collect flagged prompts if any
