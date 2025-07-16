@@ -7,6 +7,8 @@ import re
 from typing import List
 import wandb
 import random
+from openai import AzureOpenAI
+import pathlib
 from collections import defaultdict
 wandb.init(mode="disabled")
 
@@ -14,7 +16,16 @@ from sklearn.metrics import f1_score
 from scipy.stats import pearsonr
 
 # Import vLLM components
-from vllm import LLM, SamplingParams
+
+
+
+
+# Azure OpenAI Setup
+AZURE_OPENAI_KEY = "18W17o5SWFUi6HTmovJNqtPn7xbMw4wvqwOZ6dX16u189b4Xg4qNJQQJ99BGACYeBjFXJ3w3AAABACOGDWaH"# When publishing paper store this in uv at some point
+AZURE_OPENAI_ENDPOINT = "https://gpt4t.openai.azure.com/"
+AZURE_OPENAI_DEPLOYMENT = "gpt-4.1"  # Set this to your Azure deployment name
+AZURE_OPENAI_VERSION = "2025-01-01-preview"
+
 
 ###########################################################
 # GLOBAL SETTINGS
@@ -51,7 +62,7 @@ EMOTIONS = ["anger", "disgust", "fear", "joy", "sadness", "surprise"]
 # Default "main" config
 main_config = {
     "variant": "v2",
-    "n_shot": 8,
+    "n_shot": 0,
     "top_k": 1
 }
 
@@ -159,6 +170,7 @@ TASK_CONFIGS = {
     }
 }
 
+
 ###########################################################
 # DATA LOADER
 ###########################################################
@@ -261,7 +273,8 @@ def evaluate_model_on_test_set(
     task: str,
     top_k: int,
     n_shot: int,
-    model_name: str
+    model_name: str,
+    out_json: str
 ) -> dict:
     # ------------------------------------------------------
     # 1) Sample few-shot examples from test_data
@@ -372,29 +385,165 @@ def evaluate_model_on_test_set(
     print(f"  Running evaluation for {len(prompts)} samples ...")
     if len(prompts) > 0:
         print(f"  Example prompt:\n{prompts[0]}\n---")
+    if model_name == "openai/gpt-4":
+        from openai import AzureOpenAI
 
+        print("Using Azure GPT-4.1...")
+
+        flagged_prompts = []
+
+        client = AzureOpenAI(
+            api_key=os.getenv("AZURE_OPENAI_KEY"),
+            api_version="2025-01-01-preview",
+            base_url=os.getenv("AZURE_OPENAI_ENDPOINT") + "/openai/deployments/gpt-4.1"
+        )
+        generation_results = []
+        for i, prompt in enumerate(prompts):
+            while True:
+                try:
+                    response = client.chat.completions.create(
+                        model="gpt-4.1",
+                        messages=[
+                            {"role": "system", "content": "You are a helpful assistant."},
+                            {"role": "user", "content": [{"type": "text", "text": prompt}]}
+                        ],
+                        max_tokens=80
+                    )
+                    output = response.choices[0].message.content
+                    if output is None:
+                        raise ValueError("No output returned.")
+                    output = output.strip()
+
+                    print(f"\n--- Prompt #{i} ---")
+                    print(f"Prompt:\n{prompt}\n")
+                    print(f"Output:\n{output}\n")
+
+                    generation_results.append(
+                        type("LLMOutput", (object,), {
+                            "outputs": [type("Obj", (object,), {"text": output})()]
+                        })()
+                    )
+                    break
+                except Exception as e:
+                    error_str = str(e)
+                    
+                    # Handle flagged prompts (filtered by policy)
+                    if "content management policy" in error_str or "ResponsibleAIPolicyViolation" in error_str:
+                        print(f"[FLAGGED] Prompt #{i} violated content policy:\n{error_str}")
+                        flagged_prompts.append({
+                            "index": i,
+                            "prompt": prompt,
+                            "error": error_str
+                        })
+                        generation_results.append(
+                            type("LLMOutput", (object,), {
+                                "outputs": [type("Obj", (object,), {"text": ""})()]
+                            })()
+                        )
+                        break  # Stop retrying flagged prompt
+
+                    # Otherwise retry indefinitely
+                    print(f"[RETRYING] Prompt #{i} failed due to: {error_str}\nRetrying in 5 seconds...")
+    elif model_name == "google/gemini-2F":
+        import requests
+
+        print("Using Google gemini-2F...")
+
+        GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") or "AIzaSyBci7Tsl2Tpqcyv782vV_oyojgYimi8_ew"
+        GEMINI_API_ENDPOINT = os.getenv("GEMINI_API_ENDPOINT") or "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyBci7Tsl2Tpqcyv782vV_oyojgYimi8_ew"
+
+        headers = {
+            "Content-Type": "application/json"
+        }
+
+        flagged_prompts = []
+        generation_results = []
+
+        for i, prompt in enumerate(prompts):
+            while True:
+                try:
+                    payload = {
+                        "contents": [{
+                            "parts": [{"text": prompt}],
+                            "role": "user"
+                        }]
+                    }
+
+                    response = requests.post(GEMINI_API_ENDPOINT, headers=headers, json=payload)
+                    response.raise_for_status()
+                    resp_json = response.json()
+
+                    candidates = resp_json.get("candidates", [])
+                    if not candidates:
+                        raise ValueError("No response candidates from Gemini.")
+
+                    output = candidates[0]["content"]["parts"][0]["text"]
+                    output = output.strip()
+
+                    print(f"\n--- Prompt #{i} ---")
+                    print(f"Prompt:\n{prompt}\n")
+                    print(f"Output:\n{output}\n")
+
+                    generation_results.append(
+                        type("LLMOutput", (object,), {
+                            "outputs": [type("Obj", (object,), {"text": output})()]
+                        })()
+                    )
+                    break
+                except requests.exceptions.HTTPError as e:
+                    error_str = str(e)
+                    if response.status_code == 429:
+                        print(f"[RATE LIMIT] Prompt #{i} rate limited. Waiting 30 seconds before retry.")
+                        import time
+                        time.sleep(30)
+                        continue
+
+                    if "content policy" in error_str.lower():
+                        print(f"[FLAGGED] Prompt #{i} violated content policy:\n{error_str}")
+                        flagged_prompts.append({
+                            "index": i,
+                            "prompt": prompt,
+                            "error": error_str
+                        })
+                        generation_results.append(
+                            type("LLMOutput", (object,), {
+                                "outputs": [type("Obj", (object,), {"text": ""})()]
+                            })()
+                        )
+                        break
+
+                    print(f"[RETRYING] Prompt #{i} failed due to: {error_str}\nRetrying in 5 seconds...")
+                    import time
+                    time.sleep(5)
+
+                except Exception as e:
+                    error_str = str(e)
+                    print(f"[RETRYING] Prompt #{i} failed due to: {error_str}\nRetrying in 5 seconds...")
+                    import time
+                    time.sleep(5)
     # ------------------------------------------------------
     # 3) Generate predictions with vLLM
     # ------------------------------------------------------
-    max_tokens = 80
-    if "DeepSeek" in model_name:
-        print("Using DeepSeek model, increasing max_tokens from 80 to 1024")
-        max_tokens = 1024
-    if top_k <= 1:
-        sampling_params = SamplingParams(
-            max_tokens=max_tokens,
-            temperature=0.0,
-            top_p=0.95,
-            n=top_k
-        )
     else:
-        sampling_params = SamplingParams(
-            max_tokens=max_tokens,
-            temperature=0.7,
-            top_p=0.95,
-            n=top_k
-        )
-    generation_results = engine.generate(prompts, sampling_params)
+        max_tokens = 80
+        if "DeepSeek" in model_name:
+            print("Using DeepSeek model, increasing max_tokens from 80 to 1024")
+            max_tokens = 1024
+        if top_k <= 1:
+            sampling_params = SamplingParams(
+                max_tokens=max_tokens,
+                temperature=0.0,
+                top_p=0.95,
+                n=top_k
+            )
+        else:
+            sampling_params = SamplingParams(
+                max_tokens=max_tokens,
+                temperature=0.7,
+                top_p=0.95,
+                n=top_k
+            )
+        generation_results = engine.generate(prompts, sampling_params)
 
     # ------------------------------------------------------
     # 4) Collect + parse predictions, compute metrics
@@ -439,6 +588,12 @@ def evaluate_model_on_test_set(
             sum(f1_per_emotion.values()) / len(f1_per_emotion)
             if len(f1_per_emotion) > 0 else 0.0
         )
+        if flagged_prompts:
+            out_path = pathlib.Path(out_json)
+            flagged_filename = out_path.with_name(out_path.stem + "_flagged.json")
+            os.makedirs(flagged_filename.parent, exist_ok=True)
+            with open(flagged_filename, "w", encoding="utf-8") as f:
+                json.dump(flagged_prompts, f, indent=2)
         return {"f1_per_emotion": f1_per_emotion, "macro_f1": macro_f1}
     else:
         # Pearson computation
@@ -459,6 +614,12 @@ def evaluate_model_on_test_set(
             sum(pearson_per_emotion.values()) / len(pearson_per_emotion)
             if len(pearson_per_emotion) > 0 else 0.0
         )
+        if flagged_prompts:
+            out_path = pathlib.Path(out_json)
+            flagged_filename = out_path.with_name(out_path.stem + "_flagged.json")
+            os.makedirs(flagged_filename.parent, exist_ok=True)
+            with open(flagged_filename, "w", encoding="utf-8") as f:
+                json.dump(flagged_prompts, f, indent=2)
         return {"pearson_per_emotion": pearson_per_emotion, "avg_pearson": avg_pearson}
                                
 def evaluate_ablation(engine,
@@ -487,7 +648,7 @@ def evaluate_ablation(engine,
     variant_results = {}
     for variant, tmpl in prompt_variants.items():
         scores_dict = evaluate_model_on_test_set(
-            engine, test_data, tmpl, task, main_top_k, n_shot=main_n_shot, model_name=model_name
+            engine, test_data, tmpl, task, main_top_k, n_shot=main_n_shot, model_name=model_name,out_json=f"llm_track_ab_results/tmp_{model_name.replace('/', '_')}_{task}_prompt_{variant}.json"
         )
         variant_results[variant] = scores_dict
 
@@ -506,7 +667,7 @@ def evaluate_ablation(engine,
     main_prompt = prompt_variants[main_variant]
     for n_shot in shot_counts:
         scores_dict = evaluate_model_on_test_set(
-            engine, test_data, main_prompt, task, main_top_k, n_shot=n_shot, model_name=model_name
+            engine, test_data, main_prompt, task, main_top_k, n_shot=n_shot, model_name=model_name,out_json=f"llm_track_ab_results/tmp_{model_name.replace('/', '_')}_{task}_fewshot_{n_shot}.json"
         )
         few_shot_results[n_shot] = scores_dict
 
@@ -524,7 +685,7 @@ def evaluate_ablation(engine,
     topk_results = {}
     for k in topk_list:
         scores_dict = evaluate_model_on_test_set(
-            engine, test_data, main_prompt, task, k, n_shot=main_n_shot, model_name=model_name
+            engine, test_data, main_prompt, task, k, n_shot=main_n_shot, model_name=model_name, out_json=f"llm_track_ab_results/tmp_{model_name.replace('/', '_')}_{task}_topk_{k}.json"
         )
         topk_results[k] = scores_dict
 
@@ -546,6 +707,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Run LLM inference with vLLM for a single task and language."
     )
+    parser.add_argument("--n_shot", type=int, default=None,
+                    help="Number of few-shot examples to use (overrides default config).")
     parser.add_argument("--model_name", type=str, required=True,
                         help="Hugging Face model ID (e.g., 'bigscience/bloom')")
     parser.add_argument("--task", type=str, required=True,
@@ -570,12 +733,18 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    if "openai" not in args.model_name:
+        from vllm import LLM, SamplingParams
+
     # Load model
     model_name = args.model_name
     safe_model = model_name.replace("/", "_")
     print(f"\n>>> Loading LLM: {model_name} with vLLM ...")
-    engine = LLM(model=model_name, tokenizer=model_name,
+    if model_name != "openai/gpt-4":
+        engine = LLM(model=model_name, tokenizer=model_name,
                 tensor_parallel_size=args.tensor_parallel_size)
+    else:
+        engine = None
     print(" LLM engine loaded.\n")
 
     for lang in ALL_LANGUAGES:
@@ -606,7 +775,7 @@ if __name__ == "__main__":
         config = TASK_CONFIGS[args.task]
         var_name = main_config["variant"]
         topk_main = main_config["top_k"]
-        n_shot_main = main_config["n_shot"]
+        n_shot_main = args.n_shot if args.n_shot is not None else main_config["n_shot"]
 
         main_prompt = config["prompt_variants"][var_name]
 
@@ -619,7 +788,8 @@ if __name__ == "__main__":
             task=args.task,
             top_k=topk_main,
             n_shot=n_shot_main,
-            model_name=model_name
+            model_name=model_name,
+            out_json=out_json
         )
         # Log the main result
         if args.task == "binary":
@@ -676,6 +846,18 @@ if __name__ == "__main__":
         }
 
         # Write results
+        os.makedirs(os.path.dirname(out_json), exist_ok=True)
         with open(out_json, "w", encoding="utf-8") as f:
             json.dump(final_output, f, indent=4)
         print(f"\nAll done! Wrote results to {out_json}\n")
+        if args.output_file is None and lang == ALL_LANGUAGES[-1]:
+            combined_results = []
+            for lang_code in ALL_LANGUAGES:
+                lang_path = f"llm_track_ab_results/results_{safe_model}_{args.task}_{lang_code}.json"
+                if os.path.exists(lang_path):
+                    with open(lang_path, "r", encoding="utf-8") as f:
+                        combined_results.append(json.load(f))
+            final_path = f"llm_track_ab_results/final_bothTasks_{safe_model}.json"
+            with open(final_path, "w", encoding="utf-8") as f:
+                json.dump(combined_results, f, indent=2)
+            print(f"[✓] Wrote combined final JSON to: {final_path}")

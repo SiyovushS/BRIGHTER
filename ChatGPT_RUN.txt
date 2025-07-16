@@ -1,0 +1,18 @@
+@echo off
+
+conda --version
+conda activate brighter-llm
+set AZURE_OPENAI_KEY=18W17o5SWFUi6HTmovJNqtPn7xbMw4wvqwOZ6dX16u189b4Xg4qNJQQJ99BGACYeBjFXJ3w3AAABACOGDWaH
+set AZURE_OPENAI_ENDPOINT=https://gpt4t.openai.azure.com/
+cd C:\Users\siyov\Documents\GitHub\BRIGHTER
+
+
+python llms.py --model_name "openai/gpt-4" --task "binary" --n_shot 4 --output_file "./llm_track_ab_results/gpt4_binary.json"
+python llms.py --model_name "openai/gpt-4" --task "intensity" --n_shot 4 --output_file "./llm_track_ab_results/gpt4_intensity.json"
+python llms.py --model_name "openai/gpt-4" --task "binary" --n_shot 0 --output_file "./llm_track_ab_results/gpt4_binary_zeroshot.json"
+python llms.py --model_name "openai/gpt-4" --task "intensity" --n_shot 0 --output_file "./llm_track_ab_results/gpt4_intensity_zeroshot.json"
+
+
+python process_llm_results.py
+
+pause

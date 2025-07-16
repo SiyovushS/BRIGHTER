@@ -11,7 +11,10 @@ model_name_map = {
     "final_bothTasks_databricks_dolly-v2-12b": "Dolly-v2-12B",
     "final_bothTasks_meta-llama_Llama-3.3-70B-Instruct": "Llama-3.3-70B",
     "final_bothTasks_mistralai_Mixtral-8x7B-Instruct-v0.1": "Mixtral-8x7B",
-    "final_bothTasks_deepseek-ai_DeepSeek-R1-Distill-Llama-70B": "DeepSeek-R1-70B"
+    "final_bothTasks_deepseek-ai_DeepSeek-R1-Distill-Llama-70B": "DeepSeek-R1-70B",
+    "final_bothTasks_openai_gpt-4": "ChatGPT-GPT4",
+    "final_bothTasks_google_gemini-2F":"Google Gemini2Flash"
+
 }
 
 desired_model_order = [
@@ -19,7 +22,9 @@ desired_model_order = [
     "Dolly-v2-12B",
     "Llama-3.3-70B",
     "Mixtral-8x7B",
-    "DeepSeek-R1-70B"
+    "DeepSeek-R1-70B",
+    "ChatGPT-GPT4",
+    "Google Gemini2Flash"
 ]
 
 def get_short_model_name_from_data(data):
@@ -282,6 +287,7 @@ def collect_main_results(all_files, task="binary"):
 # 5. main()
 ###############################################################################
 def main():
+    os.makedirs("llm_track_ab_results", exist_ok=True)
     # 1. Gather all JSON files from the results folder.
     all_files = glob.glob("llm_track_ab_results/*.json")
 
@@ -296,6 +302,7 @@ def main():
     df_main_intensity = collect_main_results(all_files, task="intensity")
 
     # 4. Output ablation tables (CSV + LaTeX)
+    os.makedirs("llm_track_ab_results", exist_ok=True)
     df_prompt_variant.to_csv("llm_track_ab_results/table_prompt_variant.csv", float_format="%.2f")
     df_few_shot.to_csv("llm_track_ab_results/table_few_shot.csv", float_format="%.2f")
     df_top_k.to_csv("llm_track_ab_results/table_top_k.csv", float_format="%.2f")
@@ -320,6 +327,23 @@ def main():
         f.write(df_main_intensity.to_latex(float_format="%.2f"))
 
     print("All tables have been saved to CSV and LaTeX files in llm_track_ab_results/.")
+    # 6. Collect flagged prompts if any
+    flagged_files = glob.glob("llm_track_ab_results/*_flagged.json")
+    all_flagged = []
+    for path in flagged_files:
+        with open(path, "r", encoding="utf-8") as f:
+            flagged = json.load(f)
+            for entry in flagged:
+                entry["source_file"] = os.path.basename(path)
+            all_flagged.extend(flagged)
+
+    # Save as CSV for review
+    if all_flagged:
+        flagged_df = pd.DataFrame(all_flagged)
+        flagged_df.to_csv("llm_track_ab_results/flagged_prompts.csv", index=False)
+        print(f"{len(all_flagged)} flagged prompts saved to flagged_prompts.csv.")
+    else:
+        print("No flagged prompts found.")
 
 if __name__ == "__main__":
     main()

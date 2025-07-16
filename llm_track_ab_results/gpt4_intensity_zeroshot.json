@@ -1,0 +1,17 @@
+{
+    "task": "intensity",
+    "language": "deu",
+    "model_name": "openai/gpt-4",
+    "main_result": {
+        "pearson_per_emotion": {
+            "anger": 0.23184170051121325,
+            "disgust": 0.21006725906020934,
+            "fear": 0.1479038896484847,
+            "joy": 0.5300230768546238,
+            "sadness": 0.3131809959324532,
+            "surprise": 0.2606954278434142
+        },
+        "avg_pearson": 0.28228539164173305
+    },
+    "ablation": {}
+}

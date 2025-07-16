@@ -3,7 +3,7 @@
 #SBATCH --time=3-00:00:00
 #SBATCH --gpus=8
 #SBATCH -N 1
-#SBATCH --array=0-4
+#SBATCH --array=0-6
 
 # Optional: check GPU visibility
 nvidia-smi
@@ -15,6 +15,8 @@ MODELS=(
   "meta-llama/Llama-3.3-70B-Instruct"
   "Qwen/Qwen2.5-72B-Instruct"
   "databricks/dolly-v2-12b"
+  "openai/gpt-4"
+  "google/gemini-2F"
 )
 
 # -- 2) SLURM array index picks which model to run --
@@ -39,11 +41,18 @@ for TASK in "${TASKS[@]}"; do
 
   # Use either "srun" or just directly "python" (depending on environment)
   # Some HPC setups require "srun" or "mpirun"; adapt as needed:
-  uv run python llms.py \
-    --model_name "$MODEL" \
-    --task "$TASK" \
-    --tensor_parallel_size 8 \
-    --skip_existing
+  if [[ "$MODEL" == "openai/gpt-4" || "$MODEL" == "gemini-2F" ]]; then
+    uv run python llms.py \
+      --model_name "$MODEL" \
+      --task "$TASK" \
+      --skip_existing
+  else
+    uv run python llms.py \
+      --model_name "$MODEL" \
+      --task "$TASK" \
+      --tensor_parallel_size 8 \
+      --skip_existing
+  fi
 done
 
 echo "Done with all tasks & langs for model=$MODEL"
