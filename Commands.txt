@@ -8,15 +8,18 @@ conda --version
 conda activate brighter-llm
 set AZURE_OPENAI_KEY=18W17o5SWFUi6HTmovJNqtPn7xbMw4wvqwOZ6dX16u189b4Xg4qNJQQJ99BGACYeBjFXJ3w3AAABACOGDWaH
 set AZURE_OPENAI_ENDPOINT=https://gpt4t.openai.azure.com/
+cd C:\Users\caoca\Documents\GitHub\BRIGHTER
 
+conda --version
+conda activate brighter-llm
 set GEMINI_API_KEY="AIzaSyBci7Tsl2Tpqcyv782vV_oyojgYimi8_ew"
 set GEMINI_API_ENDPOINT="https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyBci7Tsl2Tpqcyv782vV_oyojgYimi8_ew"
 cd C:\Users\caoca\Documents\GitHub\BRIGHTER
 
-python llms.py --model_name "openai/gpt-4" --task "binary" --n_shot 4
+python llms.py --model_name "openai/gpt-4" --task "binary" --n_shot 4 
 python llms.py --model_name "openai/gpt-4" --task "intensity" --n_shot 4 
 python llms.py --model_name "openai/gpt-4" --task "binary" --n_shot 0 
-python llms.py --model_name "openai/gpt-4" --task "intensity" --n_shot 0
+python llms.py --model_name "openai/gpt-4" --task "intensity" --n_shot 0 
 
 python llms.py --model_name "google/gemini-2F" --task "binary" --n_shot 4
 python llms.py --model_name "google/gemini-2F" --task "intensity" --n_shot 4
