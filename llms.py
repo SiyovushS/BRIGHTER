@@ -419,7 +419,7 @@ def evaluate_model_on_test_set(
                         ],
                         max_tokens=80
                     )
-                    text = (resp.choices[0].message.content or "")
+                    text = (response.choices[0].message.content or "")
                     parsed = parse_output(text, task)
                     if parsed is not None:
                         output = text.strip()
