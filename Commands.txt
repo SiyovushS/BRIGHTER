@@ -18,9 +18,12 @@ set GEMINI_API_KEY="AIzaSyBci7Tsl2Tpqcyv782vV_oyojgYimi8_ew"
 set GEMINI_API_ENDPOINT="https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyBci7Tsl2Tpqcyv782vV_oyojgYimi8_ew"
 cd C:\Users\caoca\Documents\GitHub\BRIGHTER
 
-python llms.py --model_name "openai/gpt-4" --task "binary" --n_shot 4 Preforming on Laptop
-python llms.py --model_name "openai/gpt-4" --task "intensity" --n_shot 4 Preforming on Laptop
+Preforming on Laptop
+python llms.py --model_name "openai/gpt-4" --task "binary" --n_shot 4 
+python llms.py --model_name "openai/gpt-4" --task "intensity" --n_shot 4 
 v
+
+Preforming on PC
 python llms.py --model_name "openai/gpt-4" --task "binary" --n_shot 0 Preforming On Pc
 python llms.py --model_name "openai/gpt-4" --task "intensity" --n_shot 0 Preforming on Pc
 v

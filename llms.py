@@ -13,6 +13,7 @@ from collections import defaultdict
 wandb.init(mode="disabled")
 import glob
 
+
 from sklearn.metrics import f1_score
 from scipy.stats import pearsonr
 
@@ -22,8 +23,6 @@ from scipy.stats import pearsonr
 
 
 # Azure OpenAI Setup
-AZURE_OPENAI_KEY = "18W17o5SWFUi6HTmovJNqtPn7xbMw4wvqwOZ6dX16u189b4Xg4qNJQQJ99BGACYeBjFXJ3w3AAABACOGDWaH"# When publishing paper store this in uv at some point
-AZURE_OPENAI_ENDPOINT = "https://gpt4t.openai.azure.com/"
 AZURE_OPENAI_DEPLOYMENT = "gpt-4.1"  # Set this to your Azure deployment name
 AZURE_OPENAI_VERSION = "2025-01-01-preview"
 
@@ -176,33 +175,37 @@ TASK_CONFIGS = {
 # DATA LOADER
 ###########################################################
 def load_test_data_multicolumn(filepath: str, task: str) -> List[dict]:
-    """
-    CSV columns: 'text' + some subset of [anger, disgust, fear, joy, sadness, surprise].
-    If task='binary', interpret '1' => 1, '0' => 0 (accounting for floats or spaces).
-    If task='intensity', interpret '0'..'3' as integer (again robust cast).
-    """
     data_expanded = []
-    with open(filepath, "r", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        fieldnames = reader.fieldnames
-        if fieldnames is None:
-            return data_expanded
-
-        available_emotions = [emo for emo in EMOTIONS if emo in fieldnames]
-        for row in reader:
-            text_val = row["text"]
-            for emo in available_emotions:
-                val_str = row[emo].strip()
-                numeric_val = int(float(val_str)) if val_str else 0
-                if task == "binary":
-                    label_val = 1 if numeric_val == 1 else 0
-                else:
-                    label_val = max(0, min(3, numeric_val))
-                data_expanded.append({
-                    "text": text_val,
-                    "emotion": emo,
-                    "label": label_val
-                })
+    try:
+        with open(filepath, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            if reader.fieldnames is None:
+                print(f"Warning: No headers found in {filepath}")
+                return data_expanded
+            available_emotions = [emo for emo in EMOTIONS if emo in reader.fieldnames]
+            for row in reader:
+                text_val = row.get("text", "").strip()
+                if not text_val:
+                    continue  # Skip empty texts
+                for emo in available_emotions:
+                    val_str = row.get(emo, "").strip()
+                    try:
+                        numeric_val = int(float(val_str)) if val_str else 0
+                    except ValueError:
+                        numeric_val = 0
+                    if task == "binary":
+                        label_val = 1 if numeric_val == 1 else 0
+                    else:
+                        label_val = max(0, min(3, numeric_val))
+                    data_expanded.append({
+                        "text": text_val,
+                        "emotion": emo,
+                        "label": label_val
+                    })
+    except FileNotFoundError:
+        print(f"Error: File {filepath} not found.")
+    except Exception as e:
+        print(f"Error loading data from {filepath}: {e}")
     return data_expanded
 
 ###########################################################
@@ -245,7 +248,8 @@ def robust_parse_binary(generated_text: str) -> int:
     match = re.search(r"Answer:\s*(yes|no)", generated_text, re.IGNORECASE)
     if match:
         return 1 if match.group(1).lower() == "yes" else 0
-    return None  # Default fallback
+    print(f"Warning: Could not parse binary answer from: {generated_text}")
+    return None
 
 
 def robust_parse_intensity(generated_text: str) -> int:
@@ -256,7 +260,8 @@ def robust_parse_intensity(generated_text: str) -> int:
     match = re.search(r"Answer:\s*([0-3])", generated_text)
     if match:
         return int(match.group(1))
-    return 0  # Default fallback
+    print(f"Warning: Could not parse intensity answer from: {generated_text}")
+    return 0
 
 def parse_output(generated_text: str, task: str) -> int:
     if task == "binary":
@@ -399,6 +404,8 @@ def evaluate_model_on_test_set(
             base_url=os.getenv("AZURE_OPENAI_ENDPOINT") + "/openai/deployments/gpt-4.1"
         )
         generation_results = []
+        parsed_outputs = []
+        raw_outputs = []
         for i, prompt in enumerate(prompts):
             while True:
                 try:
@@ -421,11 +428,8 @@ def evaluate_model_on_test_set(
 
                     parsed = parse_output(output, task)
                     if parsed is not None:
-                        generation_results.append(
-                            type("LLMOutput", (object,), {
-                                "outputs": [type("Obj", (object,), {"text": output})()]
-                            })()
-                        )
+                        raw_outputs.append(output)
+                        parsed_outputs.append(parsed)
                         break
                     else:
                         print(f"[REASKING-FIRST-STAGE] Invalid output. Repeating prompt #{i}...")
@@ -453,8 +457,8 @@ def evaluate_model_on_test_set(
 
         print("Using Google gemini-2F...")
 
-        GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") or "AIzaSyBci7Tsl2Tpqcyv782vV_oyojgYimi8_ew"
-        GEMINI_API_ENDPOINT = os.getenv("GEMINI_API_ENDPOINT") or "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyBci7Tsl2Tpqcyv782vV_oyojgYimi8_ew"
+        GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") 
+        GEMINI_API_ENDPOINT = os.getenv("GEMINI_API_ENDPOINT")
 
         headers = {
             "Content-Type": "application/json"
@@ -558,69 +562,21 @@ def evaluate_model_on_test_set(
     for i, (sample, prompt) in enumerate(zip(test_data, prompts)):
         gold_label = sample["label"]
         e = sample["emotion"]
-        valid_output = None
-        retry_count = 0
+        
+        if i >= len(parsed_outputs):  # safety check
+            print(f"[WARNING] Missing parsed output for prompt #{i}, skipping.")
+            continue
 
-        while valid_output is None:
-            retry_count += 1
+        parsed = parsed_outputs[i]
 
-            if model_name == "openai/gpt-4":
-                try:
-                    response = client.chat.completions.create(
-                        model="gpt-4.1",
-                        messages=[
-                            {"role": "system", "content": "You are a helpful assistant."},
-                            {"role": "user", "content": [{"type": "text", "text": prompt}]}
-                        ],
-                        max_tokens=80
-                    )
-                    output = response.choices[0].message.content
-                    if output is None:
-                        raise ValueError("No output returned.")
-                    output = output.strip()
-                except Exception as e:
-                    error_str = str(e)
-                    if "content management policy" in error_str or "ResponsibleAIPolicyViolation" in error_str:
-                        print(f"[FLAGGED DURING PARSE] Prompt #{i} triggered content filter during re-ask:\n{error_str}")
-                        flagged_prompts.append({
-                            "index": i,
-                            "prompt": prompt,
-                            "error": error_str
-                        })
-                        output = ""  # fallback to empty string for parsing
-                        continue
-                    else:
-                        print(f"[RETRYING] Prompt #{i} failed during re-ask due to: {error_str}\nRetrying in 5 seconds…")
-                        import time
-                        time.sleep(5)
-                        continue  # go back and retry
-
-            elif model_name == "google/gemini-2F":
-                import requests
-                headers = { "Content-Type": "application/json" }
-                payload = {
-                    "contents": [ { "parts": [ { "text": prompt } ], "role": "user" } ]
-                }
-                response = requests.post(GEMINI_API_ENDPOINT, headers=headers, json=payload)
-                response.raise_for_status()
-                output = response.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
-
-            else:
-                result = engine.generate([prompt], sampling_params)[0]
-                output = result.outputs[0].text.strip()
-
-            print(f"\n--- Prompt #{i} (Attempt {retry_count}) ---")
-            print(f"Prompt:\n{prompt}\n")
-            print(f"Output:\n{output}\n")
-
-            parsed = parse_output(output, task)
-            if parsed is not None:
-                valid_output = parsed
-            else:
-                print(f"[REASKING] Invalid output. Repeating prompt #{i}...")
+        if parsed is None:
+            print(f"[SKIPPED] Prompt #{i} had unparseable output.")
+            continue
 
         emotion2refs[e].append(int(gold_label))
-        emotion2preds[e].append(int(valid_output))
+        emotion2preds[e].append(int(parsed))
+
+        
 
     if task == "binary":
         # F1 computation
@@ -644,9 +600,22 @@ def evaluate_model_on_test_set(
         if flagged_prompts:
             out_path = pathlib.Path(out_json)
             flagged_filename = out_path.with_name(out_path.stem + "_flagged.json")
-            os.makedirs(flagged_filename.parent, exist_ok=True)
+            os.makedirs(os.path.dirname(flagged_filename), exist_ok=True)
             with open(flagged_filename, "w", encoding="utf-8") as f:
                 json.dump(flagged_prompts, f, indent=2)
+
+        out_path = pathlib.Path(out_json)
+        csv_path = out_path.with_name(out_path.stem + "_predictions.csv")
+
+        with open(csv_path, "w", encoding="utf-8", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(["prompt_index", "prompt", "output", "parsed_label", "gold_label", "emotion"])
+            for i, (sample, prompt) in enumerate(zip(test_data, prompts)):
+                output = raw_outputs[i] if i < len(raw_outputs) else ""
+                parsed = parsed_outputs[i] if i < len(parsed_outputs) else ""
+                label = sample["label"]
+                emotion = sample["emotion"]
+                writer.writerow([i, prompt, output, parsed, label, emotion])
         return {"f1_per_emotion": f1_per_emotion, "macro_f1": macro_f1}
     else:
         # Pearson computation
@@ -670,9 +639,21 @@ def evaluate_model_on_test_set(
         if flagged_prompts:
             out_path = pathlib.Path(out_json)
             flagged_filename = out_path.with_name(out_path.stem + "_flagged.json")
-            os.makedirs(flagged_filename.parent, exist_ok=True)
+            os.makedirs(os.path.dirname(flagged_filename), exist_ok=True)
             with open(flagged_filename, "w", encoding="utf-8") as f:
                 json.dump(flagged_prompts, f, indent=2)
+        out_path = pathlib.Path(out_json)
+        csv_path = out_path.with_name(out_path.stem + "_predictions.csv")
+
+        with open(csv_path, "w", encoding="utf-8", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(["prompt_index", "prompt", "output", "parsed_label", "gold_label", "emotion"])
+            for i, (sample, prompt) in enumerate(zip(test_data, prompts)):
+                output = raw_outputs[i] if i < len(raw_outputs) else ""
+                parsed = parsed_outputs[i] if i < len(parsed_outputs) else ""
+                label = sample["label"]
+                emotion = sample["emotion"]
+                writer.writerow([i, prompt, output, parsed, label, emotion])
         return {"pearson_per_emotion": pearson_per_emotion, "avg_pearson": avg_pearson}
                                
 def evaluate_ablation(engine,
