@@ -419,15 +419,18 @@ def evaluate_model_on_test_set(
                     print(f"Prompt:\n{prompt}\n")
                     print(f"Output:\n{output}\n")
 
-                    generation_results.append(
-                        type("LLMOutput", (object,), {
-                            "outputs": [type("Obj", (object,), {"text": output})()]
-                        })()
-                    )
-                    break
+                    parsed = parse_output(output, task)
+                    if parsed is not None:
+                        generation_results.append(
+                            type("LLMOutput", (object,), {
+                                "outputs": [type("Obj", (object,), {"text": output})()]
+                            })()
+                        )
+                        break
+                    else:
+                        print(f"[REASKING-FIRST-STAGE] Invalid output. Repeating prompt #{i}...")
                 except Exception as e:
                     error_str = str(e)
-                    
                     # Handle flagged prompts (filtered by policy)
                     if "content management policy" in error_str or "ResponsibleAIPolicyViolation" in error_str:
                         print(f"[FLAGGED] Prompt #{i} violated content policy:\n{error_str}")
