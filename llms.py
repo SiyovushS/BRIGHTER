@@ -261,7 +261,7 @@ def robust_parse_intensity(generated_text: str) -> int:
     if match:
         return int(match.group(1))
     print(f"Warning: Could not parse intensity answer from: {generated_text}")
-    return 0
+    return None
 
 def parse_output(generated_text: str, task: str) -> int:
     if task == "binary":
@@ -407,6 +407,8 @@ def evaluate_model_on_test_set(
         parsed_outputs = []
         raw_outputs = []
         for i, prompt in enumerate(prompts):
+            output = None
+            parsed = None
             while True:
                 try:
                     response = client.chat.completions.create(
@@ -417,41 +419,36 @@ def evaluate_model_on_test_set(
                         ],
                         max_tokens=80
                     )
-                    output = response.choices[0].message.content
-                    if output is None:
-                        raise ValueError("No output returned.")
-                    output = output.strip()
-
-                    print(f"\n--- Prompt #{i} ---")
-                    print(f"Prompt:\n{prompt}\n")
-                    print(f"Output:\n{output}\n")
-
-                    parsed = parse_output(output, task)
+                    text = (resp.choices[0].message.content or "")
+                    parsed = parse_output(text, task)
                     if parsed is not None:
-                        raw_outputs.append(output)
-                        parsed_outputs.append(parsed)
+                        output = text.strip()
                         break
-                    else:
-                        print(f"[REASKING-FIRST-STAGE] Invalid output. Repeating prompt #{i}...")
-                except Exception as e:
-                    error_str = str(e)
-                    # Handle flagged prompts (filtered by policy)
-                    if "content management policy" in error_str or "ResponsibleAIPolicyViolation" in error_str:
-                        print(f"[FLAGGED] Prompt #{i} violated content policy:\n{error_str}")
-                        flagged_prompts.append({
-                            "index": i,
-                            "prompt": prompt,
-                            "error": error_str
-                        })
-                        generation_results.append(
-                            type("LLMOutput", (object,), {
-                                "outputs": [type("Obj", (object,), {"text": ""})()]
-                            })()
-                        )
-                        break  # Stop retrying flagged prompt
+                    print(f"[RETRY] Prompt #{i} gave unparseable output: {repr(text)} — retrying…")
 
-                    # Otherwise retry indefinitely
-                    print(f"[RETRYING] Prompt #{i} failed due to: {error_str}\nRetrying in 5 seconds...")
+                except Exception as e:
+                    err = str(e)
+                    # on policy violation → log+stop retrying
+                    if "content management policy" in err or "ResponsibleAIPolicyViolation" in err:
+                        print(f"[FLAGGED] Prompt #{i} violated policy: {err}")
+                        flagged_prompts.append({"index": i, "prompt": prompt, "error": err})
+                        break
+                    # otherwise → immediate retry
+                    print(f"[ERROR] Prompt #{i} error: {err} — retrying…")
+
+            # after retry loop
+            if output is None:
+                # either flagged or never parsed → record blanks so later code skips
+                raw_outputs.append("")
+                parsed_outputs.append(None)
+                continue
+
+            # we have a valid answer
+            print(f"\n--- Prompt #{i} ---")
+            print(f"Prompt:\n{prompt}\nOutput:\n{output}\n")
+
+            raw_outputs.append(output)
+            parsed_outputs.append(parsed)
     elif model_name == "google/gemini-2F":
         import requests
 
