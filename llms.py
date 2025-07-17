@@ -562,15 +562,35 @@ def evaluate_model_on_test_set(
             retry_count += 1
 
             if model_name == "openai/gpt-4":
-                response = client.chat.completions.create(
-                    model="gpt-4.1",
-                    messages=[
-                        {"role": "system", "content": "You are a helpful assistant."},
-                        {"role": "user", "content": [{"type": "text", "text": prompt}]}
-                    ],
-                    max_tokens=80
-                )
-                output = response.choices[0].message.content.strip()
+                try:
+                    response = client.chat.completions.create(
+                        model="gpt-4.1",
+                        messages=[
+                            {"role": "system", "content": "You are a helpful assistant."},
+                            {"role": "user", "content": [{"type": "text", "text": prompt}]}
+                        ],
+                        max_tokens=80
+                    )
+                    output = response.choices[0].message.content
+                    if output is None:
+                        raise ValueError("No output returned.")
+                    output = output.strip()
+                except Exception as e:
+                    error_str = str(e)
+                    if "content management policy" in error_str or "ResponsibleAIPolicyViolation" in error_str:
+                        print(f"[FLAGGED DURING PARSE] Prompt #{i} triggered content filter during re-ask:\n{error_str}")
+                        flagged_prompts.append({
+                            "index": i,
+                            "prompt": prompt,
+                            "error": error_str
+                        })
+                        output = ""  # fallback to empty string for parsing
+                        continue
+                    else:
+                        print(f"[RETRYING] Prompt #{i} failed during re-ask due to: {error_str}\nRetrying in 5 seconds…")
+                        import time
+                        time.sleep(5)
+                        continue  # go back and retry
 
             elif model_name == "google/gemini-2F":
                 import requests
