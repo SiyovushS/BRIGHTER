@@ -245,7 +245,7 @@ def robust_parse_binary(generated_text: str) -> int:
     match = re.search(r"Answer:\s*(yes|no)", generated_text, re.IGNORECASE)
     if match:
         return 1 if match.group(1).lower() == "yes" else 0
-    return 0  # Default fallback
+    return None  # Default fallback
 
 
 def robust_parse_intensity(generated_text: str) -> int:
@@ -552,23 +552,52 @@ def evaluate_model_on_test_set(
     emotion2refs = defaultdict(list)
     emotion2preds = defaultdict(list)
 
-    for sample, result in zip(test_data, generation_results):
+    for i, (sample, prompt) in enumerate(zip(test_data, prompts)):
         gold_label = sample["label"]
         e = sample["emotion"]
+        valid_output = None
+        retry_count = 0
 
-        parsed_candidates = []
-        for out in result.outputs:
-            pred_label = parse_output(out.text, task)
-            parsed_candidates.append(pred_label)
+        while valid_output is None:
+            retry_count += 1
 
-        # "Oracle" pick: if any candidate matches gold_label, pick that
-        if gold_label in parsed_candidates:
-            final_pred = gold_label
-        else:
-            final_pred = parsed_candidates[0]
+            if model_name == "openai/gpt-4":
+                response = client.chat.completions.create(
+                    model="gpt-4.1",
+                    messages=[
+                        {"role": "system", "content": "You are a helpful assistant."},
+                        {"role": "user", "content": [{"type": "text", "text": prompt}]}
+                    ],
+                    max_tokens=80
+                )
+                output = response.choices[0].message.content.strip()
+
+            elif model_name == "google/gemini-2F":
+                import requests
+                headers = { "Content-Type": "application/json" }
+                payload = {
+                    "contents": [ { "parts": [ { "text": prompt } ], "role": "user" } ]
+                }
+                response = requests.post(GEMINI_API_ENDPOINT, headers=headers, json=payload)
+                response.raise_for_status()
+                output = response.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+
+            else:
+                result = engine.generate([prompt], sampling_params)[0]
+                output = result.outputs[0].text.strip()
+
+            print(f"\n--- Prompt #{i} (Attempt {retry_count}) ---")
+            print(f"Prompt:\n{prompt}\n")
+            print(f"Output:\n{output}\n")
+
+            parsed = parse_output(output, task)
+            if parsed is not None:
+                valid_output = parsed
+            else:
+                print(f"[REASKING] Invalid output. Repeating prompt #{i}...")
 
         emotion2refs[e].append(int(gold_label))
-        emotion2preds[e].append(int(final_pred))
+        emotion2preds[e].append(int(valid_output))
 
     if task == "binary":
         # F1 computation
