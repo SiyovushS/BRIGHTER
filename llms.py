@@ -406,10 +406,11 @@ def evaluate_model_on_test_set(
         generation_results = []
         parsed_outputs = []
         raw_outputs = []
+        MAX_RETRIES = 20
         for i, prompt in enumerate(prompts):
             output = None
             parsed = None
-            while True:
+            for attempt in range(1, MAX_RETRIES + 1): 
                 try:
                     response = client.chat.completions.create(
                         model="gpt-4.1",
@@ -860,13 +861,14 @@ if __name__ == "__main__":
                 eng_v1_scores = evaluate_model_on_test_set(
                     engine, data,
                     config["prompt_variants"]["v1"],
-                    args.task, topk_main, n_shot_main, model_name
+                    args.task, topk_main, n_shot_main, model_name,
+                    out_json=f"llm_track_ab_results/tmp_{safe_model}_{args.task}_{lang}_engv1.json"
                 )
-                native_v1_prompt = LANG_NATIVE_PROMPTS[lang]
                 native_v1_scores = evaluate_model_on_test_set(
                     engine, data,
                     native_v1_prompt,
-                    args.task, topk_main, n_shot_main, model_name
+                    args.task, topk_main, n_shot_main, model_name,
+                    out_json=f"llm_track_ab_results/tmp_{safe_model}_{args.task}_{lang}_nativev1.json"
                 )
                 ablation_res["english_v1_vs_native_v1"] = {
                     "f1_english_v1": eng_v1_scores,
