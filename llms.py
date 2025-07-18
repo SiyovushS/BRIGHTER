@@ -439,9 +439,17 @@ def evaluate_model_on_test_set(
 
             # after retry loop
             if output is None:
-                # either flagged or never parsed → record blanks so later code skips
+                print(f"[SKIPPED] Prompt #{i} failed after {MAX_RETRIES} attempts.")
                 raw_outputs.append("")
                 parsed_outputs.append(None)
+
+                # Log the failed attempt in flagged_prompts
+                flagged_prompts.append({
+                    "index": i,
+                    "prompt": prompt,
+                    "reason": f"Max retries reached with unparseable output after {MAX_RETRIES} attempts.",
+                    "last_output": text.strip() if 'text' in locals() else ""
+                })
                 continue
 
             # we have a valid answer
