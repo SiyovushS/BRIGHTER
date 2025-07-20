@@ -1,0 +1,587 @@
+[
+  {
+    "index": 175,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Ixhego(70) lakrwintsha libulala imtombi yalo(13) eNgqamakwe kunyaka ophelikeyo | EC Indab\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 211,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Inzalelwane yaseBhayi yiKumkani eZimbabwe\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 211,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Inzalelwane yaseBhayi yiKumkani eZimbabwe\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": "The text \"Inzalelwane yaseBhayi yiKumkani eZimbabwe\" appears to be a neutral statement, possibly celebrating or noting the status of a person from Bhayi as a king in Zimbabwe. There is no language indicating frustration, resentment, or aggression.\n\nAnswer: no"
+  },
+  {
+    "index": 923,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of surprise.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: IGOSA LAMAPOLISA ELINGEKHO MSEBENZINI LIBAMBE ABARHANELWA BOKUPHANGA EMONTI | EC Indab\nAnswer: no\n\nExample 2:\nInput: Isigwebo kowadlwengula abafundi baseWSU\nAnswer: no\n\nExample 3:\nInput: Kuqweshe ibanjwa eCala, lijonge ukuxoxa ityala lalo | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Wabulala umfazi kuba engavumi athathe owesibini!\nAnswer: yes\n\n\n### Your Turn ###\nInput: Wadlwengulelwa umntwana kwisikolo sabakhubazekileyo\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 1147,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Bakhululwe ngesilumkiso kwizityholo zokubhunyula iR37 million eMnquma\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 1147,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Bakhululwe ngesilumkiso kwizityholo zokubhunyula iR37 million eMnquma\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": "The text \"Bakhululwe ngesilumkiso kwizityholo zokubhunyula iR37 million eMnquma\" is a factual statement about individuals being released with a warning on charges of stealing R37 million in Mnquma. There is no explicit or implicit expression of anger in the language used.\n\nAnswer: no"
+  },
+  {
+    "index": 1597,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Ubulele indoda umlilo waseEurope\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 1597,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Ubulele indoda umlilo waseEurope\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": "The text \"Ubulele indoda umlilo waseEurope\" translates to \"A man was killed by the European fire.\" There is no explicit expression of anger, emotion, or condemnation in this statement; it is a factual report of an incident.\n\nAnswer: no"
+  },
+  {
+    "index": 1699,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: YINTWAZANA EMINYAKA(12) EDLWENGULWE YABULAWA YINDODA(47) YASE XHORA EYALUSA IMFUYO EKUHLALENI | EC Indab\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 1700,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of fear.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Umzobi uzisula iinyembezi ngokuzoba umama wakhe\nAnswer: no\n\nExample 2:\nInput: Kubanjwe amadoda elayishe inyoka nengwenya\nAnswer: no\n\nExample 3:\nInput: Ubungozi obenziwa zizithambisi zokhanyiso-lusu\nAnswer: yes\n\nExample 4:\nInput: Bafuna ukundidlisa, utsho uceba we-UDM\nAnswer: yes\n\n\n### Your Turn ###\nInput: YINTWAZANA EMINYAKA(12) EDLWENGULWE YABULAWA YINDODA(47) YASE XHORA EYALUSA IMFUYO EKUHLALENI | EC Indab\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 1702,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of sadness.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Intsumantsumane ephakathi kweChiefs nePSL isetafileni kaMnu. Zola Majavu\nAnswer: no\n\nExample 2:\nInput: URamaphosa sele esifumene isiqingatha se-R1.2 trillion\nAnswer: no\n\nExample 3:\nInput: Kubanjwe Owasetyhini ngezityholo zokudlwengula intombazana ekwishumi elivisayo ngobusuku bangaphambi kweKrisimesi | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Zintoni ezibulala abakhwetha eMpuma Koloni?\nAnswer: yes\n\n\n### Your Turn ###\nInput: YINTWAZANA EMINYAKA(12) EDLWENGULWE YABULAWA YINDODA(47) YASE XHORA EYALUSA IMFUYO EKUHLALENI | EC Indab\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 1703,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of surprise.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: IGOSA LAMAPOLISA ELINGEKHO MSEBENZINI LIBAMBE ABARHANELWA BOKUPHANGA EMONTI | EC Indab\nAnswer: no\n\nExample 2:\nInput: Isigwebo kowadlwengula abafundi baseWSU\nAnswer: no\n\nExample 3:\nInput: Kuqweshe ibanjwa eCala, lijonge ukuxoxa ityala lalo | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Wabulala umfazi kuba engavumi athathe owesibini!\nAnswer: yes\n\n\n### Your Turn ###\nInput: YINTWAZANA EMINYAKA(12) EDLWENGULWE YABULAWA YINDODA(47) YASE XHORA EYALUSA IMFUYO EKUHLALENI | EC Indab\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 1879,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Bakhutshwe bengathandanga abahlali abangene ngondlela mnyama kwizindlu zaseChicken farm eMonti. | EC Indab\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 1879,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Bakhutshwe bengathandanga abahlali abangene ngondlela mnyama kwizindlu zaseChicken farm eMonti. | EC Indab\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": "The text describes residents being evicted against their will after entering houses unlawfully. Although the situation could provoke anger, the text itself reports the events factually without expressing anger or using angry language.\n\nAnswer: no"
+  },
+  {
+    "index": 2645,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of surprise.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: IGOSA LAMAPOLISA ELINGEKHO MSEBENZINI LIBAMBE ABARHANELWA BOKUPHANGA EMONTI | EC Indab\nAnswer: no\n\nExample 2:\nInput: Isigwebo kowadlwengula abafundi baseWSU\nAnswer: no\n\nExample 3:\nInput: Kuqweshe ibanjwa eCala, lijonge ukuxoxa ityala lalo | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Wabulala umfazi kuba engavumi athathe owesibini!\nAnswer: yes\n\n\n### Your Turn ###\nInput: Ixhwele kuthiwa lidlwengule intombi yomninawa walo eDutywa\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 2671,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Igwetywe iminyaka eyi18 indoda eyadlwengula umntwana ona8\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 2672,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of fear.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Umzobi uzisula iinyembezi ngokuzoba umama wakhe\nAnswer: no\n\nExample 2:\nInput: Kubanjwe amadoda elayishe inyoka nengwenya\nAnswer: no\n\nExample 3:\nInput: Ubungozi obenziwa zizithambisi zokhanyiso-lusu\nAnswer: yes\n\nExample 4:\nInput: Bafuna ukundidlisa, utsho uceba we-UDM\nAnswer: yes\n\n\n### Your Turn ###\nInput: Igwetywe iminyaka eyi18 indoda eyadlwengula umntwana ona8\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 2673,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of joy.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Umdlwengule, emxhaxha de wamkrolonqa amehlo umtwana(16) | EC Indab\nAnswer: no\n\nExample 2:\nInput: IMamelodi Sundowns iyambambezela uKeagan Dolly!\nAnswer: no\n\nExample 3:\nInput: Uthi ufuna ukunceda abaphelelwe lithemba owagaxeleka kwiziyobisi nokuthengisa ngomzimba ngenxa yemphatho\nAnswer: yes\n\nExample 4:\nInput: Usaqhula ekugugeni, ongagugiyo uLottering\nAnswer: yes\n\n\n### Your Turn ###\nInput: Igwetywe iminyaka eyi18 indoda eyadlwengula umntwana ona8\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 2674,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of sadness.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Intsumantsumane ephakathi kweChiefs nePSL isetafileni kaMnu. Zola Majavu\nAnswer: no\n\nExample 2:\nInput: URamaphosa sele esifumene isiqingatha se-R1.2 trillion\nAnswer: no\n\nExample 3:\nInput: Kubanjwe Owasetyhini ngezityholo zokudlwengula intombazana ekwishumi elivisayo ngobusuku bangaphambi kweKrisimesi | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Zintoni ezibulala abakhwetha eMpuma Koloni?\nAnswer: yes\n\n\n### Your Turn ###\nInput: Igwetywe iminyaka eyi18 indoda eyadlwengula umntwana ona8\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 2675,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of surprise.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: IGOSA LAMAPOLISA ELINGEKHO MSEBENZINI LIBAMBE ABARHANELWA BOKUPHANGA EMONTI | EC Indab\nAnswer: no\n\nExample 2:\nInput: Isigwebo kowadlwengula abafundi baseWSU\nAnswer: no\n\nExample 3:\nInput: Kuqweshe ibanjwa eCala, lijonge ukuxoxa ityala lalo | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Wabulala umfazi kuba engavumi athathe owesibini!\nAnswer: yes\n\n\n### Your Turn ###\nInput: Igwetywe iminyaka eyi18 indoda eyadlwengula umntwana ona8\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 2771,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of surprise.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: IGOSA LAMAPOLISA ELINGEKHO MSEBENZINI LIBAMBE ABARHANELWA BOKUPHANGA EMONTI | EC Indab\nAnswer: no\n\nExample 2:\nInput: Isigwebo kowadlwengula abafundi baseWSU\nAnswer: no\n\nExample 3:\nInput: Kuqweshe ibanjwa eCala, lijonge ukuxoxa ityala lalo | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Wabulala umfazi kuba engavumi athathe owesibini!\nAnswer: yes\n\n\n### Your Turn ###\nInput: Ufunyenwe ezantsi kobuhlanti odlwengulwe ngumelusi\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 2777,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of surprise.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: IGOSA LAMAPOLISA ELINGEKHO MSEBENZINI LIBAMBE ABARHANELWA BOKUPHANGA EMONTI | EC Indab\nAnswer: no\n\nExample 2:\nInput: Isigwebo kowadlwengula abafundi baseWSU\nAnswer: no\n\nExample 3:\nInput: Kuqweshe ibanjwa eCala, lijonge ukuxoxa ityala lalo | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Wabulala umfazi kuba engavumi athathe owesibini!\nAnswer: yes\n\n\n### Your Turn ###\nInput: Usiwe esibhedlele ona-7 ofakwe ikhuni kwilungu langasese ngofunda uGrade 7!\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 2941,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Kutshone umfana edamini kuHombe!\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'medium'}}}}}"
+  },
+  {
+    "index": 2941,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Kutshone umfana edamini kuHombe!\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": "The text states that a boy drowned in a dam at Hombe. This statement reports a tragic incident but does not express or imply anger; it is simply informative.\n\nAnswer: no"
+  },
+  {
+    "index": 2945,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of surprise.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: IGOSA LAMAPOLISA ELINGEKHO MSEBENZINI LIBAMBE ABARHANELWA BOKUPHANGA EMONTI | EC Indab\nAnswer: no\n\nExample 2:\nInput: Isigwebo kowadlwengula abafundi baseWSU\nAnswer: no\n\nExample 3:\nInput: Kuqweshe ibanjwa eCala, lijonge ukuxoxa ityala lalo | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Wabulala umfazi kuba engavumi athathe owesibini!\nAnswer: yes\n\n\n### Your Turn ###\nInput: Kutshone umfana edamini kuHombe!\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 2945,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of surprise.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: IGOSA LAMAPOLISA ELINGEKHO MSEBENZINI LIBAMBE ABARHANELWA BOKUPHANGA EMONTI | EC Indab\nAnswer: no\n\nExample 2:\nInput: Isigwebo kowadlwengula abafundi baseWSU\nAnswer: no\n\nExample 3:\nInput: Kuqweshe ibanjwa eCala, lijonge ukuxoxa ityala lalo | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Wabulala umfazi kuba engavumi athathe owesibini!\nAnswer: yes\n\n\n### Your Turn ###\nInput: Kutshone umfana edamini kuHombe!\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": "The text reports the drowning of a boy in a dam, which indicates loss of life and would evoke feelings of grief and sadness.\n\nAnswer: yes"
+  },
+  {
+    "index": 3031,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Uzibulele umfundi ona14 obethukelwa ukuba-gay!\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 3031,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Uzibulele umfundi ona14 obethukelwa ukuba-gay!\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": "The text reports a tragic incident where a 14-year-old student died by suicide after being bullied for being gay. While the statement conveys sadness and perhaps outrage at the bullying, it does not explicitly express anger itself.\n\nAnswer: no"
+  },
+  {
+    "index": 3517,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Kubhubhe abantu ababini(2) kwingozi eyenzeke eBerlin | EC Indab\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 3517,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Kubhubhe abantu ababini(2) kwingozi eyenzeke eBerlin | EC Indab\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": "The text reports a tragic incident (the death of two people in an accident) in a neutral, factual manner. There are no words or phrases expressing anger or strong negative emotion.\n\nAnswer: no"
+  },
+  {
+    "index": 3552,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of anger.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Musa ukuba lixhoba lolwaphulo-mthetho oluqhubeka kumaqonga onxibelelwano\nAnswer: no\n\nExample 2:\nInput: Halala! kumfama onguNontuthuzelo Mbele\nAnswer: no\n\nExample 3:\nInput: Isibindi sokukhuthuza umtu sele efile! | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Ababulali mababulawe nabo xa besixutha ubomi bomtu. | EC Indab\nAnswer: yes\n\n\n### Your Turn ###\nInput: Ibokoboko amacala iDinaledi engonjwe yiCoastal United ngolunya\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": "The text reports on a sports team (Dinaledi) being harshly beaten by another team (Coastal United). The term \"ngolunya\" suggests harshness or cruelty, but the context is a sports result and does not express personal anger or strong negative feelings towards anyone. It is more of a descriptive statement about the match's severity rather than an outburst or display of anger.\n\nAnswer"
+  },
+  {
+    "index": 3750,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of anger.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Musa ukuba lixhoba lolwaphulo-mthetho oluqhubeka kumaqonga onxibelelwano\nAnswer: no\n\nExample 2:\nInput: Halala! kumfama onguNontuthuzelo Mbele\nAnswer: no\n\nExample 3:\nInput: Isibindi sokukhuthuza umtu sele efile! | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Ababulali mababulawe nabo xa besixutha ubomi bomtu. | EC Indab\nAnswer: yes\n\n\n### Your Turn ###\nInput: Bathiwe nka ngezigwebo ezikhulu abadlali beBidvest Wits ngenxa yokuqaqadeka!\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 3750,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of anger.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Musa ukuba lixhoba lolwaphulo-mthetho oluqhubeka kumaqonga onxibelelwano\nAnswer: no\n\nExample 2:\nInput: Halala! kumfama onguNontuthuzelo Mbele\nAnswer: no\n\nExample 3:\nInput: Isibindi sokukhuthuza umtu sele efile! | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Ababulali mababulawe nabo xa besixutha ubomi bomtu. | EC Indab\nAnswer: yes\n\n\n### Your Turn ###\nInput: Bathiwe nka ngezigwebo ezikhulu abadlali beBidvest Wits ngenxa yokuqaqadeka!\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": "The text describes a boxer from the Eastern Cape who was shot and killed. The presence of surprise comes from the unexpected nature of the incident\u2014being shot and killed is not a common or predictable fate for a boxer, especially in this context.\n\nAnswer: yes"
+  },
+  {
+    "index": 3751,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Bathiwe nka ngezigwebo ezikhulu abadlali beBidvest Wits ngenxa yokuqaqadeka!\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 3751,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Bathiwe nka ngezigwebo ezikhulu abadlali beBidvest Wits ngenxa yokuqaqadeka!\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": "The text describes a boxer from the Eastern Cape who was shot and killed. The presence of surprise comes from the unexpected nature of the incident\u2014being shot and killed is not a common or predictable fate for a boxer, especially in this context.\n\nAnswer: yes"
+  },
+  {
+    "index": 3752,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of fear.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Umzobi uzisula iinyembezi ngokuzoba umama wakhe\nAnswer: no\n\nExample 2:\nInput: Kubanjwe amadoda elayishe inyoka nengwenya\nAnswer: no\n\nExample 3:\nInput: Ubungozi obenziwa zizithambisi zokhanyiso-lusu\nAnswer: yes\n\nExample 4:\nInput: Bafuna ukundidlisa, utsho uceba we-UDM\nAnswer: yes\n\n\n### Your Turn ###\nInput: Bathiwe nka ngezigwebo ezikhulu abadlali beBidvest Wits ngenxa yokuqaqadeka!\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 3752,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of fear.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Umzobi uzisula iinyembezi ngokuzoba umama wakhe\nAnswer: no\n\nExample 2:\nInput: Kubanjwe amadoda elayishe inyoka nengwenya\nAnswer: no\n\nExample 3:\nInput: Ubungozi obenziwa zizithambisi zokhanyiso-lusu\nAnswer: yes\n\nExample 4:\nInput: Bafuna ukundidlisa, utsho uceba we-UDM\nAnswer: yes\n\n\n### Your Turn ###\nInput: Bathiwe nka ngezigwebo ezikhulu abadlali beBidvest Wits ngenxa yokuqaqadeka!\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": "The text describes a boxer from the Eastern Cape who was shot and killed. The presence of surprise comes from the unexpected nature of the incident\u2014being shot and killed is not a common or predictable fate for a boxer, especially in this context.\n\nAnswer: yes"
+  },
+  {
+    "index": 3754,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of sadness.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Intsumantsumane ephakathi kweChiefs nePSL isetafileni kaMnu. Zola Majavu\nAnswer: no\n\nExample 2:\nInput: URamaphosa sele esifumene isiqingatha se-R1.2 trillion\nAnswer: no\n\nExample 3:\nInput: Kubanjwe Owasetyhini ngezityholo zokudlwengula intombazana ekwishumi elivisayo ngobusuku bangaphambi kweKrisimesi | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Zintoni ezibulala abakhwetha eMpuma Koloni?\nAnswer: yes\n\n\n### Your Turn ###\nInput: Bathiwe nka ngezigwebo ezikhulu abadlali beBidvest Wits ngenxa yokuqaqadeka!\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 3754,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of sadness.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Intsumantsumane ephakathi kweChiefs nePSL isetafileni kaMnu. Zola Majavu\nAnswer: no\n\nExample 2:\nInput: URamaphosa sele esifumene isiqingatha se-R1.2 trillion\nAnswer: no\n\nExample 3:\nInput: Kubanjwe Owasetyhini ngezityholo zokudlwengula intombazana ekwishumi elivisayo ngobusuku bangaphambi kweKrisimesi | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Zintoni ezibulala abakhwetha eMpuma Koloni?\nAnswer: yes\n\n\n### Your Turn ###\nInput: Bathiwe nka ngezigwebo ezikhulu abadlali beBidvest Wits ngenxa yokuqaqadeka!\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": "The text discusses Bidvest Wits players facing severe punishments due to violations or misconduct. The tone suggests consequences and seriousness rather than positivity or celebration.\n\nAnswer: no"
+  },
+  {
+    "index": 3813,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of joy.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Umdlwengule, emxhaxha de wamkrolonqa amehlo umtwana(16) | EC Indab\nAnswer: no\n\nExample 2:\nInput: IMamelodi Sundowns iyambambezela uKeagan Dolly!\nAnswer: no\n\nExample 3:\nInput: Uthi ufuna ukunceda abaphelelwe lithemba owagaxeleka kwiziyobisi nokuthengisa ngomzimba ngenxa yemphatho\nAnswer: yes\n\nExample 4:\nInput: Usaqhula ekugugeni, ongagugiyo uLottering\nAnswer: yes\n\n\n### Your Turn ###\nInput: \u2018Mabagwetywe qatha ababulala abakhwetha\u2019\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 3931,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Manyala wani la, wokudlwengulisa iigusha ngabantwana? | EC Indab\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 3949,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Babanjiwe abadlwengule intwazana beyiphindaphinda\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 3984,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of anger.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Musa ukuba lixhoba lolwaphulo-mthetho oluqhubeka kumaqonga onxibelelwano\nAnswer: no\n\nExample 2:\nInput: Halala! kumfama onguNontuthuzelo Mbele\nAnswer: no\n\nExample 3:\nInput: Isibindi sokukhuthuza umtu sele efile! | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Ababulali mababulawe nabo xa besixutha ubomi bomtu. | EC Indab\nAnswer: yes\n\n\n### Your Turn ###\nInput: \u2018Masihlangabezane kuba iAfrika inye\u2019\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 3984,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of anger.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Musa ukuba lixhoba lolwaphulo-mthetho oluqhubeka kumaqonga onxibelelwano\nAnswer: no\n\nExample 2:\nInput: Halala! kumfama onguNontuthuzelo Mbele\nAnswer: no\n\nExample 3:\nInput: Isibindi sokukhuthuza umtu sele efile! | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Ababulali mababulawe nabo xa besixutha ubomi bomtu. | EC Indab\nAnswer: yes\n\n\n### Your Turn ###\nInput: \u2018Masihlangabezane kuba iAfrika inye\u2019\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": "The phrase \"Iswelekile inkwenkwe ebiphila ngokungqiba\" reports that a boy who lived by scavenging has died. The fact that someone young and marginalized has died could be seen as not surprising, given their vulnerable circumstances. However, the wording does not emphasize the unexpectedness or suddenness of the death; it simply reports the event.\n\nAnswer: no"
+  },
+  {
+    "index": 3987,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of joy.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Umdlwengule, emxhaxha de wamkrolonqa amehlo umtwana(16) | EC Indab\nAnswer: no\n\nExample 2:\nInput: IMamelodi Sundowns iyambambezela uKeagan Dolly!\nAnswer: no\n\nExample 3:\nInput: Uthi ufuna ukunceda abaphelelwe lithemba owagaxeleka kwiziyobisi nokuthengisa ngomzimba ngenxa yemphatho\nAnswer: yes\n\nExample 4:\nInput: Usaqhula ekugugeni, ongagugiyo uLottering\nAnswer: yes\n\n\n### Your Turn ###\nInput: \u2018Masihlangabezane kuba iAfrika inye\u2019\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 3987,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of joy.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Umdlwengule, emxhaxha de wamkrolonqa amehlo umtwana(16) | EC Indab\nAnswer: no\n\nExample 2:\nInput: IMamelodi Sundowns iyambambezela uKeagan Dolly!\nAnswer: no\n\nExample 3:\nInput: Uthi ufuna ukunceda abaphelelwe lithemba owagaxeleka kwiziyobisi nokuthengisa ngomzimba ngenxa yemphatho\nAnswer: yes\n\nExample 4:\nInput: Usaqhula ekugugeni, ongagugiyo uLottering\nAnswer: yes\n\n\n### Your Turn ###\nInput: \u2018Masihlangabezane kuba iAfrika inye\u2019\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": "The text encourages unity and facing things together, indicating hope and solidarity rather than expressing fear.\n\nAnswer: no"
+  },
+  {
+    "index": 4556,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of fear.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Umzobi uzisula iinyembezi ngokuzoba umama wakhe\nAnswer: no\n\nExample 2:\nInput: Kubanjwe amadoda elayishe inyoka nengwenya\nAnswer: no\n\nExample 3:\nInput: Ubungozi obenziwa zizithambisi zokhanyiso-lusu\nAnswer: yes\n\nExample 4:\nInput: Bafuna ukundidlisa, utsho uceba we-UDM\nAnswer: yes\n\n\n### Your Turn ###\nInput: Yamkelwe ngezandla ezishushu intwazana ebidlwengulwe yagojwa amehlo eMount Ayliff | EC Indab\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 4559,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of surprise.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: IGOSA LAMAPOLISA ELINGEKHO MSEBENZINI LIBAMBE ABARHANELWA BOKUPHANGA EMONTI | EC Indab\nAnswer: no\n\nExample 2:\nInput: Isigwebo kowadlwengula abafundi baseWSU\nAnswer: no\n\nExample 3:\nInput: Kuqweshe ibanjwa eCala, lijonge ukuxoxa ityala lalo | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Wabulala umfazi kuba engavumi athathe owesibini!\nAnswer: yes\n\n\n### Your Turn ###\nInput: Yamkelwe ngezandla ezishushu intwazana ebidlwengulwe yagojwa amehlo eMount Ayliff | EC Indab\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 4567,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Sisixhiphothi sendoda(63) endala netyholwa ngokudlwengula imveku eneminyaka emine(4) ubudala. | EC Indab\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 4570,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of sadness.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Intsumantsumane ephakathi kweChiefs nePSL isetafileni kaMnu. Zola Majavu\nAnswer: no\n\nExample 2:\nInput: URamaphosa sele esifumene isiqingatha se-R1.2 trillion\nAnswer: no\n\nExample 3:\nInput: Kubanjwe Owasetyhini ngezityholo zokudlwengula intombazana ekwishumi elivisayo ngobusuku bangaphambi kweKrisimesi | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Zintoni ezibulala abakhwetha eMpuma Koloni?\nAnswer: yes\n\n\n### Your Turn ###\nInput: Sisixhiphothi sendoda(63) endala netyholwa ngokudlwengula imveku eneminyaka emine(4) ubudala. | EC Indab\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 4571,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of surprise.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: IGOSA LAMAPOLISA ELINGEKHO MSEBENZINI LIBAMBE ABARHANELWA BOKUPHANGA EMONTI | EC Indab\nAnswer: no\n\nExample 2:\nInput: Isigwebo kowadlwengula abafundi baseWSU\nAnswer: no\n\nExample 3:\nInput: Kuqweshe ibanjwa eCala, lijonge ukuxoxa ityala lalo | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Wabulala umfazi kuba engavumi athathe owesibini!\nAnswer: yes\n\n\n### Your Turn ###\nInput: Sisixhiphothi sendoda(63) endala netyholwa ngokudlwengula imveku eneminyaka emine(4) ubudala. | EC Indab\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 4694,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of fear.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Umzobi uzisula iinyembezi ngokuzoba umama wakhe\nAnswer: no\n\nExample 2:\nInput: Kubanjwe amadoda elayishe inyoka nengwenya\nAnswer: no\n\nExample 3:\nInput: Ubungozi obenziwa zizithambisi zokhanyiso-lusu\nAnswer: yes\n\nExample 4:\nInput: Bafuna ukundidlisa, utsho uceba we-UDM\nAnswer: yes\n\n\n### Your Turn ###\nInput: Indoda idlwengule isalamane sayo\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 4697,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of surprise.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: IGOSA LAMAPOLISA ELINGEKHO MSEBENZINI LIBAMBE ABARHANELWA BOKUPHANGA EMONTI | EC Indab\nAnswer: no\n\nExample 2:\nInput: Isigwebo kowadlwengula abafundi baseWSU\nAnswer: no\n\nExample 3:\nInput: Kuqweshe ibanjwa eCala, lijonge ukuxoxa ityala lalo | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Wabulala umfazi kuba engavumi athathe owesibini!\nAnswer: yes\n\n\n### Your Turn ###\nInput: Indoda idlwengule isalamane sayo\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 4783,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Bane abantwana ababhubhileyo ngenxa yetyhefu!\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 4783,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Bane abantwana ababhubhileyo ngenxa yetyhefu!\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": "The text expresses distress over the deaths of children due to poisoning, but it does not explicitly show anger. There is sorrow or concern present, but no direct signs of anger such as blame, outrage, or a call for retribution.\n\nAnswer: no"
+  },
+  {
+    "index": 4837,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Akakafumaneki umsebenzi womgodi i-Impala\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 4837,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Akakafumaneki umsebenzi womgodi i-Impala\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": "There is no expression of anger in this text. It simply states that a mining job at Impala has not yet been found, which is factual and neutral in tone.\n\nAnswer: no"
+  },
+  {
+    "index": 5140,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of sadness.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Intsumantsumane ephakathi kweChiefs nePSL isetafileni kaMnu. Zola Majavu\nAnswer: no\n\nExample 2:\nInput: URamaphosa sele esifumene isiqingatha se-R1.2 trillion\nAnswer: no\n\nExample 3:\nInput: Kubanjwe Owasetyhini ngezityholo zokudlwengula intombazana ekwishumi elivisayo ngobusuku bangaphambi kweKrisimesi | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Zintoni ezibulala abakhwetha eMpuma Koloni?\nAnswer: yes\n\n\n### Your Turn ###\nInput: Ubanjiwe umalume odlwengule umtshana\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 5141,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of surprise.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: IGOSA LAMAPOLISA ELINGEKHO MSEBENZINI LIBAMBE ABARHANELWA BOKUPHANGA EMONTI | EC Indab\nAnswer: no\n\nExample 2:\nInput: Isigwebo kowadlwengula abafundi baseWSU\nAnswer: no\n\nExample 3:\nInput: Kuqweshe ibanjwa eCala, lijonge ukuxoxa ityala lalo | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Wabulala umfazi kuba engavumi athathe owesibini!\nAnswer: yes\n\n\n### Your Turn ###\nInput: Ubanjiwe umalume odlwengule umtshana\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 5203,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Kubhaqwe indoda ibhubhile KwaZakhele\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 5203,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Kubhaqwe indoda ibhubhile KwaZakhele\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": "This text is a factual statement reporting that a man was found dead in KwaZakhele. There is no indication of anger, emotional expression, or strong negative opinion.\n\nAnswer: no"
+  },
+  {
+    "index": 5618,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of fear.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Umzobi uzisula iinyembezi ngokuzoba umama wakhe\nAnswer: no\n\nExample 2:\nInput: Kubanjwe amadoda elayishe inyoka nengwenya\nAnswer: no\n\nExample 3:\nInput: Ubungozi obenziwa zizithambisi zokhanyiso-lusu\nAnswer: yes\n\nExample 4:\nInput: Bafuna ukundidlisa, utsho uceba we-UDM\nAnswer: yes\n\n\n### Your Turn ###\nInput: Ithath\u2019 indebe iAustralia, bashiyeka bengqukrulela aboMzantsi Afrika!\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'low'}}}}}"
+  },
+  {
+    "index": 5618,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of fear.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Umzobi uzisula iinyembezi ngokuzoba umama wakhe\nAnswer: no\n\nExample 2:\nInput: Kubanjwe amadoda elayishe inyoka nengwenya\nAnswer: no\n\nExample 3:\nInput: Ubungozi obenziwa zizithambisi zokhanyiso-lusu\nAnswer: yes\n\nExample 4:\nInput: Bafuna ukundidlisa, utsho uceba we-UDM\nAnswer: yes\n\n\n### Your Turn ###\nInput: Ithath\u2019 indebe iAustralia, bashiyeka bengqukrulela aboMzantsi Afrika!\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": "The text discusses Australia winning a trophy, while people from South Africa are left disappointed. The language does not mention anything revolting, offensive, or evoking disgust. It is focused on sports competition and its outcomes rather than anything physically or morally unpleasant.\n\nAnswer: no"
+  },
+  {
+    "index": 5887,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Ude wabufumana ubulungisa umtwana, owashiywa lwelokufa yindonda eyamdlwengula ze yamkhupha amehlo. | EC Indab\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 5888,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of fear.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Umzobi uzisula iinyembezi ngokuzoba umama wakhe\nAnswer: no\n\nExample 2:\nInput: Kubanjwe amadoda elayishe inyoka nengwenya\nAnswer: no\n\nExample 3:\nInput: Ubungozi obenziwa zizithambisi zokhanyiso-lusu\nAnswer: yes\n\nExample 4:\nInput: Bafuna ukundidlisa, utsho uceba we-UDM\nAnswer: yes\n\n\n### Your Turn ###\nInput: Ude wabufumana ubulungisa umtwana, owashiywa lwelokufa yindonda eyamdlwengula ze yamkhupha amehlo. | EC Indab\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 5965,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Umnqimbinqa obulele iqabane uvele enkundleni ebukeka okomntu ocing\u2019 eBhakubha\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": "The text describes a person who killed their partner and appeared in court looking like someone from a morgue (\"okomntu ocing\u2019 eBhakubha\"). The reference to looking like someone from a morgue could evoke feelings of disgust due to associations with death and corpses. However, the primary focus is on appearance and not explicitly on disgusting actions or substances. The emotion conveyed is more related"
+  },
+  {
+    "index": 6385,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Kubanjwe indoda eMonti ngezityholo zokuxaphaza abantwana anancinci ngesondo kwi\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 6846,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of anger.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Musa ukuba lixhoba lolwaphulo-mthetho oluqhubeka kumaqonga onxibelelwano\nAnswer: no\n\nExample 2:\nInput: Halala! kumfama onguNontuthuzelo Mbele\nAnswer: no\n\nExample 3:\nInput: Isibindi sokukhuthuza umtu sele efile! | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Ababulali mababulawe nabo xa besixutha ubomi bomtu. | EC Indab\nAnswer: yes\n\n\n### Your Turn ###\nInput: Ukuthelekiswa kwaqela omnyazi kwamkelwe ngovuyo nguMzantsi Afrika!\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 6846,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of anger.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Musa ukuba lixhoba lolwaphulo-mthetho oluqhubeka kumaqonga onxibelelwano\nAnswer: no\n\nExample 2:\nInput: Halala! kumfama onguNontuthuzelo Mbele\nAnswer: no\n\nExample 3:\nInput: Isibindi sokukhuthuza umtu sele efile! | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Ababulali mababulawe nabo xa besixutha ubomi bomtu. | EC Indab\nAnswer: yes\n\n\n### Your Turn ###\nInput: Ukuthelekiswa kwaqela omnyazi kwamkelwe ngovuyo nguMzantsi Afrika!\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": "The text states that a German man has taken the place of Rhulani Mokwena. This suggests an unexpected change or replacement of a well-known person, which can be considered surprising.\n\nAnswer: yes"
+  },
+  {
+    "index": 6847,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Ukuthelekiswa kwaqela omnyazi kwamkelwe ngovuyo nguMzantsi Afrika!\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 6847,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Ukuthelekiswa kwaqela omnyazi kwamkelwe ngovuyo nguMzantsi Afrika!\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": "The text states that a German man has taken the place of Rhulani Mokwena. This suggests an unexpected change or replacement of a well-known person, which can be considered surprising.\n\nAnswer: yes"
+  },
+  {
+    "index": 6848,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of fear.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Umzobi uzisula iinyembezi ngokuzoba umama wakhe\nAnswer: no\n\nExample 2:\nInput: Kubanjwe amadoda elayishe inyoka nengwenya\nAnswer: no\n\nExample 3:\nInput: Ubungozi obenziwa zizithambisi zokhanyiso-lusu\nAnswer: yes\n\nExample 4:\nInput: Bafuna ukundidlisa, utsho uceba we-UDM\nAnswer: yes\n\n\n### Your Turn ###\nInput: Ukuthelekiswa kwaqela omnyazi kwamkelwe ngovuyo nguMzantsi Afrika!\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 6848,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of fear.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Umzobi uzisula iinyembezi ngokuzoba umama wakhe\nAnswer: no\n\nExample 2:\nInput: Kubanjwe amadoda elayishe inyoka nengwenya\nAnswer: no\n\nExample 3:\nInput: Ubungozi obenziwa zizithambisi zokhanyiso-lusu\nAnswer: yes\n\nExample 4:\nInput: Bafuna ukundidlisa, utsho uceba we-UDM\nAnswer: yes\n\n\n### Your Turn ###\nInput: Ukuthelekiswa kwaqela omnyazi kwamkelwe ngovuyo nguMzantsi Afrika!\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": "The text states that a German man has taken the place of Rhulani Mokwena. This suggests an unexpected change or replacement of a well-known person, which can be considered surprising.\n\nAnswer: yes"
+  },
+  {
+    "index": 6851,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of surprise.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: IGOSA LAMAPOLISA ELINGEKHO MSEBENZINI LIBAMBE ABARHANELWA BOKUPHANGA EMONTI | EC Indab\nAnswer: no\n\nExample 2:\nInput: Isigwebo kowadlwengula abafundi baseWSU\nAnswer: no\n\nExample 3:\nInput: Kuqweshe ibanjwa eCala, lijonge ukuxoxa ityala lalo | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Wabulala umfazi kuba engavumi athathe owesibini!\nAnswer: yes\n\n\n### Your Turn ###\nInput: Ukuthelekiswa kwaqela omnyazi kwamkelwe ngovuyo nguMzantsi Afrika!\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 6851,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of surprise.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: IGOSA LAMAPOLISA ELINGEKHO MSEBENZINI LIBAMBE ABARHANELWA BOKUPHANGA EMONTI | EC Indab\nAnswer: no\n\nExample 2:\nInput: Isigwebo kowadlwengula abafundi baseWSU\nAnswer: no\n\nExample 3:\nInput: Kuqweshe ibanjwa eCala, lijonge ukuxoxa ityala lalo | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Wabulala umfazi kuba engavumi athathe owesibini!\nAnswer: yes\n\n\n### Your Turn ###\nInput: Ukuthelekiswa kwaqela omnyazi kwamkelwe ngovuyo nguMzantsi Afrika!\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": "The text discusses a comparison between teams that has been received with joy by South Africa. The use of the word \"joy\" (uvuyo) indicates a positive emotion rather than sadness.\n\nAnswer: no"
+  },
+  {
+    "index": 6913,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Umdlwengule, emxhaxha de wamkrolonqa amehlo umtwana(16) | EC Indab\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 6955,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Liza kubhubhela ejele ixhego eladlwengula umzukulwana!\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": "The text reports a crime (rape) committed by an elderly person against their grandchild, highlighting the severity and consequence (dying in jail). While the subject matter is highly disturbing and evokes moral revulsion, the specific emotional tone of the text focuses on the crime and sentence rather than describing anything physically repulsive, dirty, or explicitly expressing disgust. Therefore, the presence of disgust is not explicit."
+  },
+  {
+    "index": 6959,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of surprise.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: IGOSA LAMAPOLISA ELINGEKHO MSEBENZINI LIBAMBE ABARHANELWA BOKUPHANGA EMONTI | EC Indab\nAnswer: no\n\nExample 2:\nInput: Isigwebo kowadlwengula abafundi baseWSU\nAnswer: no\n\nExample 3:\nInput: Kuqweshe ibanjwa eCala, lijonge ukuxoxa ityala lalo | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Wabulala umfazi kuba engavumi athathe owesibini!\nAnswer: yes\n\n\n### Your Turn ###\nInput: Liza kubhubhela ejele ixhego eladlwengula umzukulwana!\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 7237,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Ubanjiwe utata owadlwengula, wamithisa waze wagrogrisa ngokubulala intombi yakhe\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 7241,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of surprise.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: IGOSA LAMAPOLISA ELINGEKHO MSEBENZINI LIBAMBE ABARHANELWA BOKUPHANGA EMONTI | EC Indab\nAnswer: no\n\nExample 2:\nInput: Isigwebo kowadlwengula abafundi baseWSU\nAnswer: no\n\nExample 3:\nInput: Kuqweshe ibanjwa eCala, lijonge ukuxoxa ityala lalo | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Wabulala umfazi kuba engavumi athathe owesibini!\nAnswer: yes\n\n\n### Your Turn ###\nInput: Ubanjiwe utata owadlwengula, wamithisa waze wagrogrisa ngokubulala intombi yakhe\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 7367,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of surprise.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: IGOSA LAMAPOLISA ELINGEKHO MSEBENZINI LIBAMBE ABARHANELWA BOKUPHANGA EMONTI | EC Indab\nAnswer: no\n\nExample 2:\nInput: Isigwebo kowadlwengula abafundi baseWSU\nAnswer: no\n\nExample 3:\nInput: Kuqweshe ibanjwa eCala, lijonge ukuxoxa ityala lalo | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Wabulala umfazi kuba engavumi athathe owesibini!\nAnswer: yes\n\n\n### Your Turn ###\nInput: Indoda idlwengule umntwana oneminyaka emithathu\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 7781,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of surprise.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: IGOSA LAMAPOLISA ELINGEKHO MSEBENZINI LIBAMBE ABARHANELWA BOKUPHANGA EMONTI | EC Indab\nAnswer: no\n\nExample 2:\nInput: Isigwebo kowadlwengula abafundi baseWSU\nAnswer: no\n\nExample 3:\nInput: Kuqweshe ibanjwa eCala, lijonge ukuxoxa ityala lalo | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Wabulala umfazi kuba engavumi athathe owesibini!\nAnswer: yes\n\n\n### Your Turn ###\nInput: Ibanjiwe indoda edlwengule isizalwane sayo!\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 8036,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of fear.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Umzobi uzisula iinyembezi ngokuzoba umama wakhe\nAnswer: no\n\nExample 2:\nInput: Kubanjwe amadoda elayishe inyoka nengwenya\nAnswer: no\n\nExample 3:\nInput: Ubungozi obenziwa zizithambisi zokhanyiso-lusu\nAnswer: yes\n\nExample 4:\nInput: Bafuna ukundidlisa, utsho uceba we-UDM\nAnswer: yes\n\n\n### Your Turn ###\nInput: Igwetyiwe indoda edlwengula amantombazana aselula\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 8039,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of surprise.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: IGOSA LAMAPOLISA ELINGEKHO MSEBENZINI LIBAMBE ABARHANELWA BOKUPHANGA EMONTI | EC Indab\nAnswer: no\n\nExample 2:\nInput: Isigwebo kowadlwengula abafundi baseWSU\nAnswer: no\n\nExample 3:\nInput: Kuqweshe ibanjwa eCala, lijonge ukuxoxa ityala lalo | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Wabulala umfazi kuba engavumi athathe owesibini!\nAnswer: yes\n\n\n### Your Turn ###\nInput: Igwetyiwe indoda edlwengula amantombazana aselula\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 8257,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Indoda ena-43 idlwengule intombazana ena-5\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 8261,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of surprise.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: IGOSA LAMAPOLISA ELINGEKHO MSEBENZINI LIBAMBE ABARHANELWA BOKUPHANGA EMONTI | EC Indab\nAnswer: no\n\nExample 2:\nInput: Isigwebo kowadlwengula abafundi baseWSU\nAnswer: no\n\nExample 3:\nInput: Kuqweshe ibanjwa eCala, lijonge ukuxoxa ityala lalo | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Wabulala umfazi kuba engavumi athathe owesibini!\nAnswer: yes\n\n\n### Your Turn ###\nInput: Indoda ena-43 idlwengule intombazana ena-5\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 8826,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of anger.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Musa ukuba lixhoba lolwaphulo-mthetho oluqhubeka kumaqonga onxibelelwano\nAnswer: no\n\nExample 2:\nInput: Halala! kumfama onguNontuthuzelo Mbele\nAnswer: no\n\nExample 3:\nInput: Isibindi sokukhuthuza umtu sele efile! | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Ababulali mababulawe nabo xa besixutha ubomi bomtu. | EC Indab\nAnswer: yes\n\n\n### Your Turn ###\nInput: AZI UMNTWANA WONE BANI DE ATSHISWE ESAZE NGOBUSO | EC Indab\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 8826,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of anger.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Musa ukuba lixhoba lolwaphulo-mthetho oluqhubeka kumaqonga onxibelelwano\nAnswer: no\n\nExample 2:\nInput: Halala! kumfama onguNontuthuzelo Mbele\nAnswer: no\n\nExample 3:\nInput: Isibindi sokukhuthuza umtu sele efile! | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Ababulali mababulawe nabo xa besixutha ubomi bomtu. | EC Indab\nAnswer: yes\n\n\n### Your Turn ###\nInput: AZI UMNTWANA WONE BANI DE ATSHISWE ESAZE NGOBUSO | EC Indab\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": "The text quotes a bishop exclaiming \"Konakele!\" (meaning \"It is ruined!\" or \"Something has gone wrong!\"). An exclamation from a bishop about something being ruined or spoiled suggests an element of surprise or shock in response to an unexpected event or situation.\n\nAnswer: yes"
+  },
+  {
+    "index": 8827,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: AZI UMNTWANA WONE BANI DE ATSHISWE ESAZE NGOBUSO | EC Indab\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 8827,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: AZI UMNTWANA WONE BANI DE ATSHISWE ESAZE NGOBUSO | EC Indab\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": "The text quotes a bishop exclaiming \"Konakele!\" (meaning \"It is ruined!\" or \"Something has gone wrong!\"). An exclamation from a bishop about something being ruined or spoiled suggests an element of surprise or shock in response to an unexpected event or situation.\n\nAnswer: yes"
+  },
+  {
+    "index": 8828,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of fear.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Umzobi uzisula iinyembezi ngokuzoba umama wakhe\nAnswer: no\n\nExample 2:\nInput: Kubanjwe amadoda elayishe inyoka nengwenya\nAnswer: no\n\nExample 3:\nInput: Ubungozi obenziwa zizithambisi zokhanyiso-lusu\nAnswer: yes\n\nExample 4:\nInput: Bafuna ukundidlisa, utsho uceba we-UDM\nAnswer: yes\n\n\n### Your Turn ###\nInput: AZI UMNTWANA WONE BANI DE ATSHISWE ESAZE NGOBUSO | EC Indab\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 8828,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of fear.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Umzobi uzisula iinyembezi ngokuzoba umama wakhe\nAnswer: no\n\nExample 2:\nInput: Kubanjwe amadoda elayishe inyoka nengwenya\nAnswer: no\n\nExample 3:\nInput: Ubungozi obenziwa zizithambisi zokhanyiso-lusu\nAnswer: yes\n\nExample 4:\nInput: Bafuna ukundidlisa, utsho uceba we-UDM\nAnswer: yes\n\n\n### Your Turn ###\nInput: AZI UMNTWANA WONE BANI DE ATSHISWE ESAZE NGOBUSO | EC Indab\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": "The text quotes a bishop exclaiming \"Konakele!\" (meaning \"It is ruined!\" or \"Something has gone wrong!\"). An exclamation from a bishop about something being ruined or spoiled suggests an element of surprise or shock in response to an unexpected event or situation.\n\nAnswer: yes"
+  },
+  {
+    "index": 8829,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of joy.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Umdlwengule, emxhaxha de wamkrolonqa amehlo umtwana(16) | EC Indab\nAnswer: no\n\nExample 2:\nInput: IMamelodi Sundowns iyambambezela uKeagan Dolly!\nAnswer: no\n\nExample 3:\nInput: Uthi ufuna ukunceda abaphelelwe lithemba owagaxeleka kwiziyobisi nokuthengisa ngomzimba ngenxa yemphatho\nAnswer: yes\n\nExample 4:\nInput: Usaqhula ekugugeni, ongagugiyo uLottering\nAnswer: yes\n\n\n### Your Turn ###\nInput: AZI UMNTWANA WONE BANI DE ATSHISWE ESAZE NGOBUSO | EC Indab\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 8829,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of joy.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Umdlwengule, emxhaxha de wamkrolonqa amehlo umtwana(16) | EC Indab\nAnswer: no\n\nExample 2:\nInput: IMamelodi Sundowns iyambambezela uKeagan Dolly!\nAnswer: no\n\nExample 3:\nInput: Uthi ufuna ukunceda abaphelelwe lithemba owagaxeleka kwiziyobisi nokuthengisa ngomzimba ngenxa yemphatho\nAnswer: yes\n\nExample 4:\nInput: Usaqhula ekugugeni, ongagugiyo uLottering\nAnswer: yes\n\n\n### Your Turn ###\nInput: AZI UMNTWANA WONE BANI DE ATSHISWE ESAZE NGOBUSO | EC Indab\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": "The text quotes a bishop exclaiming \"Konakele!\" (meaning \"It is ruined!\" or \"Something has gone wrong!\"). An exclamation from a bishop about something being ruined or spoiled suggests an element of surprise or shock in response to an unexpected event or situation.\n\nAnswer: yes"
+  },
+  {
+    "index": 8831,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of surprise.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: IGOSA LAMAPOLISA ELINGEKHO MSEBENZINI LIBAMBE ABARHANELWA BOKUPHANGA EMONTI | EC Indab\nAnswer: no\n\nExample 2:\nInput: Isigwebo kowadlwengula abafundi baseWSU\nAnswer: no\n\nExample 3:\nInput: Kuqweshe ibanjwa eCala, lijonge ukuxoxa ityala lalo | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Wabulala umfazi kuba engavumi athathe owesibini!\nAnswer: yes\n\n\n### Your Turn ###\nInput: AZI UMNTWANA WONE BANI DE ATSHISWE ESAZE NGOBUSO | EC Indab\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 8831,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of surprise.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: IGOSA LAMAPOLISA ELINGEKHO MSEBENZINI LIBAMBE ABARHANELWA BOKUPHANGA EMONTI | EC Indab\nAnswer: no\n\nExample 2:\nInput: Isigwebo kowadlwengula abafundi baseWSU\nAnswer: no\n\nExample 3:\nInput: Kuqweshe ibanjwa eCala, lijonge ukuxoxa ityala lalo | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Wabulala umfazi kuba engavumi athathe owesibini!\nAnswer: yes\n\n\n### Your Turn ###\nInput: AZI UMNTWANA WONE BANI DE ATSHISWE ESAZE NGOBUSO | EC Indab\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": "The text describes a situation where a child is not identified (unknown parentage) and is burned, including the face. This indicates a tragic and distressing event, which carries a strong presence of sadness.\n\nAnswer: yes"
+  },
+  {
+    "index": 9031,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Ugwetyiwe owadlwengula inkosikazi phambi kwendoda yayo\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": "The text describes a person who was sentenced for raping a woman in front of her husband. While the act described is horrific and morally repugnant, the specific emotion conveyed in the wording is not disgust itself, but rather recounting a criminal act. The language does not focus on sensory revulsion or things that are physically or socially 'disgusting', but instead relates to a crime and its"
+  },
+  {
+    "index": 9035,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of surprise.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: IGOSA LAMAPOLISA ELINGEKHO MSEBENZINI LIBAMBE ABARHANELWA BOKUPHANGA EMONTI | EC Indab\nAnswer: no\n\nExample 2:\nInput: Isigwebo kowadlwengula abafundi baseWSU\nAnswer: no\n\nExample 3:\nInput: Kuqweshe ibanjwa eCala, lijonge ukuxoxa ityala lalo | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Wabulala umfazi kuba engavumi athathe owesibini!\nAnswer: yes\n\n\n### Your Turn ###\nInput: Ugwetyiwe owadlwengula inkosikazi phambi kwendoda yayo\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 9085,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Ufuna ilungu lobudoda lomntwana wakhe\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 9089,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of surprise.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: IGOSA LAMAPOLISA ELINGEKHO MSEBENZINI LIBAMBE ABARHANELWA BOKUPHANGA EMONTI | EC Indab\nAnswer: no\n\nExample 2:\nInput: Isigwebo kowadlwengula abafundi baseWSU\nAnswer: no\n\nExample 3:\nInput: Kuqweshe ibanjwa eCala, lijonge ukuxoxa ityala lalo | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Wabulala umfazi kuba engavumi athathe owesibini!\nAnswer: yes\n\n\n### Your Turn ###\nInput: Ufuna ilungu lobudoda lomntwana wakhe\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 9541,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: Iphelile indlela yama-Arab emva kokubethwa yiFrance ngo\u20192-0\nAnswer: no\n\nExample 2:\nInput: Amapolisa adubule unqevu wasweleka\nAnswer: no\n\nExample 3:\nInput: Umnenga onuka phuqu kulwandle lwaseMonti\nAnswer: yes\n\nExample 4:\nInput: Uceba \u2018wonyanya ilindle\u2019 ebantwini bakhe\nAnswer: yes\n\n\n### Your Turn ###\nInput: Ubanjelwe ukudlwengula intwazana ena- 7 !\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 9545,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of surprise.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n\n### Examples ###\nExample 1:\nInput: IGOSA LAMAPOLISA ELINGEKHO MSEBENZINI LIBAMBE ABARHANELWA BOKUPHANGA EMONTI | EC Indab\nAnswer: no\n\nExample 2:\nInput: Isigwebo kowadlwengula abafundi baseWSU\nAnswer: no\n\nExample 3:\nInput: Kuqweshe ibanjwa eCala, lijonge ukuxoxa ityala lalo | EC Indab\nAnswer: yes\n\nExample 4:\nInput: Wabulala umfazi kuba engavumi athathe owesibini!\nAnswer: yes\n\n\n### Your Turn ###\nInput: Ubanjelwe ukudlwengula intwazana ena- 7 !\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  }
+]

@@ -406,7 +406,7 @@ def evaluate_model_on_test_set(
         generation_results = []
         parsed_outputs = []
         raw_outputs = []
-        MAX_RETRIES = 20
+        MAX_RETRIES = 5
         for i, prompt in enumerate(prompts):
             output = None
             parsed = None
