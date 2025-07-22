@@ -19,13 +19,13 @@ set GEMINI_API_ENDPOINT="https://generativelanguage.googleapis.com/v1beta/models
 cd C:\Users\caoca\Documents\GitHub\BRIGHTER
 
 Preforming on Laptop
-python llms.py --model_name "openai/gpt-4" --task "binary" --n_shot 4 
-python llms.py --model_name "openai/gpt-4" --task "intensity" --n_shot 4 
+python llms.py --model_name "openai/gpt-4" --task "binary" --n_shot 4 --skip_existing 
+python llms.py --model_name "openai/gpt-4" --task "intensity" --n_shot 4 --skip_existing 
 v
 
 Preforming on PC
-python llms.py --model_name "openai/gpt-4" --task "binary" --n_shot 0 
-python llms.py --model_name "openai/gpt-4" --task "intensity" --n_shot 0 
+python llms.py --model_name "openai/gpt-4" --task "binary" --n_shot 0 --skip_existing 
+python llms.py --model_name "openai/gpt-4" --task "intensity" --n_shot 0 --skip_existing 
 v
 
 Gemini Not Done
