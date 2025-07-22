@@ -9,10 +9,11 @@ import wandb
 import random
 from openai import AzureOpenAI
 import pathlib
+import socket
 from collections import defaultdict
 wandb.init(mode="disabled")
 import glob
-
+import time
 
 from sklearn.metrics import f1_score
 from scipy.stats import pearsonr
@@ -410,7 +411,10 @@ def evaluate_model_on_test_set(
         for i, prompt in enumerate(prompts):
             output = None
             parsed = None
-            for attempt in range(1, MAX_RETRIES + 1): 
+            text = ""
+            attempt = 1
+
+            while attempt <= MAX_RETRIES:
                 try:
                     response = client.chat.completions.create(
                         model="gpt-4.1",
@@ -425,37 +429,39 @@ def evaluate_model_on_test_set(
                     if parsed is not None:
                         output = text.strip()
                         break
-                    print(f"[RETRY] Prompt #{i} gave unparseable output: {repr(text)} — retrying…")
 
+                    print(f"[RETRY] Prompt #{i} gave unparseable output: {repr(text)} — retrying…")
+                    time.sleep(1)  # avoid hammering
                 except Exception as e:
                     err = str(e)
-                    # on policy violation → log+stop retrying
+
                     if "content management policy" in err or "ResponsibleAIPolicyViolation" in err:
                         print(f"[FLAGGED] Prompt #{i} violated policy: {err}")
                         flagged_prompts.append({"index": i, "prompt": prompt, "error": err})
                         break
-                    # otherwise → immediate retry
-                    print(f"[ERROR] Prompt #{i} error: {err} — retrying…")
 
-            # after retry loop
+                    if isinstance(e, (socket.gaierror, ConnectionError)) or "Temporary failure in name resolution" in err:
+                        print(f"[OFFLINE] Prompt #{i} failed due to no internet. Waiting and retrying...")
+                        time.sleep(10)
+                        continue
+
+                    print(f"[ERROR] Prompt #{i} error: {err} — retrying (attempt {attempt}/{MAX_RETRIES})")
+                    attempt += 1
+
             if output is None:
                 print(f"[SKIPPED] Prompt #{i} failed after {MAX_RETRIES} attempts.")
                 raw_outputs.append("")
                 parsed_outputs.append(None)
-
-                # Log the failed attempt in flagged_prompts
                 flagged_prompts.append({
                     "index": i,
                     "prompt": prompt,
                     "reason": f"Max retries reached with unparseable output after {MAX_RETRIES} attempts.",
-                    "last_output": text.strip() if 'text' in locals() else ""
+                    "last_output": text.strip() if isinstance(text, str) else "Unknown"
                 })
                 continue
 
-            # we have a valid answer
             print(f"\n--- Prompt #{i} ---")
             print(f"Prompt:\n{prompt}\nOutput:\n{output}\n")
-
             raw_outputs.append(output)
             parsed_outputs.append(parsed)
     elif model_name == "google/gemini-2F":
@@ -469,72 +475,82 @@ def evaluate_model_on_test_set(
         headers = {
             "Content-Type": "application/json"
         }
-
+        BASE_BACKOFF = 5
+        MAX_BACKOFF= 300
         flagged_prompts = []
-        generation_results = []
+        raw_outputs = []
+        parsed_outputs = []
+        MAX_RETRIES = 5
 
         for i, prompt in enumerate(prompts):
-            while True:
+            output = None
+            parsed = None
+
+            for attempt in range(1, MAX_RETRIES + 1):
+                payload = {
+                    "contents": [{
+                        "parts": [{"text": prompt}],
+                        "role": "user"
+                    }]
+                }
                 try:
-                    payload = {
-                        "contents": [{
-                            "parts": [{"text": prompt}],
-                            "role": "user"
-                        }]
-                    }
-
-                    response = requests.post(GEMINI_API_ENDPOINT, headers=headers, json=payload)
-                    response.raise_for_status()
-                    resp_json = response.json()
-
-                    candidates = resp_json.get("candidates", [])
-                    if not candidates:
-                        raise ValueError("No response candidates from Gemini.")
-
-                    output = candidates[0]["content"]["parts"][0]["text"]
-                    output = output.strip()
-
-                    print(f"\n--- Prompt #{i} ---")
-                    print(f"Prompt:\n{prompt}\n")
-                    print(f"Output:\n{output}\n")
-
-                    generation_results.append(
-                        type("LLMOutput", (object,), {
-                            "outputs": [type("Obj", (object,), {"text": output})()]
-                        })()
+                    response = requests.post(
+                        GEMINI_API_ENDPOINT,
+                        headers=headers,
+                        json=payload
                     )
-                    break
-                except requests.exceptions.HTTPError as e:
-                    error_str = str(e)
-                    if response.status_code == 429:
-                        print(f"[RATE LIMIT] Prompt #{i} rate limited. Waiting 30 seconds before retry.")
-                        import time
-                        time.sleep(30)
-                        continue
+                    print(f"[DEBUG] Prompt #{i} Attempt {attempt} → HTTP {response.status_code}")
+                    print(f"[DEBUG] Full response body:\n{response.text}\n")
+                    response.raise_for_status()
 
-                    if "content policy" in error_str.lower():
-                        print(f"[FLAGGED] Prompt #{i} violated content policy:\n{error_str}")
+                    text = response.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+                    print(f"[DEBUG] Raw model text for prompt #{i}:\n{text!r}\n")
+                    parsed = parse_output(text, task)
+                    if parsed is not None:
+                        output = text
+                        break
+                    print(f"[RETRY] Prompt #{i} unparseable: {repr(text)} — retrying…")
+
+                except requests.exceptions.HTTPError as e:
+                    code = response.status_code
+                    # Retry on rate-limit or service-unavailable
+                    if code in (429, 503):
+                        backoff = min(BASE_BACKOFF * 2**(attempt - 1), MAX_BACKOFF)
+                        sleep_time = random.uniform(0, backoff)
+                        print(f"[{code}] attempt {attempt}/{MAX_RETRIES}, sleeping {sleep_time:.1f}s…")
+                        time.sleep(sleep_time)
+                        continue
+                    # Policy violations: stop retrying this prompt
+                    if "content policy" in str(e).lower():
                         flagged_prompts.append({
                             "index": i,
                             "prompt": prompt,
-                            "error": error_str
+                            "error": str(e)
                         })
-                        generation_results.append(
-                            type("LLMOutput", (object,), {
-                                "outputs": [type("Obj", (object,), {"text": ""})()]
-                            })()
-                        )
                         break
+                    # Other HTTP errors: treat as fatal
+                    print(f"[ERROR] HTTP {code} for prompt #{i}: {e}")
+                    break
 
-                    print(f"[RETRYING] Prompt #{i} failed due to: {error_str}\nRetrying in 5 seconds...")
-                    import time
-                    time.sleep(5)
+                except (requests.exceptions.ConnectionError, socket.gaierror) as e:
+                    # Transient network error: small constant backoff
+                    print(f"[OFFLINE] {e}, sleeping {BASE_BACKOFF}s…")
+                    time.sleep(BASE_BACKOFF)
+                    continue
 
-                except Exception as e:
-                    error_str = str(e)
-                    print(f"[RETRYING] Prompt #{i} failed due to: {error_str}\nRetrying in 5 seconds...")
-                    import time
-                    time.sleep(5)
+            # After the retry loop
+            if output is None:
+                print(f"[SKIPPED] Prompt #{i} failed after {MAX_RETRIES} attempts.")
+                flagged_prompts.append({
+                    "index": i,
+                    "prompt": prompt,
+                    "reason": f"Max retries reached after {MAX_RETRIES} attempts"
+                })
+                raw_outputs.append("")
+                parsed_outputs.append(None)
+            else:
+                raw_outputs.append(output)
+                parsed_outputs.append(parsed)
     # ------------------------------------------------------
     # 3) Generate predictions with vLLM
     # ------------------------------------------------------
@@ -773,18 +789,21 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if "openai" not in args.model_name:
-        from vllm import LLM, SamplingParams
+    
 
     # Load model
     model_name = args.model_name
     safe_model = model_name.replace("/", "_")
-    print(f"\n>>> Loading LLM: {model_name} with vLLM ...")
-    if model_name != "openai/gpt-4":
-        engine = LLM(model=model_name, tokenizer=model_name,
-                tensor_parallel_size=args.tensor_parallel_size)
+    print(f"\n>>> Loading LLM: {model_name} ")
+    if not args.model_name.startswith("openai/") and not args.model_name.startswith("google/gemini"):
+       from vllm import LLM, SamplingParams
+       engine = LLM(
+           model=model_name,
+           tokenizer=model_name,
+           tensor_parallel_size=args.tensor_parallel_size
+       )
     else:
-        engine = None
+       engine = None
     print(" LLM engine loaded.\n")
 
     for lang in ALL_LANGUAGES:
@@ -804,6 +823,7 @@ if __name__ == "__main__":
         # Check if the output file exists and then skip if it does if the args.skip_existing is set
         if args.skip_existing and os.path.exists(out_json):
             print(f"Output file {out_json} already exists. Skipping.")
+            print(f"[DEBUG] skip_existing={args.skip_existing}, checking {out_json} exists? {os.path.exists(out_json)}")
             continue
 
         # Check if we have a valid test CSV
