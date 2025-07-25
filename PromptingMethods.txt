@@ -1,0 +1,11 @@
+Prompting Methods 
+Self Refine: Iterative refinement with Self Feedback
+
+SELF-CONSISTENCY IMPROVES CHAIN OF THOUGHT
+REASONING IN LANGUAGE MODELS
+
+Tree of Thoughts: Deliberate Problem Solving
+with Large Language Models
+
+REAC T : SYNERGIZING REASONING AND ACTING IN
+LANGUAGE MODELS

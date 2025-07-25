@@ -14,16 +14,20 @@ from collections import defaultdict
 wandb.init(mode="disabled")
 import glob
 import time
-
+import numpy as np
+import pandas as pd
 from sklearn.metrics import f1_score
 from scipy.stats import pearsonr
+import sys
 
-# Import vLLM components
+class SamplingParams:
+    def __init__(self, max_tokens, temperature, top_p, n):
+        self.max_tokens = max_tokens
+        self.temperature = temperature
+        self.top_p = top_p
+        self.n = n
 
 
-
-
-# Azure OpenAI Setup
 AZURE_OPENAI_DEPLOYMENT = "gpt-4.1"  # Set this to your Azure deployment name
 AZURE_OPENAI_VERSION = "2025-01-01-preview"
 
@@ -151,6 +155,15 @@ TASK_CONFIGS = {
                 "Examine the following text to determine whether {{EMOTION}} is present.\n"
                 "Provide a concise explanation for your assessment and end with 'Answer:' followed by either 'yes' or 'no'."
             ),
+            "dummy": (
+               "You are an expert analyzer. Read the text and think step by step about whether it conveys {{EMOTION}}.\n"
+               "Show your chain of thought, then conclude with 'Answer:' followed by 'yes' or 'no'."
+            ),
+            "tree_of_thoughts": (
+                "You are solving the task of identifying whether the emotion {{EMOTION}} is present in a text.\n"
+                "Reason through multiple steps if needed. Each step should bring you closer to the final answer.\n"
+                "After thinking it through, answer clearly: 'Answer: yes' or 'no'."
+            ),
         },
     },
     "intensity": {
@@ -241,27 +254,22 @@ def construct_prompt(prompt_template: str,
 
     return out
 
-def robust_parse_binary(generated_text: str) -> int:
-    """
-    Extracts the answer from the model output for binary classification.
-    Looks for the exact phrase 'Answer: yes' or 'Answer: no' and returns 1 or 0.
-    """
-    match = re.search(r"Answer:\s*(yes|no)", generated_text, re.IGNORECASE)
-    if match:
-        return 1 if match.group(1).lower() == "yes" else 0
-    print(f"Warning: Could not parse binary answer from: {generated_text}")
+def robust_parse_binary(output: str) -> Optional[int]:
+    # Only use the LAST "Answer: ..." line
+    lines = output.strip().splitlines()
+    for line in reversed(lines):
+        match = re.match(r"^Answer:\s*(yes|no)$", line.strip(), re.IGNORECASE)
+        if match:
+            return 1 if match.group(1).lower() == "yes" else 0
     return None
 
 
-def robust_parse_intensity(generated_text: str) -> int:
-    """
-    Extracts the answer from the model output for intensity classification.
-    Looks for 'Answer: 0', 'Answer: 1', 'Answer: 2', or 'Answer: 3' exactly.
-    """
-    match = re.search(r"Answer:\s*([0-3])", generated_text)
-    if match:
-        return int(match.group(1))
-    print(f"Warning: Could not parse intensity answer from: {generated_text}")
+def robust_parse_intensity(output: str) -> Optional[int]:
+    lines = output.strip().splitlines()
+    for line in reversed(lines):
+        match = re.match(r"^Answer:\s*([0-3])$", line.strip())
+        if match:
+            return int(match.group(1))
     return None
 
 def parse_output(generated_text: str, task: str) -> int:
@@ -270,18 +278,255 @@ def parse_output(generated_text: str, task: str) -> int:
     else:
         return robust_parse_intensity(generated_text)
 
+
+def run_tree_of_thoughts(
+    prompt_base: str,
+    emotion: str,
+    task: str,
+    llm: AzureEngineWrapper,
+    max_steps: int = 3,
+    beam_width: int = 3,
+    max_retries: int = 5
+) -> Tuple[Optional[int], List[dict]]:
+    """
+    Simplified Tree of Thoughts with retry + moderation handling.
+    Returns (final_answer, flagged_prompts).
+    """
+    state_queue = [""]
+    all_flagged = []
+
+    for step in range(max_steps):
+        new_states = []
+        for state in state_queue:
+            full_prompt = prompt_base + state
+            prompts = [full_prompt] * beam_width
+            sampling = SamplingParams(
+                max_tokens=80, temperature=0.7, top_p=0.95, n=beam_width
+            )
+
+            max_thought_retries = 10
+            thought_retry_count = 0
+            success = False
+            while thought_retry_count < max_thought_retries:
+                thought_retry_count += 1
+                try:
+                    result = llm.generate(prompts, sampling)[0]
+                    parseable_thoughts = 0
+                    for thought in result.texts:
+                        branch = state + thought.strip() + "\n"
+                        if parse_output(branch, task) is not None:
+                            new_states.append(branch)
+                            parseable_thoughts += 1
+
+                    if parseable_thoughts > 0:
+                        success = True
+                        break  # ✅ got at least one valid child state
+
+                except Exception as e:
+                    err = str(e)
+                    if "policy" in err.lower() or "violation" in err.lower():
+                        all_flagged.append({
+                            "step": step,
+                            "state": state,
+                            "error": err,
+                            "reason": "content policy violation"
+                        })
+                        break
+                    if isinstance(e, (ConnectionError, socket.gaierror)) or "connection" in err.lower():
+                        time.sleep(2 ** thought_retry_count)
+                        continue
+                    time.sleep(1)
+
+            # ❌ If all retries failed to produce a parseable thought
+            if not success:
+                all_flagged.append({
+                    "input_text": input_text,
+                    "emotion": emotion,
+                    "task": task,
+                    "step": step,
+                    "state": state,
+                    "error": "No parseable thoughts after max retries",
+                    "prompt": full_prompt
+                })
+
+        # prune to top‑beam_width by length
+        state_queue = sorted(new_states, key=lambda s: -len(s))[:beam_width]
+        if not state_queue:
+            break
+
+    # final voting
+    answers = [parse_output(s, task) for s in state_queue]
+    answers = [a for a in answers if a is not None]
+    if not answers:
+        return None, all_flagged
+
+    if task == "binary":
+        final = max(set(answers), key=answers.count)
+    else:
+        final = round(sum(answers) / len(answers))
+
+    return final, all_flagged
+def sample_dataset(csv_path: str, sample_size: int) -> pd.DataFrame:
+    """
+    Load the CSV and greedily sample `sample_size` rows so that
+    each of the six emotions is covered roughly equally.
+
+    We assign each row a multi-hot vector over emotions,
+    then at each step pick the row that best reduces the
+    current imbalance vs. the ideal target count per emotion.
+    """
+    df = pd.read_csv(csv_path)
+    all_emotions = ["anger", "disgust", "fear", "joy", "sadness", "surprise"]
+    emotions     = [emo for emo in all_emotions if emo in df.columns]
+    if not emotions:
+        raise ValueError(f"No emotion columns found in {csv_path}: expected one of {all_emotions}")
+
+    # compute float target per emotion
+    target = {emo: sample_size / len(emotions) for emo in emotions}
+
+    # precompute each row’s emotion vector
+    vectors = df[emotions].fillna(0).astype(int).to_numpy()
+
+    chosen_idxs = []
+    counts = np.zeros(len(emotions), dtype=float)
+
+    # greedy selection
+    for _ in range(min(sample_size, len(df))):
+        # for each candidate not yet chosen, compute new counts if picked
+        best_idx, best_score = None, float('inf')
+        for idx in range(len(df)):
+            if idx in chosen_idxs:
+                continue
+            new_counts = counts + vectors[idx]
+            # squared error to target
+            err = sum((new_counts[i] - target[emo])**2 for i, emo in enumerate(emotions))
+            if err < best_score:
+                best_score, best_idx = err, idx
+        if best_idx is None:
+            break
+        chosen_idxs.append(best_idx)
+        counts += vectors[best_idx]
+
+    sampled = df.iloc[chosen_idxs].reset_index(drop=True)
+    print(f"[INFO] Sampled {len(sampled)} rows (target was {sample_size}).")
+    for i, emo in enumerate(emotions):
+        print(f"[INFO] {emo:8s}: sampled {int(counts[i])} vs. target {target[emo]:.1f}")
+    return sampled
+
+def sample_dataset_intensity(csv_path: str, sample_size: int) -> pd.DataFrame:
+    """
+    Load the CSV and greedily sample `sample_size` rows so that
+    each of the 6 emotions × 4 intensity levels (0–3) is covered roughly equally.
+
+    We build a one‑hot 24‑dim vector per row, then at each step
+    pick the row that best reduces the squared‑error to the ideal counts.
+    """
+    df = pd.read_csv(csv_path)
+    all_emotions = ["anger", "disgust", "fear", "joy", "sadness", "surprise"]
+    emotions     = [emo for emo in all_emotions if emo in df.columns]
+    if not emotions:
+        raise ValueError(f"No emotion columns found in {csv_path}: expected one of {all_emotions}")
+    levels = [0, 1, 2, 3]
+
+    # target per (emotion, level) category
+    target = sample_size / (len(emotions) * len(levels))
+
+    # build a (N, 24) matrix: one-hot for each (i_emotion, level)
+    N = len(df)
+    vecs = np.zeros((N, len(emotions)*len(levels)), dtype=int)
+    for i, emo in enumerate(emotions):
+        vals = df[emo].fillna(0).astype(int).clip(0,3).to_numpy()
+        for j, lvl in enumerate(levels):
+            vecs[:, i*4 + j] = (vals == lvl).astype(int)
+
+    chosen, counts = [], np.zeros(len(emotions)*len(levels), dtype=float)
+
+    for _ in range(min(sample_size, N)):
+        best_idx, best_err = None, float("inf")
+        for idx in range(N):
+            if idx in chosen:
+                continue
+            new_counts = counts + vecs[idx]
+            err = ((new_counts - target)**2).sum()
+            if err < best_err:
+                best_err, best_idx = err, idx
+
+        if best_idx is None:
+            break
+        chosen.append(best_idx)
+        counts += vecs[best_idx]
+
+    sampled = df.iloc[chosen].reset_index(drop=True)
+    print(f"[INFO] Sampled {len(sampled)} rows (target was {sample_size}).")
+    # report per‑category counts
+    for i, emo in enumerate(emotions):
+        for j, lvl in enumerate(levels):
+            cnt = int(counts[i*4 + j])
+            print(f"[INFO] {emo:8s} lvl {lvl}: sampled {cnt} vs. target {target:.1f}")
+    return sampled
+
+if os.getenv("TEST_SAMPLER") == "1":
+    # pick a real CSV (here for binary’s English test set)
+    test_csv = os.path.join(TEST_DIRS["intensity"], "eng.csv")
+    for size in [24, 48, 96, 192]:
+        print(f"\n=== Testing binary sampler for sample_size={size} ===")
+        _ = sample_dataset(test_csv, size)
+        print(f"\n=== Testing intensity sampler for sample_size={size} ===")
+        _ = sample_dataset_intensity(test_csv, size)
+    df = pd.read_csv("./track_a/test/eng.csv")
+
+# Emotions you're interested in
+    emotions = ["anger", "disgust", "fear", "joy", "sadness", "surprise"]
+
+    # Loop through each emotion column and show how many times each intensity appears
+    for emo in emotions:
+        if emo in df.columns:
+            print(f"{emo}: {df[emo].value_counts().sort_index().to_dict()}")
+        else:
+            print(f"{emo}: [COLUMN MISSING]")
+    sys.exit(0)
+
+class AzureEngineWrapper:
+    def __init__(self, client, model_name):
+        self.client = client
+        self.model_name = model_name
+
+    def generate(self, prompts, sampling_params):
+        class Result:
+            def __init__(self, texts):
+                self.texts = texts
+        results = []
+        for prompt in prompts:
+            response = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=sampling_params.max_tokens,
+                temperature=sampling_params.temperature,
+                top_p=sampling_params.top_p,
+                n=sampling_params.n
+            )
+            texts = [choice.message.content.strip() for choice in response.choices]
+            results.append(Result(texts))
+        return results
+
 ###########################################################
 # EVALUATION
 ###########################################################
 def evaluate_model_on_test_set(
-    engine,
+    engine,                         
+    azure_llm: AzureEngineWrapper,  
     test_data: List[dict],
     prompt_template: str,
     task: str,
     top_k: int,
     n_shot: int,
-    model_name: str,
-    out_json: str
+    reasoning_mode: str,            
+    max_steps: int,                 
+    beam_width: int,
+    out_json: str #Usless do not use
 ) -> dict:
     # ------------------------------------------------------
     # 1) Sample few-shot examples from test_data
@@ -388,7 +633,63 @@ def evaluate_model_on_test_set(
         )
         for sample in test_data
     ]
+    all_raw = []
+    all_preds = []
+    all_flagged = []
 
+    if reasoning_mode == "default":
+        # single-shot/few-shot: either call engine.generate if using vLLM,
+        # or azure_llm.generate with n=top_k
+        sampling = SamplingParams(
+            max_tokens=80,
+            temperature=0.0 if top_k == 1 else 0.7,
+            top_p=0.95,
+            n=top_k
+        )
+        results = (engine or azure_llm).generate(prompts, sampling)
+        for res in results:
+            # res.texts is a list of length `n`
+            all_raw.append(res.texts)
+            # parse each and majority‐vote:
+            candidates = [parse_output(text, task) for text in res.texts]
+            candidates = [c for c in candidates if c is not None]
+            pred = (max(set(candidates), key=candidates.count)
+                    if task=="binary"
+                    else round(sum(candidates)/len(candidates)))
+            all_preds.append(pred)
+
+    elif reasoning_mode == "self_consistency":
+        # sample `top_k` chains and vote
+        sampling = SamplingParams(
+            max_tokens=80, temperature=0.7, top_p=0.95, n=top_k
+        )
+        results = azure_llm.generate(prompts, sampling)
+        for res in results:
+            all_raw.append(res.texts)
+            parsed = [parse_output(t, task) for t in res.texts]
+            parsed = [p for p in parsed if p is not None]
+            if not parsed:
+                all_preds.append(None)
+            else:
+                if task == "binary":
+                    all_preds.append(max(set(parsed), key=parsed.count))
+                else:
+                    all_preds.append(round(sum(parsed)/len(parsed)))
+
+    else:  # tree_of_thoughts
+        # run ToT individually on each prompt
+        for prompt, sample in zip(prompts, test_data):
+            pred, flagged = run_tree_of_thoughts(
+                prompt_base=prompt,
+                emotion=sample["emotion"],
+                task=task,
+                llm=azure_llm,
+                max_steps=max_steps,
+                beam_width=beam_width
+            )
+            all_raw.append(None)      # no raw list for ToT
+            all_preds.append(pred)
+            all_flagged.extend(flagged)
     print(f"  Running evaluation for {len(prompts)} samples ...")
     if len(prompts) > 0:
         print(f"  Example prompt:\n{prompts[0]}\n---")
@@ -396,14 +697,58 @@ def evaluate_model_on_test_set(
         from openai import AzureOpenAI
 
         print("Using Azure GPT-4.1...")
+            # collect per‑emotion lists
+            emotion2refs = defaultdict(list)
+            emotion2preds = defaultdict(list)
+            for i, sample in enumerate(test_data):
+                gold = sample["label"]
+                pred = parsed_outputs[i]
+                if pred is None:
+                    continue
+                emo = sample["emotion"]
+                emotion2refs[emo].append(gold)
+                emotion2preds[emo].append(pred)
+
+            # write out predictions as CSV
+            out_path = pathlib.Path(out_json)
+            csv_path = out_path.with_name(out_path.stem + "_predictions.csv")
+            os.makedirs(os.path.dirname(csv_path), exist_ok=True)
+            with open(csv_path, "w", encoding="utf-8", newline="") as f:
+                writer = csv.writer(f)
+                writer.writerow(["prompt_index", "prompt", "raw_outputs", "parsed", "gold", "emotion"])
+                for idx, (sample, prompt, outputs) in enumerate(zip(test_data, prompts, raw_outputs)):
+                    writer.writerow([
+                        idx,
+                        prompt,
+                        outputs,
+                        parsed_outputs[idx],
+                        sample["label"],
+                        sample["emotion"],
+                    ])
+
+            # now compute and return metrics
+            if task == "binary":
+                f1_per_emotion = {}
+                for emo, refs in emotion2refs.items():
+                    preds = emotion2preds[emo]
+                    f1_per_emotion[emo] = f1_score(refs, preds, average="binary", zero_division=0)
+                macro_f1 = sum(f1_per_emotion.values()) / len(f1_per_emotion)
+                return {
+                    "f1_per_emotion": f1_per_emotion,
+                    "macro_f1": macro_f1
+                }
+            else:
+                pearson_per_emotion = {}
+                for emo, refs in emotion2refs.items():
+                    preds = emotion2preds[emo]
+                    pearson_per_emotion[emo] = pearsonr(refs, preds)[0] if len(refs) >= 2 else 0.0
+                avg_pearson = sum(pearson_per_emotion.values()) / len(pearson_per_emotion)
+                return {
+                    "pearson_per_emotion": pearson_per_emotion,
+                    "avg_pearson": avg_pearson
+                }
 
         flagged_prompts = []
-
-        client = AzureOpenAI(
-            api_key=os.getenv("AZURE_OPENAI_KEY"),
-            api_version="2025-01-01-preview",
-            base_url=os.getenv("AZURE_OPENAI_ENDPOINT") + "/openai/deployments/gpt-4.1"
-        )
         generation_results = []
         parsed_outputs = []
         raw_outputs = []
@@ -416,22 +761,43 @@ def evaluate_model_on_test_set(
 
             while attempt <= MAX_RETRIES:
                 try:
-                    response = client.chat.completions.create(
-                        model="gpt-4.1",
-                        messages=[
-                            {"role": "system", "content": "You are a helpful assistant."},
-                            {"role": "user", "content": [{"type": "text", "text": prompt}]}
-                        ],
-                        max_tokens=80
-                    )
-                    text = (response.choices[0].message.content or "")
-                    parsed = parse_output(text, task)
-                    if parsed is not None:
-                        output = text.strip()
-                        break
+                    if use_tree_of_thoughts:
+                        parsed, new_flags = run_tree_of_thoughts(
+                            prompt_base=prompt,
+                            emotion=sample["emotion"],
+                            task=task,
+                            llm=azure_llm,
+                            max_steps=3,
+                            beam_width=3
+                        )
+                        flagged_prompts.extend(new_flags)
+                        raw_outputs.append("[ToT inference used]")
+                        parsed_outputs.append(parsed)
+                        generation_results.append({
+                            "input": sample["text"],
+                            "emotion": sample["emotion"],
+                            "target": sample["label"],
+                            "output": "[ToT inference used]",
+                            "parsed": parsed
+                        })
+                        output = "[ToT inference used]"
+                    else:
+                        response = client.chat.completions.create(
+                            model="gpt-4.1",
+                            messages=[
+                                {"role": "system", "content": "You are a helpful assistant."},
+                                {"role": "user", "content": [{"type": "text", "text": prompt}]}
+                            ],
+                            max_tokens=80
+                        )
+                        text = (response.choices[0].message.content or "")
+                        parsed = parse_output(text, task)
+                        if parsed is not None:
+                            output = text.strip()
+                            break
 
-                    print(f"[RETRY] Prompt #{i} gave unparseable output: {repr(text)} — retrying…")
-                    time.sleep(1)  # avoid hammering
+                        print(f"[RETRY] Prompt #{i} gave unparseable output: {repr(text)} — retrying…")
+                        time.sleep(1)  # avoid hammering
                 except Exception as e:
                     err = str(e)
 
@@ -440,7 +806,7 @@ def evaluate_model_on_test_set(
                         flagged_prompts.append({"index": i, "prompt": prompt, "error": err})
                         break
 
-                    if isinstance(e, (socket.gaierror, ConnectionError)) or "Temporary failure in name resolution" in err:
+                    if isinstance(e, (socket.gaierror, ConnectionError)) or "Connection" in err:
                         print(f"[OFFLINE] Prompt #{i} failed due to no internet. Waiting and retrying...")
                         time.sleep(10)
                         continue
@@ -584,19 +950,27 @@ def evaluate_model_on_test_set(
     for i, (sample, prompt) in enumerate(zip(test_data, prompts)):
         gold_label = sample["label"]
         e = sample["emotion"]
-        
-        if i >= len(parsed_outputs):  # safety check
-            print(f"[WARNING] Missing parsed output for prompt #{i}, skipping.")
-            continue
 
-        parsed = parsed_outputs[i]
+    if i >= len(generation_results.outputs):  # safety
+        print(f"[WARNING] Missing output for #{i}, skipping.")
+        continue
 
-        if parsed is None:
-            print(f"[SKIPPED] Prompt #{i} had unparseable output.")
-            continue
+    completions = generation_results.outputs[i].texts
+    parsed_candidates = [parse_output(text, task) for text in completions]
+    parsed_candidates = [p for p in parsed_candidates if p is not None]
 
-        emotion2refs[e].append(int(gold_label))
-        emotion2preds[e].append(int(parsed))
+    if not parsed_candidates:
+        print(f"[SKIPPED] All outputs for prompt #{i} were unparseable.")
+        continue
+
+    # Majority vote
+    if task == "binary":
+    final_pred = max(set(parsed_candidates), key=parsed_candidates.count)
+    elif task == "intensity":
+        final_pred = round(sum(parsed_candidates) / len(parsed_candidates))
+
+    emotion2refs[e].append(int(gold_label))
+    emotion2preds[e].append(int(final_pred))
 
         
 
@@ -784,12 +1158,102 @@ if __name__ == "__main__":
     parser.add_argument("--compute_dtype", type=str, default="bfloat16",
                         choices=["float16", "bfloat16", "float32"],
                         help="Compute dtype (ignored in vLLM example).")
+    parser.add_argument("--language", type=str, default=None,
+                    help="Language code to run on (e.g., 'eng', 'ptbr'). If not set, will run on all languages.")
     parser.add_argument("--skip_existing", action="store_true",
                         help="Skip running if output file already exists.")
-
+    parser.add_argument("--prompt_variant", type=str, default=None,
+                    help="Which prompt variant to use (e.g., v1, v2, cot_rich)")
+    parser.add_argument(
+        "--dry_run",
+        action="store_true",
+        help="If set, build and print example prompts for each variant and exit (no model calls)."
+    )
+    parser.add_argument(
+    "--reasoning_mode",
+    type=str,
+    default="default",
+    choices=["default", "self_consistency", "tree_of_thoughts"],
+    help="Choose the reasoning strategy: default (1-shot), self_consistency (vote), or tree_of_thoughts (search)"
+    )
+    parser.add_argument(
+    "--sample_size",
+    type=int,
+    default=None,
+    help="Total number of examples to draw (will attempt to balance equally across emotions).")
+    parser.add_argument(
+        "--balanced",
+        action="store_true",
+        help="If set, sample sample_size examples equally across emotions. Otherwise use full dataset.")
+    parser.add_argument(
+        "--tot_steps",
+        type=int,
+        default=3,
+        help="Max steps for tree_of_thoughts"
+    )
+    parser.add_argument(
+        "--tot_beam_width",
+        type=int,
+        default=3,
+        help="Beam width for tree_of_thoughts"
+    )
     args = parser.parse_args()
 
     
+    client = AzureOpenAI(
+        api_key=os.getenv("AZURE_OPENAI_KEY"),
+        api_version="2025-01-01-preview",
+        base_url=os.getenv("AZURE_OPENAI_ENDPOINT") + "/openai/deployments/gpt-4.1"
+    )
+    azure_llm = AzureEngineWrapper(client, "gpt-4.1")
+
+    if args.model_name.startswith("openai/"):
+        vllm_engine = None
+    else:
+        from vllm import LLM, SamplingParams
+        vllm_engine = LLM(model=args.model_name,
+                          tokenizer=args.model_name,
+                          tensor_parallel_size=args.tensor_parallel_size)
+
+    data = load_test_data_multicolumn(csv_path, task=args.task)
+    main_prompt = TASK_CONFIGS[args.task]["prompt_variants"][ main_config["variant"] ]
+
+    # and finally call
+    results = evaluate_model_on_test_set(
+        engine=vllm_engine,
+        azure_llm=azure_llm,
+        test_data=data,
+        prompt_template=main_prompt,
+        task=args.task,
+        top_k=main_config["top_k"],
+        n_shot=args.n_shot or main_config["n_shot"],
+        reasoning_mode=args.reasoning_mode,
+        max_steps=args.tot_steps,
+        beam_width=args.tot_beam_width,
+        out_json=out_json
+    )
+    print("Done:", results)
+    
+    # Dry‑run: just construct & print a prompt for each variant, then exit
+    if args.dry_run:
+        from pprint import pprint
+        task_cfg = TASK_CONFIGS[args.task]
+        variants = task_cfg["prompt_variants"]
+        print(f"\n=== Dry‑run: building prompts for task='{args.task}' ===")
+        for name, template in variants.items():
+            variant_name = args.prompt_variant or name
+            prompt_template = variants[variant_name]
+            # no few‑shot examples, dummy text/emotion
+            example = construct_prompt(
+                prompt_template,
+                few_shot_examples=[],
+                input_text="This is a TEST sentence to check {{EMOTION}}.",
+                emotion="joy",
+                task=args.task
+            )
+            print(f"\n--- variant = {variant_name} ---\n")
+            print(example)
+        sys.exit(0)
 
     # Load model
     model_name = args.model_name
@@ -806,11 +1270,12 @@ if __name__ == "__main__":
        engine = None
     print(" LLM engine loaded.\n")
 
-    for lang in ALL_LANGUAGES:
+    langs_to_run = [args.language] if args.language else ALL_LANGUAGES
+    for lang in langs_to_run:
         # Prepare the output file
         if args.output_file is None:
-            var_name = main_config["variant"]
-            topk_main = main_config["top_k"]
+            var_name = args.prompt_variant if args.prompt_variant else main_config["variant"]
+            topk_main = main_config["top_k"]            
             n_shot_main = args.n_shot if args.n_shot is not None else main_config["n_shot"]
 
             out_json = (
@@ -834,7 +1299,29 @@ if __name__ == "__main__":
             continue
 
         # Load the data
-        data = load_test_data_multicolumn(csv_path, task=args.task)
+        # ——— Load (or sample) the data ———
+        if args.balanced and args.sample_size:
+            if args.task == "binary":
+                sampled_df = sample_dataset(csv_path, args.sample_size)
+            else:  # intensity
+                sampled_df = sample_dataset_intensity(csv_path, args.sample_size)
+
+            data = []
+            for row in sampled_df.itertuples(index=False):
+                for emo in EMOTIONS:
+                    val = getattr(row, emo, 0)
+                    if args.task == "binary":
+                        label = 1 if val == 1 else 0
+                    else:  # intensity
+                        label = max(0, min(3, int(val)))
+                    data.append({
+                        "text": row.text,
+                        "emotion": emo,
+                        "label": label
+                    })
+        else:
+            # no sampling → use full multi‑column loader
+            data = load_test_data_multicolumn(csv_path, task=args.task)
         if not data:
             raise ValueError(f"No data loaded for {lang} at {csv_path}")
 

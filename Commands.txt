@@ -14,8 +14,8 @@ cd C:\Users\siyov\Documents\GitHub\BRIGHTER
 
 conda --version
 conda activate brighter-llm
-set GEMINI_API_KEY="AIzaSyBci7Tsl2Tpqcyv782vV_oyojgYimi8_ew"
-set GEMINI_API_ENDPOINT="https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyBci7Tsl2Tpqcyv782vV_oyojgYimi8_ew"
+set GEMINI_API_KEY=AIzaSyBci7Tsl2Tpqcyv782vV_oyojgYimi8_ew
+set GEMINI_API_ENDPOINT=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyBci7Tsl2Tpqcyv782vV_oyojgYimi8_ew
 cd C:\Users\caoca\Documents\GitHub\BRIGHTER
 
 Preforming on Laptop
