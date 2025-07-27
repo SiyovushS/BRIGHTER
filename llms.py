@@ -1361,7 +1361,7 @@ if __name__ == "__main__":
                 balanced= args.balanced
             )
         
-        if lang in NATIVE_PROMPT_ABLATION_LANGUAGES:
+       ''' if lang in NATIVE_PROMPT_ABLATION_LANGUAGES:
             if args.task == "binary" and lang in LANG_NATIVE_PROMPTS:
                 print("  ~ Comparing English v1 vs. Native v1 prompt ~")
 
@@ -1417,7 +1417,7 @@ if __name__ == "__main__":
                 }
 
                 print(f"     English v1 macro-F1 = {eng_v1_scores['macro_f1']:.4f} "
-                    f"vs. Native v1 macro-F1 = {native_v1_scores['macro_f1']:.4f}")
+                    f"vs. Native v1 macro-F1 = {native_v1_scores['macro_f1']:.4f}")'''
 
         final_output = {
             "task": args.task,
