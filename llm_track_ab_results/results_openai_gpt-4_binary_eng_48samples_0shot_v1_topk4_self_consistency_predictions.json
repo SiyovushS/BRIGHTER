@@ -1,0 +1,1729 @@
+prompt_index,prompt,raw_outputs,parsed,gold,emotion
+0,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Needless to say, the squirt gun game ended quickly.
+",['Answer: yes'],1,1,anger
+1,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Needless to say, the squirt gun game ended quickly.
+",['Answer: yes'],1,0,disgust
+2,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Needless to say, the squirt gun game ended quickly.
+",['Answer: yes'],1,1,fear
+3,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Needless to say, the squirt gun game ended quickly.
+",['Answer: yes'],1,1,joy
+4,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Needless to say, the squirt gun game ended quickly.
+",['Answer: yes'],1,1,sadness
+5,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Needless to say, the squirt gun game ended quickly.
+",['Answer: yes'],1,1,surprise
+6,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Thankfully I was found the next day by a security guard.
+",['Answer: yes'],1,0,anger
+7,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Thankfully I was found the next day by a security guard.
+",['Answer: yes'],1,0,disgust
+8,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Thankfully I was found the next day by a security guard.
+",['Answer: no'],0,1,fear
+9,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Thankfully I was found the next day by a security guard.
+",['Answer: no'],0,1,joy
+10,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Thankfully I was found the next day by a security guard.
+",['Answer: no'],0,1,sadness
+11,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Thankfully I was found the next day by a security guard.
+",['Answer: yes'],1,1,surprise
+12,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Then they kill him.
+",['Answer: no'],0,1,anger
+13,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Then they kill him.
+",['Answer: yes'],1,0,disgust
+14,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Then they kill him.
+",['Answer: no'],0,1,fear
+15,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Then they kill him.
+",['Answer: yes'],1,0,joy
+16,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Then they kill him.
+",['Answer: yes'],1,1,sadness
+17,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Then they kill him.
+",['Answer: no'],0,1,surprise
+18,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: It's supposed to be fun but so far it's been a horrible experience.
+",['Answer: yes'],1,1,anger
+19,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: It's supposed to be fun but so far it's been a horrible experience.
+",['Answer: yes'],1,0,disgust
+20,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: It's supposed to be fun but so far it's been a horrible experience.
+",['Answer: yes'],1,1,fear
+21,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: It's supposed to be fun but so far it's been a horrible experience.
+",['Answer: yes'],1,0,joy
+22,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: It's supposed to be fun but so far it's been a horrible experience.
+",['Answer: yes'],1,1,sadness
+23,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: It's supposed to be fun but so far it's been a horrible experience.
+",['Answer: no'],0,1,surprise
+24,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Sometimes I do see ice cubes, but it's never the same.
+",['Answer: no'],0,0,anger
+25,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Sometimes I do see ice cubes, but it's never the same.
+",['Answer: yes'],1,0,disgust
+26,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Sometimes I do see ice cubes, but it's never the same.
+",['Answer: yes'],1,1,fear
+27,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Sometimes I do see ice cubes, but it's never the same.
+",['Answer: no'],0,1,joy
+28,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Sometimes I do see ice cubes, but it's never the same.
+",['Answer: yes'],1,1,sadness
+29,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Sometimes I do see ice cubes, but it's never the same.
+",['Answer: no'],0,1,surprise
+30,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Next thing I know I've screamed, the phone has been flung from my hand, and I had thus been rear-ended by some stupid 18 year old.
+",['Answer: no'],0,1,anger
+31,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Next thing I know I've screamed, the phone has been flung from my hand, and I had thus been rear-ended by some stupid 18 year old.
+",['Answer: yes'],1,0,disgust
+32,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Next thing I know I've screamed, the phone has been flung from my hand, and I had thus been rear-ended by some stupid 18 year old.
+",['Answer: yes'],1,1,fear
+33,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Next thing I know I've screamed, the phone has been flung from my hand, and I had thus been rear-ended by some stupid 18 year old.
+",['Answer: yes'],1,0,joy
+34,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Next thing I know I've screamed, the phone has been flung from my hand, and I had thus been rear-ended by some stupid 18 year old.
+",['Answer: yes'],1,1,sadness
+35,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Next thing I know I've screamed, the phone has been flung from my hand, and I had thus been rear-ended by some stupid 18 year old.
+",['Answer: yes'],1,1,surprise
+36,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Everyone was arrested and sent to prison.
+",['Answer: no'],0,1,anger
+37,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Everyone was arrested and sent to prison.
+",['Answer: yes'],1,0,disgust
+38,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Everyone was arrested and sent to prison.
+",['Answer: no'],0,1,fear
+39,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Everyone was arrested and sent to prison.
+",['Answer: yes'],1,0,joy
+40,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Everyone was arrested and sent to prison.
+",['Answer: no'],0,1,sadness
+41,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Everyone was arrested and sent to prison.
+",['Answer: no'],0,1,surprise
+42,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: It's one of the most beatiful things life has to offer, and I consider it's illegality pretty much a human right violation.
+",['Answer: yes'],1,1,anger
+43,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: It's one of the most beatiful things life has to offer, and I consider it's illegality pretty much a human right violation.
+",['Answer: yes'],1,0,disgust
+44,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: It's one of the most beatiful things life has to offer, and I consider it's illegality pretty much a human right violation.
+",['Answer: yes'],1,1,fear
+45,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: It's one of the most beatiful things life has to offer, and I consider it's illegality pretty much a human right violation.
+",['Answer: no'],0,1,joy
+46,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: It's one of the most beatiful things life has to offer, and I consider it's illegality pretty much a human right violation.
+",['Answer: yes'],1,0,sadness
+47,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: It's one of the most beatiful things life has to offer, and I consider it's illegality pretty much a human right violation.
+",['Answer: no'],0,0,surprise
+48,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: This super, attention to detail teacher, messed my grade up so bad that it moved it up two letters.
+",['Answer: no'],0,1,anger
+49,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: This super, attention to detail teacher, messed my grade up so bad that it moved it up two letters.
+",['Answer: no'],0,0,disgust
+50,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: This super, attention to detail teacher, messed my grade up so bad that it moved it up two letters.
+",['Answer: no'],0,0,fear
+51,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: This super, attention to detail teacher, messed my grade up so bad that it moved it up two letters.
+",['Answer: no'],0,1,joy
+52,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: This super, attention to detail teacher, messed my grade up so bad that it moved it up two letters.
+",['Answer: yes'],1,0,sadness
+53,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: This super, attention to detail teacher, messed my grade up so bad that it moved it up two letters.
+",['Answer: no'],0,1,surprise
+54,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: 'Landslide' by Fleetwood Mac.
+",['Answer: yes'],1,0,anger
+55,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: 'Landslide' by Fleetwood Mac.
+",['Answer: yes'],1,0,disgust
+56,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: 'Landslide' by Fleetwood Mac.
+",['Answer: yes'],1,1,fear
+57,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: 'Landslide' by Fleetwood Mac.
+",['Answer: yes'],1,1,joy
+58,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: 'Landslide' by Fleetwood Mac.
+",['Answer: no'],0,1,sadness
+59,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: 'Landslide' by Fleetwood Mac.
+",['Answer: no'],0,0,surprise
+60,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: She fucking won, and wore him down.
+",['Answer: no'],0,1,anger
+61,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: She fucking won, and wore him down.
+",['Answer: no'],0,0,disgust
+62,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: She fucking won, and wore him down.
+",['Answer: no'],0,0,fear
+63,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: She fucking won, and wore him down.
+",['Answer: yes'],1,1,joy
+64,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: She fucking won, and wore him down.
+",['Answer: yes'],1,0,sadness
+65,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: She fucking won, and wore him down.
+",['Answer: yes'],1,1,surprise
+66,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: just thought id share my first post in a personality disorder support group I was able to find:
+",['Answer: no'],0,0,anger
+67,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: just thought id share my first post in a personality disorder support group I was able to find:
+",['Answer: no'],0,0,disgust
+68,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: just thought id share my first post in a personality disorder support group I was able to find:
+",['Answer: yes'],1,1,fear
+69,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: just thought id share my first post in a personality disorder support group I was able to find:
+",['Answer: no'],0,1,joy
+70,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: just thought id share my first post in a personality disorder support group I was able to find:
+",['Answer: no'],0,1,sadness
+71,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: just thought id share my first post in a personality disorder support group I was able to find:
+",['Answer: no'],0,0,surprise
+72,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: It was a slow time to poop but I mean, come on.
+",['Answer: no'],0,1,anger
+73,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: It was a slow time to poop but I mean, come on.
+",['Answer: no'],0,0,disgust
+74,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: It was a slow time to poop but I mean, come on.
+",['Answer: yes'],1,0,fear
+75,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: It was a slow time to poop but I mean, come on.
+",['Answer: no'],0,1,joy
+76,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: It was a slow time to poop but I mean, come on.
+",['Answer: no'],0,0,sadness
+77,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: It was a slow time to poop but I mean, come on.
+",['Answer: yes'],1,0,surprise
+78,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: The next day my knees were covered in bruises... just like the last time Monika and I got drunk together!
+",['Answer: no'],0,0,anger
+79,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: The next day my knees were covered in bruises... just like the last time Monika and I got drunk together!
+",['Answer: yes'],1,0,disgust
+80,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: The next day my knees were covered in bruises... just like the last time Monika and I got drunk together!
+",['Answer: yes'],1,0,fear
+81,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: The next day my knees were covered in bruises... just like the last time Monika and I got drunk together!
+",['Answer: no'],0,1,joy
+82,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: The next day my knees were covered in bruises... just like the last time Monika and I got drunk together!
+",['Answer: no'],0,1,sadness
+83,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: The next day my knees were covered in bruises... just like the last time Monika and I got drunk together!
+",['Answer: no'],0,1,surprise
+84,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I'm sure my face was getting a little red with frustration at this point, but I wasn't rude, I just sternly asked her to leave me alone.
+",['Answer: yes'],1,1,anger
+85,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I'm sure my face was getting a little red with frustration at this point, but I wasn't rude, I just sternly asked her to leave me alone.
+",['Answer: yes'],1,0,disgust
+86,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I'm sure my face was getting a little red with frustration at this point, but I wasn't rude, I just sternly asked her to leave me alone.
+",['Answer: no'],0,0,fear
+87,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I'm sure my face was getting a little red with frustration at this point, but I wasn't rude, I just sternly asked her to leave me alone.
+",['Answer: yes'],1,0,joy
+88,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I'm sure my face was getting a little red with frustration at this point, but I wasn't rude, I just sternly asked her to leave me alone.
+",['Answer: yes'],1,0,sadness
+89,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I'm sure my face was getting a little red with frustration at this point, but I wasn't rude, I just sternly asked her to leave me alone.
+",['Answer: yes'],1,0,surprise
+90,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: i used my hands to fan of the flame.
+",['Answer: no'],0,0,anger
+91,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: i used my hands to fan of the flame.
+",['Answer: no'],0,0,disgust
+92,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: i used my hands to fan of the flame.
+",['Answer: no'],0,0,fear
+93,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: i used my hands to fan of the flame.
+",['Answer: yes'],1,0,joy
+94,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: i used my hands to fan of the flame.
+",['Answer: yes'],1,0,sadness
+95,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: i used my hands to fan of the flame.
+",['Answer: no'],0,0,surprise
+96,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I took four steps forward and bowed to my knee for the audience.
+",['Answer: no'],0,0,anger
+97,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I took four steps forward and bowed to my knee for the audience.
+",['Answer: yes'],1,0,disgust
+98,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I took four steps forward and bowed to my knee for the audience.
+",['Answer: yes'],1,0,fear
+99,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I took four steps forward and bowed to my knee for the audience.
+",['Answer: yes'],1,0,joy
+100,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I took four steps forward and bowed to my knee for the audience.
+",['Answer: no'],0,0,sadness
+101,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I took four steps forward and bowed to my knee for the audience.
+",['Answer: yes'],1,0,surprise
+102,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I browsed my back up drive for Outlook files.
+",['Answer: yes'],1,0,anger
+103,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I browsed my back up drive for Outlook files.
+",['Answer: no'],0,0,disgust
+104,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I browsed my back up drive for Outlook files.
+",['Answer: yes'],1,0,fear
+105,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I browsed my back up drive for Outlook files.
+",['Answer: no'],0,0,joy
+106,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I browsed my back up drive for Outlook files.
+",['Answer: no'],0,0,sadness
+107,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I browsed my back up drive for Outlook files.
+",['Answer: yes'],1,0,surprise
+108,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Except I'm a very lazy person and I don't really like meat with lots of bones and stuff so I felt like when I tried pieces of Sam's dish I was just playing with the food in my mouth.
+",['Answer: no'],0,0,anger
+109,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Except I'm a very lazy person and I don't really like meat with lots of bones and stuff so I felt like when I tried pieces of Sam's dish I was just playing with the food in my mouth.
+",['Answer: yes'],1,0,disgust
+110,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Except I'm a very lazy person and I don't really like meat with lots of bones and stuff so I felt like when I tried pieces of Sam's dish I was just playing with the food in my mouth.
+",['Answer: yes'],1,0,fear
+111,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Except I'm a very lazy person and I don't really like meat with lots of bones and stuff so I felt like when I tried pieces of Sam's dish I was just playing with the food in my mouth.
+",['Answer: yes'],1,0,joy
+112,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Except I'm a very lazy person and I don't really like meat with lots of bones and stuff so I felt like when I tried pieces of Sam's dish I was just playing with the food in my mouth.
+",['Answer: no'],0,0,sadness
+113,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Except I'm a very lazy person and I don't really like meat with lots of bones and stuff so I felt like when I tried pieces of Sam's dish I was just playing with the food in my mouth.
+",['Answer: no'],0,0,surprise
+114,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I shook my head.
+",['Answer: no'],0,0,anger
+115,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I shook my head.
+",['Answer: no'],0,0,disgust
+116,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I shook my head.
+",['Answer: no'],0,0,fear
+117,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I shook my head.
+",['Answer: no'],0,0,joy
+118,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I shook my head.
+",['Answer: no'],0,0,sadness
+119,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I shook my head.
+",['Answer: yes'],1,0,surprise
+120,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Needless to say, there is more to this story, but as I have already written quite a long post, I will leave this as it is for now.
+",['Answer: no'],0,0,anger
+121,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Needless to say, there is more to this story, but as I have already written quite a long post, I will leave this as it is for now.
+",['Answer: yes'],1,0,disgust
+122,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Needless to say, there is more to this story, but as I have already written quite a long post, I will leave this as it is for now.
+",['Answer: no'],0,0,fear
+123,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Needless to say, there is more to this story, but as I have already written quite a long post, I will leave this as it is for now.
+",['Answer: no'],0,0,joy
+124,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Needless to say, there is more to this story, but as I have already written quite a long post, I will leave this as it is for now.
+",['Answer: yes'],1,0,sadness
+125,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Needless to say, there is more to this story, but as I have already written quite a long post, I will leave this as it is for now.
+",['Answer: yes'],1,0,surprise
+126,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I went and had my neck stretched.
+",['Answer: yes'],1,0,anger
+127,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I went and had my neck stretched.
+",['Answer: yes'],1,0,disgust
+128,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I went and had my neck stretched.
+",['Answer: yes'],1,0,fear
+129,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I went and had my neck stretched.
+",['Answer: yes'],1,0,joy
+130,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I went and had my neck stretched.
+",['Answer: yes'],1,0,sadness
+131,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I went and had my neck stretched.
+",['Answer: yes'],1,0,surprise
+132,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I am capable of shutting the drawer not only with my hands but also my hip and knees.
+",['Answer: no'],0,0,anger
+133,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I am capable of shutting the drawer not only with my hands but also my hip and knees.
+",['Answer: no'],0,0,disgust
+134,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I am capable of shutting the drawer not only with my hands but also my hip and knees.
+",['Answer: no'],0,0,fear
+135,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I am capable of shutting the drawer not only with my hands but also my hip and knees.
+",['Answer: no'],0,0,joy
+136,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I am capable of shutting the drawer not only with my hands but also my hip and knees.
+",['Answer: yes'],1,0,sadness
+137,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I am capable of shutting the drawer not only with my hands but also my hip and knees.
+",['Answer: yes'],1,0,surprise
+138,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: But that's up to you all to decide.
+",['Answer: yes'],1,0,anger
+139,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: But that's up to you all to decide.
+",['Answer: no'],0,0,disgust
+140,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: But that's up to you all to decide.
+",['Answer: yes'],1,0,fear
+141,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: But that's up to you all to decide.
+",['Answer: yes'],1,0,joy
+142,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: But that's up to you all to decide.
+",['Answer: no'],0,0,sadness
+143,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: But that's up to you all to decide.
+",['Answer: no'],0,0,surprise
+144,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: She tells him to come there at exactly 7:30 and not a minute later.
+",['Answer: no'],0,0,anger
+145,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: She tells him to come there at exactly 7:30 and not a minute later.
+",['Answer: no'],0,0,disgust
+146,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: She tells him to come there at exactly 7:30 and not a minute later.
+",['Answer: yes'],1,0,fear
+147,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: She tells him to come there at exactly 7:30 and not a minute later.
+",['Answer: yes'],1,0,joy
+148,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: She tells him to come there at exactly 7:30 and not a minute later.
+",['Answer: no'],0,0,sadness
+149,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: She tells him to come there at exactly 7:30 and not a minute later.
+",['Answer: no'],0,0,surprise
+150,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Soon after, so were my hands and forearms.
+",['Answer: no'],0,0,anger
+151,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Soon after, so were my hands and forearms.
+",['Answer: no'],0,0,disgust
+152,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Soon after, so were my hands and forearms.
+",['Answer: no'],0,0,fear
+153,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Soon after, so were my hands and forearms.
+",['Answer: no'],0,0,joy
+154,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Soon after, so were my hands and forearms.
+",['Answer: yes'],1,0,sadness
+155,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Soon after, so were my hands and forearms.
+",['Answer: yes'],1,0,surprise
+156,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I had thrust up my arm.
+",['Answer: no'],0,0,anger
+157,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I had thrust up my arm.
+",['Answer: yes'],1,0,disgust
+158,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I had thrust up my arm.
+",['Answer: yes'],1,0,fear
+159,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I had thrust up my arm.
+",['Answer: yes'],1,0,joy
+160,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I had thrust up my arm.
+",['Answer: yes'],1,0,sadness
+161,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I had thrust up my arm.
+",['Answer: no'],0,0,surprise
+162,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: At my hand, no less.
+",['Answer: no'],0,0,anger
+163,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: At my hand, no less.
+",['Answer: yes'],1,0,disgust
+164,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: At my hand, no less.
+",['Answer: yes'],1,0,fear
+165,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: At my hand, no less.
+",['Answer: no'],0,0,joy
+166,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: At my hand, no less.
+",['Answer: no'],0,0,sadness
+167,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: At my hand, no less.
+",['Answer: yes'],1,0,surprise
+168,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Very quiet and unobtrusive.
+",['Answer: no'],0,0,anger
+169,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Very quiet and unobtrusive.
+",['Answer: no'],0,0,disgust
+170,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Very quiet and unobtrusive.
+",['Answer: no'],0,0,fear
+171,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Very quiet and unobtrusive.
+",['Answer: no'],0,0,joy
+172,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Very quiet and unobtrusive.
+",['Answer: yes'],1,0,sadness
+173,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Very quiet and unobtrusive.
+",['Answer: no'],0,0,surprise
+174,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: i shook my head in a way that made it seem like i was saying `` typical chicago.
+",['Answer: no'],0,0,anger
+175,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: i shook my head in a way that made it seem like i was saying `` typical chicago.
+",['Answer: no'],0,0,disgust
+176,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: i shook my head in a way that made it seem like i was saying `` typical chicago.
+",['Answer: no'],0,0,fear
+177,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: i shook my head in a way that made it seem like i was saying `` typical chicago.
+",['Answer: no'],0,0,joy
+178,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: i shook my head in a way that made it seem like i was saying `` typical chicago.
+",['Answer: no'],0,0,sadness
+179,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: i shook my head in a way that made it seem like i was saying `` typical chicago.
+",['Answer: yes'],1,0,surprise
+180,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I shook my head at the child's impatience before I realized that, in some ways, I still acted in quite the same manner.
+",['Answer: no'],0,0,anger
+181,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I shook my head at the child's impatience before I realized that, in some ways, I still acted in quite the same manner.
+",['Answer: yes'],1,0,disgust
+182,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I shook my head at the child's impatience before I realized that, in some ways, I still acted in quite the same manner.
+",['Answer: no'],0,0,fear
+183,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I shook my head at the child's impatience before I realized that, in some ways, I still acted in quite the same manner.
+",['Answer: no'],0,0,joy
+184,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I shook my head at the child's impatience before I realized that, in some ways, I still acted in quite the same manner.
+",['Answer: no'],0,0,sadness
+185,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I shook my head at the child's impatience before I realized that, in some ways, I still acted in quite the same manner.
+",['Answer: no'],0,0,surprise
+186,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: She was asleep in the other room where he went.
+",['Answer: yes'],1,0,anger
+187,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: She was asleep in the other room where he went.
+",['Answer: no'],0,0,disgust
+188,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: She was asleep in the other room where he went.
+",['Answer: no'],0,0,fear
+189,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: She was asleep in the other room where he went.
+",['Answer: no'],0,0,joy
+190,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: She was asleep in the other room where he went.
+",['Answer: yes'],1,0,sadness
+191,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: She was asleep in the other room where he went.
+",['Answer: no'],0,0,surprise
+192,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: The case popped open and the typewriter bounced off of my foot and into the intersection.
+",['Answer: yes'],1,0,anger
+193,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: The case popped open and the typewriter bounced off of my foot and into the intersection.
+",['Answer: yes'],1,0,disgust
+194,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: The case popped open and the typewriter bounced off of my foot and into the intersection.
+",['Answer: no'],0,0,fear
+195,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: The case popped open and the typewriter bounced off of my foot and into the intersection.
+",['Answer: no'],0,0,joy
+196,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: The case popped open and the typewriter bounced off of my foot and into the intersection.
+",['Answer: yes'],1,0,sadness
+197,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: The case popped open and the typewriter bounced off of my foot and into the intersection.
+",['Answer: yes'],1,0,surprise
+198,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Wash my hands without splashing water on the mirrors 7.
+",['Answer: no'],0,0,anger
+199,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Wash my hands without splashing water on the mirrors 7.
+",['Answer: no'],0,0,disgust
+200,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Wash my hands without splashing water on the mirrors 7.
+",['Answer: no'],0,0,fear
+201,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Wash my hands without splashing water on the mirrors 7.
+",['Answer: no'],0,0,joy
+202,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Wash my hands without splashing water on the mirrors 7.
+",['Answer: yes'],1,0,sadness
+203,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Wash my hands without splashing water on the mirrors 7.
+",['Answer: no'],0,0,surprise
+204,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: mundane megot my teeth cleaned yesterday.
+",['Answer: yes'],1,0,anger
+205,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: mundane megot my teeth cleaned yesterday.
+",['Answer: no'],0,0,disgust
+206,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: mundane megot my teeth cleaned yesterday.
+",['Answer: yes'],1,0,fear
+207,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: mundane megot my teeth cleaned yesterday.
+",['Answer: yes'],1,0,joy
+208,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: mundane megot my teeth cleaned yesterday.
+",['Answer: yes'],1,0,sadness
+209,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: mundane megot my teeth cleaned yesterday.
+",['Answer: yes'],1,0,surprise
+210,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Sam nodded, putting his hands on the floor to push himself up to the couch.
+",['Answer: no'],0,0,anger
+211,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Sam nodded, putting his hands on the floor to push himself up to the couch.
+",['Answer: no'],0,0,disgust
+212,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Sam nodded, putting his hands on the floor to push himself up to the couch.
+",['Answer: no'],0,0,fear
+213,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Sam nodded, putting his hands on the floor to push himself up to the couch.
+",['Answer: no'],0,0,joy
+214,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Sam nodded, putting his hands on the floor to push himself up to the couch.
+",['Answer: yes'],1,0,sadness
+215,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: Sam nodded, putting his hands on the floor to push himself up to the couch.
+",['Answer: no'],0,0,surprise
+216,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I kept my head clear with guaifenesin and benadryl, putting me to sleep on the first part of the trip, which was flying from Columbus to Baltimore to join up with the family.
+",['Answer: no'],0,0,anger
+217,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I kept my head clear with guaifenesin and benadryl, putting me to sleep on the first part of the trip, which was flying from Columbus to Baltimore to join up with the family.
+",['Answer: no'],0,0,disgust
+218,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I kept my head clear with guaifenesin and benadryl, putting me to sleep on the first part of the trip, which was flying from Columbus to Baltimore to join up with the family.
+",['Answer: no'],0,0,fear
+219,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I kept my head clear with guaifenesin and benadryl, putting me to sleep on the first part of the trip, which was flying from Columbus to Baltimore to join up with the family.
+",['Answer: no'],0,0,joy
+220,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I kept my head clear with guaifenesin and benadryl, putting me to sleep on the first part of the trip, which was flying from Columbus to Baltimore to join up with the family.
+",['Answer: yes'],1,0,sadness
+221,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I kept my head clear with guaifenesin and benadryl, putting me to sleep on the first part of the trip, which was flying from Columbus to Baltimore to join up with the family.
+",['Answer: yes'],1,0,surprise
+222,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: and the entertainment center.
+",['Answer: yes'],1,0,anger
+223,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: and the entertainment center.
+",['Answer: no'],0,0,disgust
+224,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: and the entertainment center.
+",['Answer: yes'],1,0,fear
+225,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: and the entertainment center.
+",['Answer: no'],0,0,joy
+226,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: and the entertainment center.
+",['Answer: yes'],1,0,sadness
+227,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: and the entertainment center.
+",['Answer: no'],0,0,surprise
+228,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: So there's that...
+",['Answer: no'],0,0,anger
+229,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: So there's that...
+",['Answer: yes'],1,0,disgust
+230,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: So there's that...
+",['Answer: yes'],1,0,fear
+231,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: So there's that...
+",['Answer: no'],0,0,joy
+232,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: So there's that...
+",['Answer: no'],0,0,sadness
+233,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: So there's that...
+",['Answer: yes'],1,0,surprise
+234,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I just nod my head in agreement.
+",['Answer: no'],0,0,anger
+235,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I just nod my head in agreement.
+",['Answer: yes'],1,0,disgust
+236,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I just nod my head in agreement.
+",['Answer: yes'],1,0,fear
+237,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I just nod my head in agreement.
+",['Answer: no'],0,0,joy
+238,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I just nod my head in agreement.
+",['Answer: yes'],1,0,sadness
+239,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I just nod my head in agreement.
+",['Answer: no'],0,0,surprise
+240,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: ( points to her palm for notebook and flashes ten fingers for blue's clues-which is what we do when we watch the show ) 4.
+",['Answer: no'],0,0,anger
+241,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: ( points to her palm for notebook and flashes ten fingers for blue's clues-which is what we do when we watch the show ) 4.
+",['Answer: yes'],1,0,disgust
+242,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: ( points to her palm for notebook and flashes ten fingers for blue's clues-which is what we do when we watch the show ) 4.
+",['Answer: yes'],1,0,fear
+243,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: ( points to her palm for notebook and flashes ten fingers for blue's clues-which is what we do when we watch the show ) 4.
+",['Answer: no'],0,0,joy
+244,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: ( points to her palm for notebook and flashes ten fingers for blue's clues-which is what we do when we watch the show ) 4.
+",['Answer: yes'],1,0,sadness
+245,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: ( points to her palm for notebook and flashes ten fingers for blue's clues-which is what we do when we watch the show ) 4.
+",['Answer: yes'],1,0,surprise
+246,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I was driving our van when I smelled it again, so I asked my husband, `` Please smell my foot. ''
+",['Answer: no'],0,0,anger
+247,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I was driving our van when I smelled it again, so I asked my husband, `` Please smell my foot. ''
+",['Answer: yes'],1,0,disgust
+248,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I was driving our van when I smelled it again, so I asked my husband, `` Please smell my foot. ''
+",['Answer: yes'],1,0,fear
+249,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I was driving our van when I smelled it again, so I asked my husband, `` Please smell my foot. ''
+",['Answer: no'],0,0,joy
+250,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I was driving our van when I smelled it again, so I asked my husband, `` Please smell my foot. ''
+",['Answer: yes'],1,0,sadness
+251,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I was driving our van when I smelled it again, so I asked my husband, `` Please smell my foot. ''
+",['Answer: no'],0,0,surprise
+252,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: These friends happen to be black.
+",['Answer: no'],0,0,anger
+253,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: These friends happen to be black.
+",['Answer: yes'],1,0,disgust
+254,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: These friends happen to be black.
+",['Answer: no'],0,0,fear
+255,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: These friends happen to be black.
+",['Answer: no'],0,0,joy
+256,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: These friends happen to be black.
+",['Answer: no'],0,0,sadness
+257,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: These friends happen to be black.
+",['Answer: yes'],1,0,surprise
+258,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I rubbed my eyes and stood up.
+",['Answer: no'],0,0,anger
+259,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I rubbed my eyes and stood up.
+",['Answer: yes'],1,0,disgust
+260,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I rubbed my eyes and stood up.
+",['Answer: yes'],1,0,fear
+261,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I rubbed my eyes and stood up.
+",['Answer: no'],0,0,joy
+262,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I rubbed my eyes and stood up.
+",['Answer: no'],0,0,sadness
+263,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I rubbed my eyes and stood up.
+",['Answer: no'],0,0,surprise
+264,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: 3 ) The little old grannies that passed me up after my calves were shot.
+",['Answer: yes'],1,0,anger
+265,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: 3 ) The little old grannies that passed me up after my calves were shot.
+",['Answer: no'],0,0,disgust
+266,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: 3 ) The little old grannies that passed me up after my calves were shot.
+",['Answer: yes'],1,0,fear
+267,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: 3 ) The little old grannies that passed me up after my calves were shot.
+",['Answer: yes'],1,0,joy
+268,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: 3 ) The little old grannies that passed me up after my calves were shot.
+",['Answer: yes'],1,0,sadness
+269,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: 3 ) The little old grannies that passed me up after my calves were shot.
+",['Answer: no'],0,0,surprise
+270,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I pull away then go to put my hand back.
+",['Answer: yes'],1,0,anger
+271,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I pull away then go to put my hand back.
+",['Answer: yes'],1,0,disgust
+272,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I pull away then go to put my hand back.
+",['Answer: no'],0,0,fear
+273,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I pull away then go to put my hand back.
+",['Answer: no'],0,0,joy
+274,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I pull away then go to put my hand back.
+",['Answer: yes'],1,0,sadness
+275,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: I pull away then go to put my hand back.
+",['Answer: no'],0,0,surprise
+276,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: i guess it's just to keep these things fresh in my skull.
+",['Answer: no'],0,0,anger
+277,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: i guess it's just to keep these things fresh in my skull.
+",['Answer: no'],0,0,disgust
+278,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: i guess it's just to keep these things fresh in my skull.
+",['Answer: no'],0,0,fear
+279,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: i guess it's just to keep these things fresh in my skull.
+",['Answer: yes'],1,0,joy
+280,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: i guess it's just to keep these things fresh in my skull.
+",['Answer: no'],0,0,sadness
+281,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: i guess it's just to keep these things fresh in my skull.
+",['Answer: yes'],1,0,surprise
+282,"### Task ###
+Evaluate whether the following text conveys the emotion of anger.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: She used sign language to ask how old Lyric was and guessed that she was 2-nope, I told her-she is 3 and held up my fingers.
+",['Answer: yes'],1,0,anger
+283,"### Task ###
+Evaluate whether the following text conveys the emotion of disgust.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: She used sign language to ask how old Lyric was and guessed that she was 2-nope, I told her-she is 3 and held up my fingers.
+",['Answer: no'],0,0,disgust
+284,"### Task ###
+Evaluate whether the following text conveys the emotion of fear.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: She used sign language to ask how old Lyric was and guessed that she was 2-nope, I told her-she is 3 and held up my fingers.
+",['Answer: yes'],1,0,fear
+285,"### Task ###
+Evaluate whether the following text conveys the emotion of joy.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: She used sign language to ask how old Lyric was and guessed that she was 2-nope, I told her-she is 3 and held up my fingers.
+",['Answer: no'],0,0,joy
+286,"### Task ###
+Evaluate whether the following text conveys the emotion of sadness.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: She used sign language to ask how old Lyric was and guessed that she was 2-nope, I told her-she is 3 and held up my fingers.
+",['Answer: yes'],1,0,sadness
+287,"### Task ###
+Evaluate whether the following text conveys the emotion of surprise.
+Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'.
+### Your Turn ###
+Input: She used sign language to ask how old Lyric was and guessed that she was 2-nope, I told her-she is 3 and held up my fingers.
+",['Answer: yes'],1,0,surprise

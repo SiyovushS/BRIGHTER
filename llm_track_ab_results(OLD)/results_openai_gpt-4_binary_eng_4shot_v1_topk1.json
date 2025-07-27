@@ -1,0 +1,70 @@
+{
+    "task": "binary",
+    "language": "eng",
+    "model_name": "openai/gpt-4",
+    "n_shot": 4,
+    "prompt_variant": "v2",
+    "top_k": 1,
+    "main_result": {
+        "f1_per_emotion": {},
+        "macro_f1": 0.0
+    },
+    "ablation": {
+        "prompt_variant": {
+            "v1": {
+                "f1_per_emotion": {},
+                "macro_f1": 0.0
+            }
+        },
+        "few_shot": {
+            "0": {
+                "f1_per_emotion": {},
+                "macro_f1": 0.0
+            },
+            "1": {
+                "f1_per_emotion": {},
+                "macro_f1": 0.0
+            },
+            "2": {
+                "f1_per_emotion": {},
+                "macro_f1": 0.0
+            },
+            "4": {
+                "f1_per_emotion": {},
+                "macro_f1": 0.0
+            },
+            "6": {
+                "f1_per_emotion": {},
+                "macro_f1": 0.0
+            }
+        },
+        "top_k": {
+            "1": {
+                "f1_per_emotion": {},
+                "macro_f1": 0.0
+            },
+            "2": {
+                "f1_per_emotion": {},
+                "macro_f1": 0.0
+            },
+            "4": {
+                "f1_per_emotion": {},
+                "macro_f1": 0.0
+            },
+            "8": {
+                "f1_per_emotion": {},
+                "macro_f1": 0.0
+            }
+        },
+        "english_v1_vs_native_v1": {
+            "f1_english_v1": {
+                "f1_per_emotion": {},
+                "macro_f1": 0.0
+            },
+            "f1_native_v1": {
+                "f1_per_emotion": {},
+                "macro_f1": 0.0
+            }
+        }
+    }
+}

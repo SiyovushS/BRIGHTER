@@ -4,7 +4,7 @@ import csv
 import json
 import argparse
 import re
-from typing import List, Optional, Tuple, Callable, Union
+from typing import List
 import wandb
 import random
 from openai import AzureOpenAI
@@ -27,28 +27,10 @@ class SamplingParams:
         self.top_p = top_p
         self.n = n
 
-class MockLLM:
-    def generate(self, prompts: List[str], sampling_params):
-        class Result:
-            def __init__(self, texts: List[str]):
-                self.texts = texts
 
-        dummy_outputs = []
-        for prompt in prompts:
-            # Detect intensity prompts by the "0: none" or "0=none" snippet
-            is_intensity = ("0: none" in prompt) or ("0=none" in prompt)
+AZURE_OPENAI_DEPLOYMENT = "gpt-4.1"  # Set this to your Azure deployment name
+AZURE_OPENAI_VERSION = "2025-01-01-preview"
 
-            # Choose from 0..3 for intensity, yes/no for binary
-            choices = ['0', '1', '2', '3'] if is_intensity else ['yes', 'no']
-
-            responses = []
-            for _ in range(sampling_params.n):
-                responses.append(f"Answer: {random.choice(choices)}")
-
-            dummy_outputs.append(Result(responses))
-
-        return dummy_outputs
-USE_MOCK_LLM = True
 
 ###########################################################
 # GLOBAL SETTINGS
@@ -86,7 +68,7 @@ EMOTIONS = ["anger", "disgust", "fear", "joy", "sadness", "surprise"]
 main_config = {
     "variant": "v2",
     "n_shot": 0,
-    "top_k": 1,
+    "top_k": 1
 }
 
 # Ablation settings (if used)
@@ -173,7 +155,7 @@ TASK_CONFIGS = {
                 "Examine the following text to determine whether {{EMOTION}} is present.\n"
                 "Provide a concise explanation for your assessment and end with 'Answer:' followed by either 'yes' or 'no'."
             ),
-            "v4": (
+            "dummy": (
                "You are an expert analyzer. Read the text and think step by step about whether it conveys {{EMOTION}}.\n"
                "Show your chain of thought, then conclude with 'Answer:' followed by 'yes' or 'no'."
             ),
@@ -198,10 +180,6 @@ TASK_CONFIGS = {
                 "Evaluate the intensity of {{EMOTION}} in the following text on a scale from 0 (none) to 3 (high).\n"
                 "Provide a brief explanation for your assessment and conclude with 'Answer:' followed by the rating."
             ),
-            "v4": (
-                "You are an expert in emotional analysis. Carefully read the text and think step by step about how intensely it expresses the emotion '{{EMOTION}}'.\n"
-                "Provide a brief reasoning, then conclude with 'Answer:' followed by a number from 0 (not at all) to 3 (very strongly)."
-            ),
             "tree_of_thoughts": (
                 "You are solving the task of assessing the intensity of {{EMOTION}} in a piece of text.\n"
                 "Reason through multiple steps, examining each clue that indicates how strong the emotion is.\n"
@@ -210,36 +188,6 @@ TASK_CONFIGS = {
         }
     }
 }    
-
-
-class AzureEngineWrapper:
-    def __init__(self, client, model_name):
-        self.client = client
-        self.model_name = model_name
-
-    def generate(self, prompts, sampling_params):
-        class Result:
-            def __init__(self, texts):
-                self.texts = texts
-        results = []
-        for prompt in prompts:
-            response = self.client.chat.completions.create(
-                model=self.model_name,
-                messages=[
-                    {"role": "system", "content": "You are a helpful assistant."},
-                    {"role": "user", "content": prompt}
-                ],
-                max_tokens=sampling_params.max_tokens,
-                temperature=sampling_params.temperature,
-                top_p=sampling_params.top_p,
-                n=sampling_params.n
-            )
-            texts = [choice.message.content.strip() for choice in response.choices]
-            results.append(Result(texts))
-        return results
-
-
-
 
 
 ###########################################################
@@ -329,7 +277,7 @@ def robust_parse_intensity(output: str) -> Optional[int]:
             return int(match.group(1))
     return None
 
-def parse_output(generated_text: str, task: str) -> Optional[int]:
+def parse_output(generated_text: str, task: str) -> int:
     if task == "binary":
         return robust_parse_binary(generated_text)
     else:
@@ -346,16 +294,11 @@ def run_self_refine(prompt: str, task: str, llm, flagged_prompts: list, max_refi
     try_count = 0
     original_prompt = prompt
     current_output = ""
-    sampling_params = SamplingParams(
-        max_tokens=80,
-        temperature=0.7,
-        top_p=0.95,
-        n=1
-    )
+
     while try_count < max_tries:
         try:
             # 1. Generate initial response
-            response = llm.generate([prompt], sampling_params)[0].texts[0]
+            response = llm(prompt)
 
             if response is None or not isinstance(response, str) or "Answer:" not in response:
                 try_count += 1
@@ -368,7 +311,7 @@ def run_self_refine(prompt: str, task: str, llm, flagged_prompts: list, max_refi
                 f"{original_prompt}\n\nYour previous answer was:\n{current_output}\n\n"
                 f"Critique your response. What was unclear or incorrect?"
             )
-            critique = llm.generate([critique_prompt], sampling_params)[0].texts[0]
+            critique = llm(critique_prompt)
 
             if critique is None or not isinstance(critique, str):
                 try_count += 1
@@ -379,7 +322,7 @@ def run_self_refine(prompt: str, task: str, llm, flagged_prompts: list, max_refi
                 f"{original_prompt}\n\nYour previous answer was:\n{current_output}\n"
                 f"Critique: {critique}\n\nPlease revise your answer based on the critique:"
             )
-            revision = llm.generate([refine_prompt], sampling_params)[0].texts[0]
+            revision = llm(refine_prompt)
 
             if revision is None or not isinstance(revision, str) or "Answer:" not in revision:
                 try_count += 1
@@ -425,10 +368,10 @@ def run_tree_of_thoughts(
     emotion: str,
     task: str,
     input_text: str,
-    llm,
+    llm: AzureEngineWrapper,
     max_steps: int = 3,
     beam_width: int = 3,
-    max_retries: int = 5,
+    max_retries: int = 5
 ) -> Tuple[Optional[int], List[dict]]:
     """
     Simplified Tree of Thoughts with retry + moderation handling.
@@ -637,85 +580,38 @@ if os.getenv("TEST_SAMPLER") == "1":
             print(f"{emo}: [COLUMN MISSING]")
     sys.exit(0)
 
-def try_generate_with_retries(
-    prompt: str,
-    generator_fn: Callable[[str], Union[List[str], "ResultBatch"]],
-    task: str,
-    max_retries: int,
-    flagged_list: List[dict]
-) -> Tuple[Optional[any], List[str]]:
-    """
-    Calls generator_fn(prompt) up to max_retries times, 
-    handles network errors (infinite retry), policy errors (flag & stop),
-    unparseable outputs (counted toward retries), and on success returns
-    (parsed_prediction, raw_texts). On failure returns (None, last_texts).
-    """
-    attempt = 0
-    last_texts: List[str] = []
-    while True:
-        try:
-            # 1) Call the LLM
-            result = generator_fn(prompt)
-            #   - generator_fn should return either a list of strings (texts)
-            #     or a vLLM/Azure-like batch object with `.texts`
-            texts = result.texts if hasattr(result, "texts") else result
+class AzureEngineWrapper:
+    def __init__(self, client, model_name):
+        self.client = client
+        self.model_name = model_name
 
-            # 2) Try parsing
-            parsed = [parse_output(t, task) for t in texts]
-            valid = [p for p in parsed if p is not None]
-            if valid:
-                # Success
-                if task == "binary":
-                    pred = max(set(valid), key=valid.count)
-                else:
-                    pred = round(sum(valid) / len(valid))
-                return pred, texts
-
-            # 3) Unparseable → count against retries
-            attempt += 1
-            last_texts = texts
-            if attempt >= max_retries:
-                flagged_list.append({
-                    "prompt": prompt,
-                    "outputs": texts,
-                    "reason": f"Unparseable after {max_retries} attempts"
-                })
-                return None, texts
-            # otherwise loop to retry
-
-        except Exception as e:
-            err = str(e).lower()
-            # 4) Network errors → retry indefinitely (don’t increment attempt)
-            if "connection" in err or isinstance(e, (ConnectionError, socket.gaierror)):
-                time.sleep(2)
-                continue
-
-            # 5) Policy errors → flag & stop
-            if "policy" in err or "violation" in err:
-                flagged_list.append({
-                    "prompt": prompt,
-                    "reason": "Content policy violation",
-                    "error": err
-                })
-                return None, []
-
-            # 6) Other errors → count against retries
-            attempt += 1
-            if attempt >= max_retries:
-                flagged_list.append({
-                    "prompt": prompt,
-                    "reason": f"Error after {max_retries} attempts",
-                    "error": err
-                })
-                return None, []
-            # else loop to retry
+    def generate(self, prompts, sampling_params):
+        class Result:
+            def __init__(self, texts):
+                self.texts = texts
+        results = []
+        for prompt in prompts:
+            response = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=sampling_params.max_tokens,
+                temperature=sampling_params.temperature,
+                top_p=sampling_params.top_p,
+                n=sampling_params.n
+            )
+            texts = [choice.message.content.strip() for choice in response.choices]
+            results.append(Result(texts))
+        return results
 
 ###########################################################
 # EVALUATION
 ###########################################################
 def evaluate_model_on_test_set(
-    model_name: str,                         
-    llm: Union["AzureEngineWrapper", "MockLLM"],  
+    engine,                         
+    azure_llm: AzureEngineWrapper,  
     test_data: List[dict],
     prompt_template: str,
     task: str,
@@ -834,159 +730,530 @@ def evaluate_model_on_test_set(
     all_raw = []
     all_preds = []
     all_flagged = []
-    max_retries = 5
+    
+    if len(valid_candidates) == 0:
+        flagged_prompts.append({
+            "prompt": prompts[i],
+            "outputs": res.texts,
+            "reason": "No valid parse from outputs"
+        })
+        # maybe continue or handle default prediction?
+        pred = None
+    else:
+        pred = (max(set(candidates), key=candidates.count)
+                    if task=="binary"
+                    else round(sum(candidates)/len(candidates)))
+    all_preds.append(pred)
 
-    # Only OpenAI GPT models support these advanced methods
-    if model_name.startswith("openai"):
-        if reasoning_mode == "default":
-            sampling = SamplingParams(
-                max_tokens=80,
-                temperature=0.0,
-                top_p=0.95,
-                n=top_k
-            )
-            # prepare a generator function that returns a batch-like object
-            def gen_fn(prompt_text):
-                if model_name.startswith("openai/"):
-                    return llm.generate([prompt_text], sampling)[0]
+    MAX_SELF_RETRIES = 5  # or whatever hard‑coded limit you prefer
+
+    if reasoning_mode == "default":
+        # build sampling params for CoT
+        sampling = SamplingParams(
+            max_tokens=80,
+            temperature=0.0,
+            top_p=0.95,
+            n=top_k
+        )
+        # call either vLLM or Azure
+        results = (
+            engine.generate(prompts, sampling)
+            if engine is not None
+            else azure_llm.generate(prompts, sampling)
+        )
+
+        # parse each generated batch
+        for i, res in enumerate(results):
+            all_raw.append(res.texts)
+            candidates = [parse_output(t, task) for t in res.texts]
+            valid = [c for c in candidates if c is not None]
+            if not valid:
+                all_flagged.append({
+                    "prompt": prompts[i],
+                    "outputs": res.texts,
+                    "reason": "No parseable outputs"
+                })
+                all_preds.append(None)
+            else:
+                if task == "binary":
+                    pred = max(set(valid), key=valid.count)
                 else:
-                    raise NotImplementedError(f"Only Azure OpenAI models supported currently. Got model_name={model_name}")
-
-                # Loop through each prompt
-            for prompt in prompts:
-                pred, raw_texts = try_generate_with_retries(
-                    prompt=prompt,
-                    generator_fn=gen_fn,
-                    task=task,
-                    max_retries=max_retries,
-                    flagged_list=all_flagged
-                )
+                    pred = round(sum(valid) / len(valid))
                 all_preds.append(pred)
-                all_raw.append(raw_texts)
 
-        elif reasoning_mode == "self_consistency":
-            sampling_sc = SamplingParams(
-                max_tokens=80,
-                temperature=0.7,  # encourage diverse outputs
-                top_p=0.95,
-                n=top_k
-            )
+    elif reasoning_mode == "self_refine":
+    for prompt, sample in zip(prompts, test_data):
+        pred, diag = run_self_refine(
+            prompt, azure_llm, task, max_rounds=3
+        )
+        all_preds.append(pred)
+        all_flagged.extend([{'prompt': prompt, 'round': d['round'], 'critique': d['critique']} for d in diag if 'error' in d])
+        all_raw.append([d['answer'] for d in diag])
 
-            def gen_fn_sc(prompt_text: str):
-                if model_name.startswith("openai/"):
-                    return llm.generate([prompt_text], sampling_sc)[0]
-                else:
-                    raise NotImplementedError(f"Only Azure OpenAI models supported currently. Got model_name={model_name}")
+    elif reasoning_mode == "self_consistency":
+        for prompt in prompts:
+            attempt = 0
+            success = False
+            while not success and attempt < MAX_SELF_RETRIES:
+                attempt += 1
+                try:
+                    # 1) generate top_k chains
+                    sampling = SamplingParams(..., n=top_k)
+                    result = azure_llm.generate([prompt], sampling)[0]
+                    
+                    # 2) parse them
+                    parsed = [parse_output(t, task) for t in result.texts]
+                    parsed = [p for p in parsed if p is not None]
+                    
+                    if parsed:
+                        # good! do your vote/average
+                        if task=="binary":
+                            pred = max(set(parsed), key=parsed.count)
+                        else:
+                            pred = round(sum(parsed)/len(parsed))
+                        all_preds.append(pred)
+                        all_raw.append(result.texts)
+                        success = True
+                    else:
+                        # unparseable: retry
+                        if attempt == MAX_SELF_RETRIES:
+                            flagged_prompts.append({
+                            "prompt": prompt,
+                            "reason": f"No parsable chains after {MAX_SELF_RETRIES} attempts",
+                            "last_texts": result.texts
+                            })
+                            all_preds.append(None)
+                            all_raw.append(result.texts)
+                        else:
+                            # sleep or back off if you want
+                            continue
 
-            for prompt in prompts:
-                pred, raw_texts = try_generate_with_retries(
-                    prompt=prompt,
-                    generator_fn=gen_fn_sc,
-                    task=task,
-                    max_retries=max_retries,
-                    flagged_list=all_flagged,
-                )
-                all_preds.append(pred)
-                all_raw.append(raw_texts)
+                except Exception as e:
+                    err = str(e).lower()
+                    # Content policy violation?
+                    if "policy" in err or "violation" in err:
+                        flagged_prompts.append({
+                        "prompt": prompt,
+                        "reason": "content policy violation",
+                        "error": err
+                        })
+                        all_preds.append(None)
+                        all_raw.append([])
+                        break
 
-        elif reasoning_mode == "self_refine":
-            for prompt in prompts:
-                pred, diagnostics = run_self_refine(prompt, task, llm, all_flagged, max_refinements=3, max_tries=max_retries)
-                if pred is not None:
-                    all_preds.append(parse_output(pred, task)) 
-                    all_raw.append([pred])
-                else:
-                    all_preds.append(None)
-                    all_raw.append([])
+                    # Connection error? retry indefinitely
+                    if "connection" in err or isinstance(e, (ConnectionError, socket.gaierror)):
+                        time.sleep(1)
+                        attempt -= 1  # don’t count against max
+                        continue
 
-        elif reasoning_mode == "tree_of_thoughts":
-            for prompt, sample in zip(prompts, test_data):
-                final, new_flags = run_tree_of_thoughts(
+                    # Other unexpected errors: you could choose to retry or flag
+                    if attempt == MAX_SELF_RETRIES:
+                        flagged_prompts.append({
+                        "prompt": prompt,
+                        "reason": f"Error after {MAX_SELF_RETRIES} attempts",
+                        "error": err
+                        })
+                        all_preds.append(None)
+                        all_raw.append([])
+                    else:
+                        continue
+    else:  # tree_of_thoughts
+        # run ToT individually on each prompt
+        for prompt, sample in zip(prompts, test_data):
+            pred, flagged = run_tree_of_thoughts(
                 prompt_base=prompt,
                 input_text=sample["text"],
                 emotion=sample["emotion"],
                 task=task,
-                llm=llm,
+                llm=azure_llm,
                 max_steps=max_steps,
-                beam_width=beam_width,
-                )
-                all_preds.append(final)
-                all_raw.append(None)
-                all_flagged.extend(new_flags)
+                beam_width=beam_width
+            )
+            all_raw.append(None)      # no raw list for ToT
+            all_preds.append(pred)
+            all_flagged.extend(flagged)
+    print(f"  Running evaluation for {len(prompts)} samples ...")
+    if len(prompts) > 0:
+        print(f"  Example prompt:\n{prompts[0]}\n---")
+    if model_name == "openai/gpt-4":
+        from openai import AzureOpenAI
 
+        print("Using Azure GPT-4.1...")
+            # collect per‑emotion lists
+            emotion2refs = defaultdict(list)
+            emotion2preds = defaultdict(list)
+            for i, sample in enumerate(test_data):
+                gold = sample["label"]
+                pred = parsed_outputs[i]
+                if pred is None:
+                    continue
+                emo = sample["emotion"]
+                emotion2refs[emo].append(gold)
+                emotion2preds[emo].append(pred)
+
+            # write out predictions as CSV
+            out_path = pathlib.Path(out_json)
+            csv_path = out_path.with_name(out_path.stem + "_predictions.csv")
+            os.makedirs(os.path.dirname(csv_path), exist_ok=True)
+            with open(csv_path, "w", encoding="utf-8", newline="") as f:
+                writer = csv.writer(f)
+                writer.writerow(["prompt_index", "prompt", "raw_outputs", "parsed", "gold", "emotion"])
+                for idx, (sample, prompt, outputs) in enumerate(zip(test_data, prompts, raw_outputs)):
+                    writer.writerow([
+                        idx,
+                        prompt,
+                        outputs,
+                        parsed_outputs[idx],
+                        sample["label"],
+                        sample["emotion"],
+                    ])
+
+            # now compute and return metrics
+            if task == "binary":
+                f1_per_emotion = {}
+                for emo, refs in emotion2refs.items():
+                    preds = emotion2preds[emo]
+                    f1_per_emotion[emo] = f1_score(refs, preds, average="binary", zero_division=0)
+                macro_f1 = sum(f1_per_emotion.values()) / len(f1_per_emotion)
+                return {
+                    "f1_per_emotion": f1_per_emotion,
+                    "macro_f1": macro_f1
+                }
+            else:
+                pearson_per_emotion = {}
+                for emo, refs in emotion2refs.items():
+                    preds = emotion2preds[emo]
+                    pearson_per_emotion[emo] = pearsonr(refs, preds)[0] if len(refs) >= 2 else 0.0
+                avg_pearson = sum(pearson_per_emotion.values()) / len(pearson_per_emotion)
+                return {
+                    "pearson_per_emotion": pearson_per_emotion,
+                    "avg_pearson": avg_pearson
+                }
+
+        flagged_prompts = []
+        generation_results = []
+        parsed_outputs = []
+        raw_outputs = []
+        MAX_RETRIES = 5
+        for i, prompt in enumerate(prompts):
+            output = None
+            parsed = None
+            text = ""
+            attempt = 1
+
+            while attempt <= MAX_RETRIES:
+                try:
+                    if use_tree_of_thoughts:
+                        parsed, new_flags = run_tree_of_thoughts(
+                            prompt_base=prompt,
+                            emotion=sample["emotion"],
+                            task=task,
+                            llm=azure_llm,
+                            max_steps=3,
+                            beam_width=3
+                        )
+                        flagged_prompts.extend(new_flags)
+                        raw_outputs.append("[ToT inference used]")
+                        parsed_outputs.append(parsed)
+                        generation_results.append({
+                            "input": sample["text"],
+                            "emotion": sample["emotion"],
+                            "target": sample["label"],
+                            "output": "[ToT inference used]",
+                            "parsed": parsed
+                        })
+                        output = "[ToT inference used]"
+                    else:
+                        response = client.chat.completions.create(
+                            model="gpt-4.1",
+                            messages=[
+                                {"role": "system", "content": "You are a helpful assistant."},
+                                {"role": "user", "content": [{"type": "text", "text": prompt}]}
+                            ],
+                            max_tokens=80
+                        )
+                        text = (response.choices[0].message.content or "")
+                        parsed = parse_output(text, task)
+                        if parsed is not None:
+                            output = text.strip()
+                            break
+
+                        print(f"[RETRY] Prompt #{i} gave unparseable output: {repr(text)} — retrying…")
+                        time.sleep(1)  # avoid hammering
+                except Exception as e:
+                    err = str(e)
+
+                    if "content management policy" in err or "ResponsibleAIPolicyViolation" in err:
+                        print(f"[FLAGGED] Prompt #{i} violated policy: {err}")
+                        flagged_prompts.append({"index": i, "prompt": prompt, "error": err})
+                        break
+
+                    if isinstance(e, (socket.gaierror, ConnectionError)) or "Connection" in err:
+                        print(f"[OFFLINE] Prompt #{i} failed due to no internet. Waiting and retrying...")
+                        time.sleep(10)
+                        continue
+
+                    print(f"[ERROR] Prompt #{i} error: {err} — retrying (attempt {attempt}/{MAX_RETRIES})")
+                    attempt += 1
+
+            if output is None:
+                print(f"[SKIPPED] Prompt #{i} failed after {MAX_RETRIES} attempts.")
+                raw_outputs.append("")
+                parsed_outputs.append(None)
+                flagged_prompts.append({
+                    "index": i,
+                    "prompt": prompt,
+                    "reason": f"Max retries reached with unparseable output after {MAX_RETRIES} attempts.",
+                    "last_output": text.strip() if isinstance(text, str) else "Unknown"
+                })
+                continue
+
+            print(f"\n--- Prompt #{i} ---")
+            print(f"Prompt:\n{prompt}\nOutput:\n{output}\n")
+            raw_outputs.append(output)
+            parsed_outputs.append(parsed)
+    elif model_name == "google/gemini-2F":
+        import requests
+
+        print("Using Google gemini-2F...")
+
+        GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") 
+        GEMINI_API_ENDPOINT = os.getenv("GEMINI_API_ENDPOINT")
+
+        headers = {
+            "Content-Type": "application/json"
+        }
+        BASE_BACKOFF = 5
+        MAX_BACKOFF= 300
+        flagged_prompts = []
+        raw_outputs = []
+        parsed_outputs = []
+        MAX_RETRIES = 5
+
+        for i, prompt in enumerate(prompts):
+            output = None
+            parsed = None
+
+            for attempt in range(1, MAX_RETRIES + 1):
+                payload = {
+                    "contents": [{
+                        "parts": [{"text": prompt}],
+                        "role": "user"
+                    }]
+                }
+                try:
+                    response = requests.post(
+                        GEMINI_API_ENDPOINT,
+                        headers=headers,
+                        json=payload
+                    )
+                    print(f"[DEBUG] Prompt #{i} Attempt {attempt} → HTTP {response.status_code}")
+                    print(f"[DEBUG] Full response body:\n{response.text}\n")
+                    response.raise_for_status()
+
+                    text = response.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+                    print(f"[DEBUG] Raw model text for prompt #{i}:\n{text!r}\n")
+                    parsed = parse_output(text, task)
+                    if parsed is not None:
+                        output = text
+                        break
+                    print(f"[RETRY] Prompt #{i} unparseable: {repr(text)} — retrying…")
+
+                except requests.exceptions.HTTPError as e:
+                    code = response.status_code
+                    # Retry on rate-limit or service-unavailable
+                    if code in (429, 503):
+                        backoff = min(BASE_BACKOFF * 2**(attempt - 1), MAX_BACKOFF)
+                        sleep_time = random.uniform(0, backoff)
+                        print(f"[{code}] attempt {attempt}/{MAX_RETRIES}, sleeping {sleep_time:.1f}s…")
+                        time.sleep(sleep_time)
+                        continue
+                    # Policy violations: stop retrying this prompt
+                    if "content policy" in str(e).lower():
+                        flagged_prompts.append({
+                            "index": i,
+                            "prompt": prompt,
+                            "error": str(e)
+                        })
+                        break
+                    # Other HTTP errors: treat as fatal
+                    print(f"[ERROR] HTTP {code} for prompt #{i}: {e}")
+                    break
+
+                except (requests.exceptions.ConnectionError, socket.gaierror) as e:
+                    # Transient network error: small constant backoff
+                    print(f"[OFFLINE] {e}, sleeping {BASE_BACKOFF}s…")
+                    time.sleep(BASE_BACKOFF)
+                    continue
+
+            # After the retry loop
+            if output is None:
+                print(f"[SKIPPED] Prompt #{i} failed after {MAX_RETRIES} attempts.")
+                flagged_prompts.append({
+                    "index": i,
+                    "prompt": prompt,
+                    "reason": f"Max retries reached after {MAX_RETRIES} attempts"
+                })
+                raw_outputs.append("")
+                parsed_outputs.append(None)
+            else:
+                raw_outputs.append(output)
+                parsed_outputs.append(parsed)
+    # ------------------------------------------------------
+    # 3) Generate predictions with vLLM
+    # ------------------------------------------------------
+    else:
+        max_tokens = 80
+        if "DeepSeek" in model_name:
+            print("Using DeepSeek model, increasing max_tokens from 80 to 1024")
+            max_tokens = 1024
+        if top_k <= 1:
+            sampling_params = SamplingParams(
+                max_tokens=max_tokens,
+                temperature=0.0,
+                top_p=0.95,
+                n=top_k
+            )
         else:
-            raise ValueError(f"Unsupported reasoning_mode: {reasoning_mode}")
+            sampling_params = SamplingParams(
+                max_tokens=max_tokens,
+                temperature=0.7,
+                top_p=0.95,
+                n=top_k
+            )
+        generation_results = engine.generate(prompts, sampling_params)
 
-
-    flagged_path = pathlib.Path(out_json).with_name(pathlib.Path(out_json).stem + "_flagged" + pathlib.Path(out_json).suffix)
-    if all_flagged:
-        os.makedirs(flagged_path.parent, exist_ok=True)
-        with open(flagged_path, "w", encoding="utf-8") as fp:
-            json.dump(all_flagged, fp, indent=2)
-
-    preds_csv = pathlib.Path(out_json).with_name(
-        pathlib.Path(out_json).stem + "_predictions" + pathlib.Path(out_json).suffix
-    )
-    os.makedirs(preds_csv.parent, exist_ok=True)
-    with open(preds_csv, "w", encoding="utf-8", newline="") as fp:
-        writer = csv.writer(fp)
-        writer.writerow(["prompt_index", "prompt", "raw_outputs", "parsed", "gold", "emotion"])
-        for idx, (sample, prompt) in enumerate(zip(test_data, prompts)):
-            raw = all_raw[idx] if idx < len(all_raw) else []
-            pred = all_preds[idx] if idx < len(all_preds) else None
-            writer.writerow([
-                idx,
-                prompt,
-                raw,
-                pred,
-                sample["label"],
-                sample["emotion"]
-            ])
-
-    # ----------------------------------------
-    # 6) Compute metrics
-    # ----------------------------------------
+    # ------------------------------------------------------
+    # 4) Collect + parse predictions, compute metrics
+    # ------------------------------------------------------
     emotion2refs = defaultdict(list)
     emotion2preds = defaultdict(list)
-    for sample, pred in zip(test_data, all_preds):
-        if pred is None:
-            continue
-        emotion2refs[sample["emotion"]].append(sample["label"])
-        emotion2preds[sample["emotion"]].append(pred)
+
+    for i, (sample, prompt) in enumerate(zip(test_data, prompts)):
+        gold_label = sample["label"]
+        e = sample["emotion"]
+
+    if i >= len(generation_results.outputs):  # safety
+        print(f"[WARNING] Missing output for #{i}, skipping.")
+        continue
+
+    completions = generation_results.outputs[i].texts
+    parsed_candidates = [parse_output(text, task) for text in completions]
+    parsed_candidates = [p for p in parsed_candidates if p is not None]
+
+    if not parsed_candidates:
+        print(f"[SKIPPED] All outputs for prompt #{i} were unparseable.")
+        continue
+
+    # Majority vote
+    if task == "binary":
+    final_pred = max(set(parsed_candidates), key=parsed_candidates.count)
+    elif task == "intensity":
+        final_pred = round(sum(parsed_candidates) / len(parsed_candidates))
+
+    emotion2refs[e].append(int(gold_label))
+    emotion2preds[e].append(int(final_pred))
+
+        
 
     if task == "binary":
-        f1_per_emotion = {
-            emo: f1_score(refs, emotion2preds[emo], average="binary", zero_division=0)
-            for emo, refs in emotion2refs.items()
-        }
-        macro_f1 = sum(f1_per_emotion.values()) / len(f1_per_emotion) if f1_per_emotion else 0.0
-        return {"f1_per_emotion": f1_per_emotion, "macro_f1": macro_f1}
+        # F1 computation
+        f1_per_emotion = {}
+        for emo in EMOTIONS:
+            if emo in emotion2refs:
+                refs = emotion2refs[emo]
+                preds = emotion2preds[emo]
+                # Print a few examples of prediction and reference
+                if len(refs) > 0:
+                    print(f"  {emo} refs: {refs[:3]} vs. preds: {preds[:3]}")
+                else:
+                    print("No refs for", emo)
 
-    else:  # intensity
-        pearson_per_emotion = {
-            emo: (pearsonr(refs, emotion2preds[emo])[0] if len(refs) > 1 else 0.0)
-            for emo, refs in emotion2refs.items()
-        }
-        avg_pearson = sum(pearson_per_emotion.values()) / len(pearson_per_emotion) if pearson_per_emotion else 0.0
+                f1_val = f1_score(refs, preds, average="binary", zero_division=0)
+                f1_per_emotion[emo] = f1_val
+        macro_f1 = (
+            sum(f1_per_emotion.values()) / len(f1_per_emotion)
+            if len(f1_per_emotion) > 0 else 0.0
+        )
+        if flagged_prompts:
+            out_path = pathlib.Path(out_json)
+            flagged_filename = out_path.with_name(out_path.stem + "_flagged.json")
+            os.makedirs(os.path.dirname(flagged_filename), exist_ok=True)
+            with open(flagged_filename, "w", encoding="utf-8") as f:
+                json.dump(flagged_prompts, f, indent=2)
+
+        out_path = pathlib.Path(out_json)
+        csv_path = out_path.with_name(out_path.stem + "_predictions.csv")
+
+        with open(csv_path, "w", encoding="utf-8", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(["prompt_index", "prompt", "output", "parsed_label", "gold_label", "emotion"])
+            for i, (sample, prompt) in enumerate(zip(test_data, prompts)):
+                output = raw_outputs[i] if i < len(raw_outputs) else ""
+                parsed = parsed_outputs[i] if i < len(parsed_outputs) else ""
+                label = sample["label"]
+                emotion = sample["emotion"]
+                writer.writerow([i, prompt, output, parsed, label, emotion])
+        return {"f1_per_emotion": f1_per_emotion, "macro_f1": macro_f1}
+    else:
+        # Pearson computation
+        pearson_per_emotion = {}
+        for emo in EMOTIONS:
+            if emo in emotion2refs:
+                refs = emotion2refs[emo]
+                preds = emotion2preds[emo]
+                # Print a few examples of prediction and reference
+                if len(refs) > 0:
+                    print(f"  {emo} refs: {refs[:3]} vs. preds: {preds[:3]}")
+                else:
+                    print("No refs for", emo)
+                
+                r_val = pearsonr(refs, preds)[0]
+                pearson_per_emotion[emo] = r_val
+        avg_pearson = (
+            sum(pearson_per_emotion.values()) / len(pearson_per_emotion)
+            if len(pearson_per_emotion) > 0 else 0.0
+        )
+        if flagged_prompts:
+            out_path = pathlib.Path(out_json)
+            flagged_filename = out_path.with_name(out_path.stem + "_flagged.json")
+            os.makedirs(os.path.dirname(flagged_filename), exist_ok=True)
+            with open(flagged_filename, "w", encoding="utf-8") as f:
+                json.dump(flagged_prompts, f, indent=2)
+        out_path = pathlib.Path(out_json)
+        csv_path = out_path.with_name(out_path.stem + "_predictions.csv")
+
+        with open(csv_path, "w", encoding="utf-8", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(["prompt_index", "prompt", "output", "parsed_label", "gold_label", "emotion"])
+            for i, (sample, prompt) in enumerate(zip(test_data, prompts)):
+                output = raw_outputs[i] if i < len(raw_outputs) else ""
+                parsed = parsed_outputs[i] if i < len(parsed_outputs) else ""
+                label = sample["label"]
+                emotion = sample["emotion"]
+                writer.writerow([i, prompt, output, parsed, label, emotion])
         return {"pearson_per_emotion": pearson_per_emotion, "avg_pearson": avg_pearson}
                                
-def evaluate_ablation(
-    test_data,
-    prompt_variants,
-    main_prompt,
-    main_top_k,
-    main_n_shot,
-    shot_counts,
-    topk_list,
-    task,
-    model_name,
-    language,
-    llm,
-    reasoning_mode,
-    max_steps,
-    tot_beam_width,
-    balanced
-):
+def evaluate_ablation(engine,
+                      test_data: List[dict],
+                      task: str,
+                      prompt_variants: dict,
+                      shot_counts: List[int],
+                      topk_list: List[int],
+                      main_variant: str,
+                      main_n_shot: int,
+                      main_top_k: int,
+                      model_name: str) -> dict:
+    """
+    Runs ablations over:
+      1) Prompt variants
+      2) Few-shot example counts
+      3) top_k sampling
+
+    Also does optional English-v1 vs. native-v1 if relevant.
+    Returns a dict with 'prompt_variant', 'few_shot', 'top_k', etc.
+    """
     results = {}
 
     # 1. Prompt variants
@@ -994,115 +1261,55 @@ def evaluate_ablation(
     variant_results = {}
     for variant, tmpl in prompt_variants.items():
         scores_dict = evaluate_model_on_test_set(
-            test_data=test_data,
-            prompt_template=tmpl,
-            task=task,
-            top_k=main_top_k,
-            n_shot=main_n_shot,
-            model_name=model_name,
-            out_json=f"...",
-            llm=llm,
-            reasoning_mode=reasoning_mode,
-            max_steps=max_steps,
-            beam_width=tot_beam_width,
+            engine, test_data, tmpl, task, main_top_k, n_shot=main_n_shot, model_name=model_name,out_json=f"llm_track_ab_results/tmp_{model_name.replace('/', '_')}_{task}_prompt_{variant}.json"
         )
         variant_results[variant] = scores_dict
 
-        score = scores_dict["macro_f1"] if task == "binary" else scores_dict["avg_pearson"]
-        print(f"  Prompt variant '{variant}': {score:.4f}")
+        if task == "binary":
+            main_score = scores_dict["macro_f1"]
+            print(f"  Prompt variant '{variant}': macro-F1 = {main_score:.4f}")
+        else:
+            main_score = scores_dict["avg_pearson"]
+            print(f"  Prompt variant '{variant}': avg-Pearson = {main_score:.4f}")
 
     results['prompt_variant'] = variant_results
 
     # 2. Few-shot examples
     print("=== Ablation: Few-shot Examples ===")
     few_shot_results = {}
+    main_prompt = prompt_variants[main_variant]
     for n_shot in shot_counts:
         scores_dict = evaluate_model_on_test_set(
-            test_data=test_data,
-            prompt_template=main_prompt,
-            task=task,
-            top_k=main_top_k,
-            n_shot=n_shot,
-            model_name=model_name,
-            out_json=f"...",
-            llm=llm,
-            reasoning_mode=reasoning_mode,
-            max_steps=max_steps,
-            beam_width=tot_beam_width,
+            engine, test_data, main_prompt, task, main_top_k, n_shot=n_shot, model_name=model_name,out_json=f"llm_track_ab_results/tmp_{model_name.replace('/', '_')}_{task}_fewshot_{n_shot}.json"
         )
         few_shot_results[n_shot] = scores_dict
-        score = scores_dict["macro_f1"] if task == "binary" else scores_dict["avg_pearson"]
-        print(f"  n_shot = {n_shot}: {score:.4f}")
+
+        if task == "binary":
+            main_score = scores_dict["macro_f1"]
+            print(f"  n_shot = {n_shot}: macro-F1 = {main_score:.4f}")
+        else:
+            main_score = scores_dict["avg_pearson"]
+            print(f"  n_shot = {n_shot}: avg-Pearson = {main_score:.4f}")
 
     results['few_shot'] = few_shot_results
 
     # 3. top_k
-    if reasoning_mode == "self_consistency":
-        print("=== Ablation: Top_k Values (self_consistency only) ===")
-        topk_results = {}
-        for k in topk_list:
-            scores = evaluate_model_on_test_set(
-                test_data=test_data,
-                prompt_template=main_prompt,
-                task=task,
-                top_k=k,
-                n_shot=main_n_shot,
-                model_name=model_name,
-                llm=llm,
-                reasoning_mode=reasoning_mode,
-                max_steps=max_steps,
-                beam_width=tot_beam_width,
-            )
-            topk_results[k] = scores
-            print(f"  top_k = {k}: {scores['macro_f1']:.4f}")
-        results['top_k'] = topk_results
-    
-    sample_sizes = [30, 48, 60, 90, 120, 150, 180, 240]
-    print("=== Ablation: Sample Sizes ===")
-    sample_size_results = {}
-    for size in sample_sizes:
-        print(f"\n  → Sampling {size} examples ...")
-        if balanced:
-            # Compute test CSV path inside function
-            csv_path = os.path.join(TEST_DIRS[task], f"{language}.csv")
-
-            if task == "binary":
-                sampled_df = sample_dataset(csv_path, size)
-            else:
-                sampled_df = sample_dataset_intensity(csv_path, size)
-
-            new_test_data = []
-            for row in sampled_df.itertuples(index=False):
-                for emo in EMOTIONS:
-                    val = getattr(row, emo, 0)
-                    label = 1 if val == 1 else 0 if task == "binary" else max(0, min(3, int(val)))
-                    new_test_data.append({
-                        "text": row.text,
-                        "emotion": emo,
-                        "label": label
-                    })
-        else:
-            # Just slice test_data (unbalanced)
-            new_test_data = test_data[:size]
-
-        scores = evaluate_model_on_test_set(
-            test_data=new_test_data,
-            prompt_template=main_prompt,
-            task=task,
-            top_k=main_top_k,
-            n_shot=main_n_shot,
-            model_name=model_name,
-            llm=llm,
-            reasoning_mode=reasoning_mode,
-            max_steps=max_steps,
-            beam_width=tot_beam_width,
-            out_json= out_json
+    print("=== Ablation: Top_k Values ===")
+    topk_results = {}
+    for k in topk_list:
+        scores_dict = evaluate_model_on_test_set(
+            engine, test_data, main_prompt, task, k, n_shot=main_n_shot, model_name=model_name, out_json=f"llm_track_ab_results/tmp_{model_name.replace('/', '_')}_{task}_topk_{k}.json"
         )
-        sample_size_results[size] = scores
-        score = scores["macro_f1"] if task == "binary" else scores["avg_pearson"]
-        print(f"  sample_size = {size}: {score:.4f}")
+        topk_results[k] = scores_dict
 
-    results["sample_size"] = sample_size_results
+        if task == "binary":
+            main_score = scores_dict["macro_f1"]
+            print(f"  top_k = {k}: macro-F1 = {main_score:.4f}")
+        else:
+            main_score = scores_dict["avg_pearson"]
+            print(f"  top_k = {k}: avg-Pearson = {main_score:.4f}")
+
+    results['top_k'] = topk_results
 
     return results
 
@@ -1129,7 +1336,6 @@ if __name__ == "__main__":
     parser.add_argument("--bnb_quant_type", type=str, default="nf4",
                         choices=["fp4", "nf4"],
                         help="4-bit quantization type (not fully used here).")
-    parser.add_argument("--top_k", type=int, default=1, help="Number of completions to sample for self-consistency or top-k reasoning.")
     parser.add_argument("--use_double_quant", action="store_true",
                         help="Enable double quantization if supported by vLLM.")
     parser.add_argument("--compute_dtype", type=str, default="bfloat16",
@@ -1147,17 +1353,17 @@ if __name__ == "__main__":
         help="If set, build and print example prompts for each variant and exit (no model calls)."
     )
     parser.add_argument(
-        "--reasoning_mode",
-        type=str,
-        default="default",
-        choices=["default", "self_consistency", "tree_of_thoughts","self_refine"],
-        help="Choose the reasoning strategy: default (1-shot), self_consistency (vote), or tree_of_thoughts (search)"
+    "--reasoning_mode",
+    type=str,
+    default="default",
+    choices=["default", "self_consistency", "tree_of_thoughts","self_refine"],
+    help="Choose the reasoning strategy: default (1-shot), self_consistency (vote), or tree_of_thoughts (search)"
     )
     parser.add_argument(
-        "--sample_size",
-        type=int,
-        default=None,
-        help="Total number of examples to draw (will attempt to balance equally across emotions).")
+    "--sample_size",
+    type=int,
+    default=None,
+    help="Total number of examples to draw (will attempt to balance equally across emotions).")
     parser.add_argument(
         "--balanced",
         action="store_true",
@@ -1176,20 +1382,13 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    if args.reasoning_mode != "self_consistency":
-        print(f"[DEBUG] For reasoning_mode={args.reasoning_mode}, forcing top_k=1 (was {args.top_k})")
-        args.top_k = 1
-
-    if USE_MOCK_LLM:
-        print("[DEBUG] Using Mock LLM for offline testing.")
-        llm_engine = MockLLM()
-    else:
-        client = AzureOpenAI(
-            api_key=os.getenv("AZURE_OPENAI_KEY"),
-            api_version=AZURE_OPENAI_VERSION,
-            base_url=os.getenv("AZURE_OPENAI_ENDPOINT") + f"/openai/deployments/{AZURE_OPENAI_DEPLOYMENT}"
-        )
-        llm_engine = AzureEngineWrapper(client, AZURE_OPENAI_DEPLOYMENT)
+    
+    client = AzureOpenAI(
+        api_key=os.getenv("AZURE_OPENAI_KEY"),
+        api_version="2025-01-01-preview",
+        base_url=os.getenv("AZURE_OPENAI_ENDPOINT") + "/openai/deployments/gpt-4.1"
+    )
+    azure_llm = AzureEngineWrapper(client, "gpt-4.1")
 
     if args.model_name.startswith("openai/"):
         vllm_engine = None
@@ -1198,6 +1397,25 @@ if __name__ == "__main__":
         vllm_engine = LLM(model=args.model_name,
                           tokenizer=args.model_name,
                           tensor_parallel_size=args.tensor_parallel_size)
+
+    data = load_test_data_multicolumn(csv_path, task=args.task)
+    main_prompt = TASK_CONFIGS[args.task]["prompt_variants"][ main_config["variant"] ]
+
+    # and finally call
+    results = evaluate_model_on_test_set(
+        engine=vllm_engine,
+        azure_llm=azure_llm,
+        test_data=data,
+        prompt_template=main_prompt,
+        task=args.task,
+        top_k=main_config["top_k"],
+        n_shot=args.n_shot or main_config["n_shot"],
+        reasoning_mode=args.reasoning_mode,
+        max_steps=args.tot_steps,
+        beam_width=args.tot_beam_width,
+        out_json=out_json
+    )
+    print("Done:", results)
     
     # Dry‑run: just construct & print a prompt for each variant, then exit
     if args.dry_run:
@@ -1244,8 +1462,8 @@ if __name__ == "__main__":
             n_shot_main = args.n_shot if args.n_shot is not None else main_config["n_shot"]
 
             out_json = (
-                f"llm_track_ab_results/results_{safe_model}_{args.task}_{args.language}_"
-                f"{args.sample_size}samples_{args.n_shot}shot_{args.prompt_variant}_topk{args.top_k}_{args.reasoning_mode}.json"
+                f"llm_track_ab_results/results_{safe_model}_{args.task}_{lang}_"
+                f"{n_shot_main}shot_{var_name}_topk{topk_main}.json"
             )
         else:
             out_json = args.output_file
@@ -1284,41 +1502,31 @@ if __name__ == "__main__":
                         "emotion": emo,
                         "label": label
                     })
-
+        else:
+            # no sampling → use full multi‑column loader
+            data = load_test_data_multicolumn(csv_path, task=args.task)
+        if not data:
+            raise ValueError(f"No data loaded for {lang} at {csv_path}")
 
         # Prepare the main prompt template + few shot examples
         config = TASK_CONFIGS[args.task]
+        var_name = main_config["variant"]
         topk_main = main_config["top_k"]
         n_shot_main = args.n_shot if args.n_shot is not None else main_config["n_shot"]
-        #var_name = main_config["variant"]
-        #main_prompt = config["prompt_variants"][var_name]
 
-        if args.reasoning_mode == "tree_of_thoughts":
-            # Use the dedicated tree_of_thoughts prompt variant for main run
-            if "tree_of_thoughts" in config["prompt_variants"]:
-                var_name = "tree_of_thoughts"
-                main_prompt = config["prompt_variants"][var_name]
-            else:
-                raise ValueError("No Tree of Thoughts prompt variant defined in TASK_CONFIGS for this task.")
-        else:
-            # Use the prompt variant passed by user or default
-            var_name = args.prompt_variant if args.prompt_variant else main_config["variant"]
-            main_prompt = config["prompt_variants"][var_name]
+        main_prompt = config["prompt_variants"][var_name]
 
         # Evaluate single-run
         print(f"Running main evaluation for task={args.task}, lang={lang} ...")
         main_res = evaluate_model_on_test_set(
-            model_name=model_name,
-            llm=llm_engine,
+            engine=engine,
             test_data=data,
             prompt_template=main_prompt,
             task=args.task,
             top_k=topk_main,
             n_shot=n_shot_main,
-            out_json=out_json,
-            reasoning_mode=args.reasoning_mode,     
-            max_steps=args.tot_steps,                
-            beam_width=args.tot_beam_width
+            model_name=model_name,
+            out_json=out_json
         )
         # Log the main result
         if args.task == "binary":
@@ -1330,92 +1538,40 @@ if __name__ == "__main__":
         # Possibly run ablations if language is in ablation list
         ablation_res = {}
         if lang in FULL_ABLATION_LANGUAGES:
-            task = args.task
-            reasoning_mode = args.reasoning_mode
-            model_name = args.model_name
-            prompt_variants = TASK_CONFIGS[task]['prompt_variants']
-            if args.prompt_variant is not None:
-                if args.prompt_variant not in prompt_variants:
-                    raise ValueError(f"Prompt variant {args.prompt_variant} not found for task {task}")
-                prompt_variants = {args.prompt_variant: prompt_variants[args.prompt_variant]}
             print("  ~ Running ablations for this language ~")
-            shot_counts = [0, 1, 2, 4, 6]
-            topk_list = [1, 2, 4, 8]
-
-            # Call ablation (fix argument names)
             ablation_res = evaluate_ablation(
+                engine=engine,
                 test_data=data,
-                prompt_variants=prompt_variants,
-                main_prompt=main_prompt,
-                main_top_k=topk_main,
-                main_n_shot=n_shot_main,
-                shot_counts=shot_counts,
-                topk_list=topk_list,
                 task=args.task,
-                model_name=args.model_name,
-                language=lang,
-                llm=llm_engine,
-                reasoning_mode=args.reasoning_mode,
-                max_steps=args.tot_steps,
-                tot_beam_width=args.tot_beam_width,
-                balanced= args.balanced
+                prompt_variants=config["prompt_variants"],
+                shot_counts=few_shot_counts,
+                topk_list=top_k_list,
+                main_variant=var_name,
+                main_n_shot=n_shot_main,
+                main_top_k=topk_main,
+                model_name=model_name
             )
         
         if lang in NATIVE_PROMPT_ABLATION_LANGUAGES:
+            # Extra ablation: compare English v1 vs. Native v1 for binary tasks
             if args.task == "binary" and lang in LANG_NATIVE_PROMPTS:
                 print("  ~ Comparing English v1 vs. Native v1 prompt ~")
-
-                # Required variables
-                model_name = args.model_name
-                task = args.task
-                test_data = data  # Assuming 'data' is defined earlier from sampled dataset
-
-                # Prompt templates
-                eng_v1_prompt = TASK_CONFIGS[task]["prompt_variants"]["v1"]
-                native_v1_prompt = LANG_NATIVE_PROMPTS[lang]
-
-                # Other arguments
-                top_k = args.top_k if hasattr(args, "top_k") else 4
-                n_shot = args.n_shot if hasattr(args, "n_shot") else 4
-                reasoning_mode = args.reasoning_mode
-                max_steps = args.tot_steps if hasattr(args, "tot_steps") else 3
-                beam_width = args.tot_beam_width if hasattr(args, "tot_beam_width") else 3
-
-                # Run evaluation for English v1
                 eng_v1_scores = evaluate_model_on_test_set(
-                    model_name=model_name,
-                    llm=llm_engine,
-                    test_data=test_data,
-                    prompt_template=eng_v1_prompt,
-                    task=task,
-                    top_k=top_k,
-                    n_shot=n_shot,
-                    reasoning_mode=reasoning_mode,
-                    max_steps=max_steps,
-                    beam_width=beam_width,
-                    out_json=f"llm_track_ab_results/tmp_{model_name.replace('/', '_')}_{task}_{lang}_engv1.json"
+                    engine, data,
+                    config["prompt_variants"]["v1"],
+                    args.task, topk_main, n_shot_main, model_name,
+                    out_json=f"llm_track_ab_results/tmp_{safe_model}_{args.task}_{lang}_engv1.json"
                 )
-
-                # Run evaluation for Native v1
                 native_v1_scores = evaluate_model_on_test_set(
-                    model_name=model_name,
-                    llm=llm_engine,
-                    test_data=test_data,
-                    prompt_template=native_v1_prompt,
-                    task=task,
-                    top_k=top_k,
-                    n_shot=n_shot,
-                    reasoning_mode=reasoning_mode,
-                    max_steps=max_steps,
-                    beam_width=beam_width,
-                    out_json=f"llm_track_ab_results/tmp_{model_name.replace('/', '_')}_{task}_{lang}_nativev1.json"
+                    engine, data,
+                    native_v1_prompt,
+                    args.task, topk_main, n_shot_main, model_name,
+                    out_json=f"llm_track_ab_results/tmp_{safe_model}_{args.task}_{lang}_nativev1.json"
                 )
-
                 ablation_res["english_v1_vs_native_v1"] = {
                     "f1_english_v1": eng_v1_scores,
                     "f1_native_v1": native_v1_scores
                 }
-
                 print(f"     English v1 macro-F1 = {eng_v1_scores['macro_f1']:.4f} "
                     f"vs. Native v1 macro-F1 = {native_v1_scores['macro_f1']:.4f}")
 

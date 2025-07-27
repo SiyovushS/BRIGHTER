@@ -1,0 +1,181 @@
+{
+    "task": "intensity",
+    "language": "eng",
+    "model_name": "openai/gpt-4",
+    "n_shot": 4,
+    "prompt_variant": "v1",
+    "top_k": 1,
+    "main_result": {
+        "pearson_per_emotion": {
+            "anger": -0.1315004713843441,
+            "disgust": NaN,
+            "fear": 0.017360483211470372,
+            "joy": 0.07884388540159093,
+            "sadness": -0.14640088038867624,
+            "surprise": 0.044467214394159724
+        },
+        "avg_pearson": NaN
+    },
+    "ablation": {
+        "prompt_variant": {
+            "v1": {
+                "pearson_per_emotion": {
+                    "anger": 0.012473881696844949,
+                    "disgust": NaN,
+                    "fear": -0.16255460710166086,
+                    "joy": 0.0018493480480176669,
+                    "sadness": -0.23679440255164474,
+                    "surprise": 0.009269428511687765
+                },
+                "avg_pearson": NaN
+            }
+        },
+        "few_shot": {
+            "0": {
+                "pearson_per_emotion": {
+                    "anger": -0.30574565717997637,
+                    "disgust": NaN,
+                    "fear": 0.04056812544449871,
+                    "joy": 0.1728448763742896,
+                    "sadness": 0.11566805354829707,
+                    "surprise": 0.12985492183869896
+                },
+                "avg_pearson": NaN
+            },
+            "1": {
+                "pearson_per_emotion": {
+                    "anger": 0.04597170950834793,
+                    "disgust": NaN,
+                    "fear": 0.15031090735868674,
+                    "joy": -0.00577470588096668,
+                    "sadness": 0.2175668544241066,
+                    "surprise": 0.03818112566872818
+                },
+                "avg_pearson": NaN
+            },
+            "2": {
+                "pearson_per_emotion": {
+                    "anger": 0.16757547291621472,
+                    "disgust": NaN,
+                    "fear": 0.0023243434998128226,
+                    "joy": -0.17698542268528103,
+                    "sadness": -0.07608745594219737,
+                    "surprise": -0.2636138638617894
+                },
+                "avg_pearson": NaN
+            },
+            "4": {
+                "pearson_per_emotion": {
+                    "anger": -0.09648569149923628,
+                    "disgust": NaN,
+                    "fear": -0.08333988626645744,
+                    "joy": 0.1538352568093953,
+                    "sadness": -0.10901938674690262,
+                    "surprise": 0.1738965807402155
+                },
+                "avg_pearson": NaN
+            },
+            "6": {
+                "pearson_per_emotion": {
+                    "anger": 0.04541424489530599,
+                    "disgust": NaN,
+                    "fear": -0.0789099149427171,
+                    "joy": 0.04939261239099363,
+                    "sadness": 0.01777273526505202,
+                    "surprise": -0.19526035800628938
+                },
+                "avg_pearson": NaN
+            }
+        },
+        "sample_size": {
+            "30": {
+                "pearson_per_emotion": {
+                    "anger": -0.03204929757373316,
+                    "disgust": NaN,
+                    "fear": -0.13173827646305825,
+                    "joy": -0.15168840320590865,
+                    "sadness": 0.029098798098966275,
+                    "surprise": -0.18449290516442773
+                },
+                "avg_pearson": NaN
+            },
+            "48": {
+                "pearson_per_emotion": {
+                    "anger": 0.28703324107236616,
+                    "disgust": NaN,
+                    "fear": -0.18787615935854934,
+                    "joy": 0.016600604060982245,
+                    "sadness": 0.1100486478423364,
+                    "surprise": 0.15140205794188147
+                },
+                "avg_pearson": NaN
+            },
+            "60": {
+                "pearson_per_emotion": {
+                    "anger": 0.08061579980258758,
+                    "disgust": NaN,
+                    "fear": 0.026773850818356645,
+                    "joy": 0.1381940660757575,
+                    "sadness": -0.12352743293535294,
+                    "surprise": -0.10570628359714176
+                },
+                "avg_pearson": NaN
+            },
+            "90": {
+                "pearson_per_emotion": {
+                    "anger": 0.08379669189465795,
+                    "disgust": NaN,
+                    "fear": 0.01391724697928979,
+                    "joy": -0.09943886245297733,
+                    "sadness": -0.06611073566849311,
+                    "surprise": 0.1419683381427142
+                },
+                "avg_pearson": NaN
+            },
+            "120": {
+                "pearson_per_emotion": {
+                    "anger": -0.027325839747710128,
+                    "disgust": NaN,
+                    "fear": -0.07232358079537272,
+                    "joy": -0.06755304981906528,
+                    "sadness": -0.029677262727491494,
+                    "surprise": -0.010898331191235622
+                },
+                "avg_pearson": NaN
+            },
+            "150": {
+                "pearson_per_emotion": {
+                    "anger": 0.017708387239721155,
+                    "disgust": NaN,
+                    "fear": 0.08876408911114214,
+                    "joy": -0.05501802815800929,
+                    "sadness": 0.055548369364000386,
+                    "surprise": 0.13565591710726094
+                },
+                "avg_pearson": NaN
+            },
+            "180": {
+                "pearson_per_emotion": {
+                    "anger": 0.11612602411677593,
+                    "disgust": NaN,
+                    "fear": -0.10965512808235911,
+                    "joy": -0.04494264776725229,
+                    "sadness": 0.04590775243782925,
+                    "surprise": 0.05047679089436933
+                },
+                "avg_pearson": NaN
+            },
+            "240": {
+                "pearson_per_emotion": {
+                    "anger": 0.015690366853054097,
+                    "disgust": NaN,
+                    "fear": 0.01947652452413777,
+                    "joy": 0.036068014216412474,
+                    "sadness": -0.0059823591635883785,
+                    "surprise": -0.06026264164968798
+                },
+                "avg_pearson": NaN
+            }
+        }
+    }
+}

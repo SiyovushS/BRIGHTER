@@ -1,0 +1,76 @@
+{
+    "task": "intensity",
+    "language": "eng",
+    "model_name": "openai/gpt-4",
+    "n_shot": 0,
+    "prompt_variant": "tree_of_thoughts",
+    "top_k": 1,
+    "main_result": {
+        "pearson_per_emotion": {},
+        "avg_pearson": 0.0
+    },
+    "ablation": {
+        "prompt_variant": {
+            "tree_of_thoughts": {
+                "pearson_per_emotion": {},
+                "avg_pearson": 0.0
+            }
+        },
+        "few_shot": {
+            "0": {
+                "pearson_per_emotion": {},
+                "avg_pearson": 0.0
+            },
+            "1": {
+                "pearson_per_emotion": {},
+                "avg_pearson": 0.0
+            },
+            "2": {
+                "pearson_per_emotion": {},
+                "avg_pearson": 0.0
+            },
+            "4": {
+                "pearson_per_emotion": {},
+                "avg_pearson": 0.0
+            },
+            "6": {
+                "pearson_per_emotion": {},
+                "avg_pearson": 0.0
+            }
+        },
+        "sample_size": {
+            "30": {
+                "pearson_per_emotion": {},
+                "avg_pearson": 0.0
+            },
+            "48": {
+                "pearson_per_emotion": {},
+                "avg_pearson": 0.0
+            },
+            "60": {
+                "pearson_per_emotion": {},
+                "avg_pearson": 0.0
+            },
+            "90": {
+                "pearson_per_emotion": {},
+                "avg_pearson": 0.0
+            },
+            "120": {
+                "pearson_per_emotion": {},
+                "avg_pearson": 0.0
+            },
+            "150": {
+                "pearson_per_emotion": {},
+                "avg_pearson": 0.0
+            },
+            "180": {
+                "pearson_per_emotion": {},
+                "avg_pearson": 0.0
+            },
+            "240": {
+                "pearson_per_emotion": {},
+                "avg_pearson": 0.0
+            }
+        }
+    }
+}
