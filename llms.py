@@ -391,7 +391,7 @@ def run_self_refine(prompt: str, task: str, llm, flagged_prompts: list, max_refi
             error_msg = str(e).lower()
 
             # 🔐 Content moderation
-            if "content policy" in error_msg or "violated" in error_msg:
+            if "content policy" in error_msg or "violated" in error_msg or "error" in error_msg:
                 flagged_prompts.append({
                     "prompt": prompt,
                     "reason": "content_moderation_violation",
@@ -469,7 +469,7 @@ def run_tree_of_thoughts(
                     err = str(e).lower()
 
                     # 1) Content‐policy violation → flag & stop retrying this state
-                    if "policy" in err or "violation" in err:
+                    if "policy" in err or "violation" in err or "error" in err:
                         all_flagged.append({
                             "step": step,
                             "state": state,
@@ -517,7 +517,7 @@ def run_tree_of_thoughts(
         final = round(sum(answers) / len(answers))
 
     return final, all_flagged
-def sample_dataset(csv_path: str, sample_size: int) -> pd.DataFrame:
+def sample_dataset(csv_path: str, sample_size: int, balanced: bool, balancing_strategy="approximate") -> pd.DataFrame:
     """
     Load the CSV and greedily sample `sample_size` rows so that
     each of the six emotions is covered roughly equally.
@@ -531,40 +531,63 @@ def sample_dataset(csv_path: str, sample_size: int) -> pd.DataFrame:
     emotions     = [emo for emo in all_emotions if emo in df.columns]
     if not emotions:
         raise ValueError(f"No emotion columns found in {csv_path}: expected one of {all_emotions}")
+    if sample_size > len(df):
+        print(f"[WARNING] Requested sample_size={sample_size} larger than dataset size={len(df)}. Reducing sample_size to dataset size.")
+        sample_size = len(df)
+    if not balanced:
+        # Just sample randomly if not balancing
+        return df.sample(n=sample_size, random_state=42).reset_index(drop=True)
 
-    # compute float target per emotion
-    target = {emo: sample_size / len(emotions) for emo in emotions}
+    if balancing_strategy == "strict":
+        # Only keep emotion groups with at least 1 sample
+        emotion_groups = {emo: df[df[emo] == 1] for emo in emotions}
+        # Filter out empty groups
+        emotion_groups = {emo: g for emo, g in emotion_groups.items() if len(g) > 0}
+        if not emotion_groups:
+            raise ValueError("No emotion groups with samples found for strict balancing.")
+        
+        min_count = min(len(g) for g in emotion_groups.values())
+        per_emo_sample = min(min_count, sample_size // len(emotion_groups))
 
-    # precompute each row’s emotion vector
-    vectors = df[emotions].fillna(0).astype(int).to_numpy()
+        sampled_dfs = [g.sample(n=per_emo_sample, random_state=42) for g in emotion_groups.values()]
+        sampled = pd.concat(sampled_dfs).sample(frac=1, random_state=42).reset_index(drop=True)
+        print(f"[INFO] Strictly balanced sample size per emotion (non-empty groups): {per_emo_sample}")
+        return sampled
+    
+    else:
+        # compute float target per emotion
+        target = {emo: sample_size / len(emotions) for emo in emotions}
 
-    chosen_idxs = []
-    counts = np.zeros(len(emotions), dtype=float)
+        # precompute each row’s emotion vector
+        vectors = df[emotions].fillna(0).astype(int).to_numpy()
 
-    # greedy selection
-    for _ in range(min(sample_size, len(df))):
-        # for each candidate not yet chosen, compute new counts if picked
-        best_idx, best_score = None, float('inf')
-        for idx in range(len(df)):
-            if idx in chosen_idxs:
-                continue
-            new_counts = counts + vectors[idx]
-            # squared error to target
-            err = sum((new_counts[i] - target[emo])**2 for i, emo in enumerate(emotions))
-            if err < best_score:
-                best_score, best_idx = err, idx
-        if best_idx is None:
-            break
-        chosen_idxs.append(best_idx)
-        counts += vectors[best_idx]
+        chosen_idxs = []
+        counts = np.zeros(len(emotions), dtype=float)
 
-    sampled = df.iloc[chosen_idxs].reset_index(drop=True)
-    print(f"[INFO] Sampled {len(sampled)} rows (target was {sample_size}).")
-    for i, emo in enumerate(emotions):
-        print(f"[INFO] {emo:8s}: sampled {int(counts[i])} vs. target {target[emo]:.1f}")
-    return sampled
+        # greedy selection
+        for _ in range(min(sample_size, len(df))):
+            # for each candidate not yet chosen, compute new counts if picked
+            best_idx, best_score = None, float('inf')
+            for idx in range(len(df)):
+                if idx in chosen_idxs:
+                    continue
+                new_counts = counts + vectors[idx]
+                # squared error to target
+                err = sum((new_counts[i] - target[emo])**2 for i, emo in enumerate(emotions))
+                if err < best_score:
+                    best_score, best_idx = err, idx
+            if best_idx is None:
+                break
+            chosen_idxs.append(best_idx)
+            counts += vectors[best_idx]
 
-def sample_dataset_intensity(csv_path: str, sample_size: int) -> pd.DataFrame:
+        sampled = df.iloc[chosen_idxs].reset_index(drop=True)
+        print(f"[INFO] Sampled {len(sampled)} rows (target was {sample_size}).")
+        for i, emo in enumerate(emotions):
+            print(f"[INFO] {emo:8s}: sampled {int(counts[i])} vs. target {target[emo]:.1f}")
+        return sampled
+
+def sample_dataset_intensity(csv_path: str, sample_size: int, balanced: bool, balancing_strategy="approximate") -> pd.DataFrame:
     """
     Load the CSV and greedily sample `sample_size` rows so that
     each of the 6 emotions × 4 intensity levels (0–3) is covered roughly equally.
@@ -578,52 +601,75 @@ def sample_dataset_intensity(csv_path: str, sample_size: int) -> pd.DataFrame:
     if not emotions:
         raise ValueError(f"No emotion columns found in {csv_path}: expected one of {all_emotions}")
     levels = [0, 1, 2, 3]
+    if not balanced:
+            return df.sample(n=sample_size, random_state=42).reset_index(drop=True)
+    
+    if balancing_strategy == "strict":
+        groups = []
+        # Collect groups with at least one sample
+        for emo in emotions:
+            for lvl in levels:
+                group = df[df[emo].fillna(0).astype(int).clip(0,3) == lvl]
+                if len(group) > 0:
+                    groups.append(group)
 
-    # target per (emotion, level) category
-    target = sample_size / (len(emotions) * len(levels))
+        if not groups:
+            raise ValueError("No emotion-level groups with samples found for strict balancing.")
 
-    # build a (N, 24) matrix: one-hot for each (i_emotion, level)
-    N = len(df)
-    vecs = np.zeros((N, len(emotions)*len(levels)), dtype=int)
-    for i, emo in enumerate(emotions):
-        vals = df[emo].fillna(0).astype(int).clip(0,3).to_numpy()
-        for j, lvl in enumerate(levels):
-            vecs[:, i*4 + j] = (vals == lvl).astype(int)
+        min_count = min(len(g) for g in groups)
+        per_group_sample = min(min_count, sample_size // len(groups))
 
-    chosen, counts = [], np.zeros(len(emotions)*len(levels), dtype=float)
+        sampled_dfs = [g.sample(n=per_group_sample, random_state=42) for g in groups]
+        sampled = pd.concat(sampled_dfs).sample(frac=1, random_state=42).reset_index(drop=True)
+        print(f"[INFO] Strictly balanced sample size per emotion-level (non-empty groups): {per_group_sample}")
+        return sampled
+    
+    else:
+        # target per (emotion, level) category
+        target = sample_size / (len(emotions) * len(levels))
 
-    for _ in range(min(sample_size, N)):
-        best_idx, best_err = None, float("inf")
-        for idx in range(N):
-            if idx in chosen:
-                continue
-            new_counts = counts + vecs[idx]
-            err = ((new_counts - target)**2).sum()
-            if err < best_err:
-                best_err, best_idx = err, idx
+        # build a (N, 24) matrix: one-hot for each (i_emotion, level)
+        N = len(df)
+        vecs = np.zeros((N, len(emotions)*len(levels)), dtype=int)
+        for i, emo in enumerate(emotions):
+            vals = df[emo].fillna(0).astype(int).clip(0,3).to_numpy()
+            for j, lvl in enumerate(levels):
+                vecs[:, i*4 + j] = (vals == lvl).astype(int)
 
-        if best_idx is None:
-            break
-        chosen.append(best_idx)
-        counts += vecs[best_idx]
+        chosen, counts = [], np.zeros(len(emotions)*len(levels), dtype=float)
 
-    sampled = df.iloc[chosen].reset_index(drop=True)
-    print(f"[INFO] Sampled {len(sampled)} rows (target was {sample_size}).")
-    # report per‑category counts
-    for i, emo in enumerate(emotions):
-        for j, lvl in enumerate(levels):
-            cnt = int(counts[i*4 + j])
-            print(f"[INFO] {emo:8s} lvl {lvl}: sampled {cnt} vs. target {target:.1f}")
-    return sampled
+        for _ in range(min(sample_size, N)):
+            best_idx, best_err = None, float("inf")
+            for idx in range(N):
+                if idx in chosen:
+                    continue
+                new_counts = counts + vecs[idx]
+                err = ((new_counts - target)**2).sum()
+                if err < best_err:
+                    best_err, best_idx = err, idx
+
+            if best_idx is None:
+                break
+            chosen.append(best_idx)
+            counts += vecs[best_idx]
+
+        sampled = df.iloc[chosen].reset_index(drop=True)
+        print(f"[INFO] Sampled {len(sampled)} rows (target was {sample_size}).")
+        # report per‑category counts
+        for i, emo in enumerate(emotions):
+            for j, lvl in enumerate(levels):
+                cnt = int(counts[i*4 + j])
+                print(f"[INFO] {emo:8s} lvl {lvl}: sampled {cnt} vs. target {target:.1f}")
+        return sampled
 
 if os.getenv("TEST_SAMPLER") == "1":
     # pick a real CSV (here for binary’s English test set)
     test_csv = os.path.join(TEST_DIRS["intensity"], "eng.csv")
     for size in [24, 48, 96, 192]:
         print(f"\n=== Testing binary sampler for sample_size={size} ===")
-        _ = sample_dataset(test_csv, size)
+        _ = sample_dataset(csv_path, sample_size=args.sample_size, balanced=args.balanced, balancing_strategy=args.balancing_strategy)
         print(f"\n=== Testing intensity sampler for sample_size={size} ===")
-        _ = sample_dataset_intensity(test_csv, size)
+        _ = sample_dataset_intensity(csv_path, sample_size=args.sample_size, balanced=args.balanced, balancing_strategy=args.balancing_strategy)
     df = pd.read_csv("./track_a/test/eng.csv")
 
 # Emotions you're interested in
@@ -691,10 +737,10 @@ def try_generate_with_retries(
                 continue
 
             # 5) Policy errors → flag & stop
-            if "policy" in err or "violation" in err:
+            if "policy" in err or "violation" in err or "error" in err:
                 flagged_list.append({
                     "prompt": prompt,
-                    "reason": "Content policy violation",
+                    "reason": "Content policy violation/Error",
                     "error": err
                 })
                 return None, []
@@ -985,7 +1031,8 @@ def evaluate_ablation(
     reasoning_mode,
     max_steps,
     tot_beam_width,
-    balanced
+    balanced,
+    balancing_strategy,
 ):
     results = {}
 
@@ -1052,6 +1099,7 @@ def evaluate_ablation(
                 reasoning_mode=reasoning_mode,
                 max_steps=max_steps,
                 beam_width=tot_beam_width,
+                out_json=out_json
             )
             topk_results[k] = scores
             print(f"  top_k = {k}: {scores['macro_f1']:.4f}")
@@ -1067,9 +1115,9 @@ def evaluate_ablation(
             csv_path = os.path.join(TEST_DIRS[task], f"{language}.csv")
 
             if task == "binary":
-                sampled_df = sample_dataset(csv_path, size)
+                sampled_df = sample_dataset(csv_path, sample_size= args.sample_size, balanced=args.balanced, balancing_strategy=args.balancing_strategy)
             else:
-                sampled_df = sample_dataset_intensity(csv_path, size)
+                sampled_df = sample_dataset_intensity(csv_path, sample_size=args.sample_size, balanced=args.balanced, balancing_strategy=args.balancing_strategy)
 
             new_test_data = []
             for row in sampled_df.itertuples(index=False):
@@ -1162,6 +1210,13 @@ if __name__ == "__main__":
         "--balanced",
         action="store_true",
         help="If set, sample sample_size examples equally across emotions. Otherwise use full dataset.")
+    parser.add_argument(
+        "--balancing_strategy",
+        type=str,
+        choices=["approximate", "strict"],
+        default="approximate",
+        help="Choose how to balance the dataset: 'approximate' for near-equal, 'strict' for exact equal based on the smallest class count."
+    )
     parser.add_argument(
         "--tot_steps",
         type=int,
@@ -1267,9 +1322,19 @@ if __name__ == "__main__":
         # ——— Load (or sample) the data ———
         if args.balanced and args.sample_size:
             if args.task == "binary":
-                sampled_df = sample_dataset(csv_path, args.sample_size)
+                sampled_df = sample_dataset(
+                    csv_path,
+                    args.sample_size,
+                    balanced=True,
+                    balancing_strategy=args.balancing_strategy  # <-- ADD THIS
+                )
             else:  # intensity
-                sampled_df = sample_dataset_intensity(csv_path, args.sample_size)
+                sampled_df = sample_dataset_intensity(
+                    csv_path,
+                    args.sample_size,
+                    balanced=True,
+                    balancing_strategy=args.balancing_strategy  # <-- ADD THIS
+                )
 
             data = []
             for row in sampled_df.itertuples(index=False):
@@ -1358,66 +1423,67 @@ if __name__ == "__main__":
                 reasoning_mode=args.reasoning_mode,
                 max_steps=args.tot_steps,
                 tot_beam_width=args.tot_beam_width,
-                balanced= args.balanced
+                balanced= args.balanced,
+                balancing_strategy = args.balancing_strategy
             )
         
-       ''' if lang in NATIVE_PROMPT_ABLATION_LANGUAGES:
-            if args.task == "binary" and lang in LANG_NATIVE_PROMPTS:
-                print("  ~ Comparing English v1 vs. Native v1 prompt ~")
-
+#     if lang in NATIVE_PROMPT_ABLATION_LANGUAGES:
+#           if args.task == "binary" and lang in LANG_NATIVE_PROMPTS:
+#                print("  ~ Comparing English v1 vs. Native v1 prompt ~")
+#
                 # Required variables
-                model_name = args.model_name
-                task = args.task
-                test_data = data  # Assuming 'data' is defined earlier from sampled dataset
-
-                # Prompt templates
-                eng_v1_prompt = TASK_CONFIGS[task]["prompt_variants"]["v1"]
-                native_v1_prompt = LANG_NATIVE_PROMPTS[lang]
-
-                # Other arguments
-                top_k = args.top_k if hasattr(args, "top_k") else 4
-                n_shot = args.n_shot if hasattr(args, "n_shot") else 4
-                reasoning_mode = args.reasoning_mode
-                max_steps = args.tot_steps if hasattr(args, "tot_steps") else 3
-                beam_width = args.tot_beam_width if hasattr(args, "tot_beam_width") else 3
-
-                # Run evaluation for English v1
-                eng_v1_scores = evaluate_model_on_test_set(
-                    model_name=model_name,
-                    llm=llm_engine,
-                    test_data=test_data,
-                    prompt_template=eng_v1_prompt,
-                    task=task,
-                    top_k=top_k,
-                    n_shot=n_shot,
-                    reasoning_mode=reasoning_mode,
-                    max_steps=max_steps,
-                    beam_width=beam_width,
-                    out_json=f"llm_track_ab_results/tmp_{model_name.replace('/', '_')}_{task}_{lang}_engv1.json"
-                )
-
-                # Run evaluation for Native v1
-                native_v1_scores = evaluate_model_on_test_set(
-                    model_name=model_name,
-                    llm=llm_engine,
-                    test_data=test_data,
-                    prompt_template=native_v1_prompt,
-                    task=task,
-                    top_k=top_k,
-                    n_shot=n_shot,
-                    reasoning_mode=reasoning_mode,
-                    max_steps=max_steps,
-                    beam_width=beam_width,
-                    out_json=f"llm_track_ab_results/tmp_{model_name.replace('/', '_')}_{task}_{lang}_nativev1.json"
-                )
-
-                ablation_res["english_v1_vs_native_v1"] = {
-                    "f1_english_v1": eng_v1_scores,
-                    "f1_native_v1": native_v1_scores
-                }
-
-                print(f"     English v1 macro-F1 = {eng_v1_scores['macro_f1']:.4f} "
-                    f"vs. Native v1 macro-F1 = {native_v1_scores['macro_f1']:.4f}")'''
+#                model_name = args.model_name
+#                task = args.task
+#                test_data = data  # Assuming 'data' is defined earlier from sampled dataset
+#
+#                # Prompt templates
+#                eng_v1_prompt = TASK_CONFIGS[task]["prompt_variants"]["v1"]
+#                native_v1_prompt = LANG_NATIVE_PROMPTS[lang]
+#
+#               # Other arguments
+#                top_k = args.top_k if hasattr(args, "top_k") else 4
+#                n_shot = args.n_shot if hasattr(args, "n_shot") else 4
+#                reasoning_mode = args.reasoning_mode
+#                max_steps = args.tot_steps if hasattr(args, "tot_steps") else 3
+#                beam_width = args.tot_beam_width if hasattr(args, "tot_beam_width") else 3
+#
+#                # Run evaluation for English v1
+#                eng_v1_scores = evaluate_model_on_test_set(
+#                    model_name=model_name,
+#                    llm=llm_engine,
+#                    test_data=test_data,
+#                    prompt_template=eng_v1_prompt,
+#                    task=task,
+#                    top_k=top_k,
+#                    n_shot=n_shot,
+#                    reasoning_mode=reasoning_mode,
+#                    max_steps=max_steps,
+#                    beam_width=beam_width,
+#                    out_json=f"llm_track_ab_results/tmp_{model_name.replace('/', '_')}_{task}_{lang}_engv1.json"
+#                )
+#
+#                # Run evaluation for Native v1
+#                native_v1_scores = evaluate_model_on_test_set(
+#                    model_name=model_name,
+#                    llm=llm_engine,
+#                    test_data=test_data,
+#                    prompt_template=native_v1_prompt,
+#                    task=task,
+#                    top_k=top_k,
+#                    n_shot=n_shot,
+#                    reasoning_mode=reasoning_mode,
+#                    max_steps=max_steps,
+#                    beam_width=beam_width,
+#                    out_json=f"llm_track_ab_results/tmp_{model_name.replace('/', '_')}_{task}_{lang}_nativev1.json"
+#                )
+#
+#                ablation_res["english_v1_vs_native_v1"] = {
+#                    "f1_english_v1": eng_v1_scores,
+#                    "f1_native_v1": native_v1_scores
+#                }
+#
+#                print(f"     English v1 macro-F1 = {eng_v1_scores['macro_f1']:.4f} "
+#                    f"vs. Native v1 macro-F1 = {native_v1_scores['macro_f1']:.4f}")'''
 
         final_output = {
             "task": args.task,
