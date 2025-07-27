@@ -41,21 +41,20 @@ python llms.py
 
 
 Mock Run
-set USE_MOCK_LLM = 1
-python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode self_consistency --top_k 4 --n_shot 4 --language eng --sample_size 48 --balanced --prompt_variant v1
-python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode self_consistency --top_k 4 --n_shot 4 --language eng --sample_size 48 --balanced --prompt_variant v1
-python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode self_consistency --top_k 4 --n_shot 0 --language eng --sample_size 48 --balanced --prompt_variant v1
-python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode self_consistency --top_k 4 --n_shot 0 --language eng --sample_size 48 --balanced --prompt_variant v1
-python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode tree_of_thoughts --n_shot 4 --language eng --sample_size 48 --balanced --prompt_variant tree_of_thoughts
-python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode tree_of_thoughts --n_shot 4 --language eng --sample_size 48 --balanced --prompt_variant tree_of_thoughts
-python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode tree_of_thoughts --n_shot 0 --language eng --sample_size 48 --balanced --prompt_variant tree_of_thoughts
-python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode tree_of_thoughts --n_shot 0 --language eng --sample_size 48 --balanced --prompt_variant tree_of_thoughts
-python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode self_refine --n_shot 4 --language eng --sample_size 48 --balanced --prompt_variant v1
-python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode self_refine --n_shot 4 --language eng --sample_size 48 --balanced --prompt_variant v1
-python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode self_refine --n_shot 0 --language eng --sample_size 48 --balanced --prompt_variant v1
-python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode self_refine --n_shot 0 --language eng --sample_size 48 --balanced --prompt_variant v1
-python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode default --n_shot 4 --language eng --sample_size 48 --balanced --prompt_variant v1
-python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode default --n_shot 4 --language eng --sample_size 48 --balanced --prompt_variant v1
-python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode default --n_shot 0 --language eng --sample_size 48 --balanced --prompt_variant v1
-python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode default --n_shot 0 --language eng --sample_size 48 --balanced --prompt_variant v1
+python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode self_consistency --top_k 4 --n_shot 4 --language eng --sample_size 48 --balanced --balancing_strategy strict --prompt_variant v1
+python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode self_consistency --top_k 4 --n_shot 4 --language eng --sample_size 48 --balanced --balancing_strategy strict --prompt_variant v1
+python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode self_consistency --top_k 4 --n_shot 0 --language eng --sample_size 48 --balanced --balancing_strategy strict --prompt_variant v1
+python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode self_consistency --top_k 4 --n_shot 0 --language eng --sample_size 48 --balanced --balancing_strategy strict --prompt_variant v1
+python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode tree_of_thoughts --n_shot 4 --language eng --sample_size 48 --balanced --balancing_strategy strict --prompt_variant tree_of_thoughts
+python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode tree_of_thoughts --n_shot 4 --language eng --sample_size 48 --balanced --balancing_strategy strict --prompt_variant tree_of_thoughts
+python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode tree_of_thoughts --n_shot 0 --language eng --sample_size 48 --balanced --balancing_strategy strict --prompt_variant tree_of_thoughts
+python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode tree_of_thoughts --n_shot 0 --language eng --sample_size 48 --balanced --balancing_strategy strict --prompt_variant tree_of_thoughts
+python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode self_refine --n_shot 4 --language eng --sample_size 48 --balanced --balancing_strategy strict --prompt_variant v1
+python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode self_refine --n_shot 4 --language eng --sample_size 48 --balanced --balancing_strategy strict --prompt_variant v1
+python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode self_refine --n_shot 0 --language eng --sample_size 48 --balanced --balancing_strategy strict --prompt_variant v1
+python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode self_refine --n_shot 0 --language eng --sample_size 48 --balanced --balancing_strategy strict --prompt_variant v1
+python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode default --n_shot 4 --language eng --sample_size 48 --balanced --balancing_strategy strict --prompt_variant v1
+python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode default --n_shot 4 --language eng --sample_size 48 --balanced --balancing_strategy strict --prompt_variant v1
+python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode default --n_shot 0 --language eng --sample_size 48 --balanced --balancing_strategy strict --prompt_variant v1
+python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode default --n_shot 0 --language eng --sample_size 48 --balanced --balancing_strategy strict --prompt_variant v1
 v
