@@ -182,6 +182,18 @@ TASK_CONFIGS = {
                 "Reason through multiple steps if needed. Each step should bring you closer to the final answer.\n"
                 "After thinking it through, answer clearly: 'Answer: yes' or 'no'."
             ),
+            "cbp_simple": (
+                "Determine whether the emotion {{EMOTION}} is expressed in the text.\n"
+                "Conclude with 'Answer:' followed by 'yes' or 'no'."
+            ),
+            "cbp_medium": (
+                "Evaluate whether the following text conveys the emotion of {{EMOTION}}.\n"
+                "Explain your reasoning briefly. Conclude with 'Answer:' followed by 'yes' or 'no'."
+            ),
+            "cbp_complex": (
+                "Carefully read the text and determine if the emotion {{EMOTION}} is expressed.\n"
+                "Think step-by-step and show your full reasoning. End with 'Answer:' followed by 'yes' or 'no'."
+            ),
         },
     },
     "intensity": {
@@ -206,6 +218,18 @@ TASK_CONFIGS = {
                 "You are solving the task of assessing the intensity of {{EMOTION}} in a piece of text.\n"
                 "Reason through multiple steps, examining each clue that indicates how strong the emotion is.\n"
                 "After thinking it through step by step, conclude with “Answer:” followed by the appropriate intensity score (0, 1, 2, or 3)."
+            ),
+            "cbp_simple": (
+                "Rate the intensity (0 to 3) of the emotion {{EMOTION}} in this text.\n"
+                "Conclude with 'Answer:' followed by the number."
+            ),
+            "cbp_medium": (
+                "Evaluate the intensity of {{EMOTION}} in this text from 0 (none) to 3 (high).\n"
+                "Give a short explanation, then write 'Answer:' followed by the score."
+            ),
+            "cbp_complex": (
+                "Analyze the text carefully and assess how strongly {{EMOTION}} is conveyed.\n"
+                "Think through all clues step-by-step. Finish with 'Answer:' and a number from 0 to 3."
             ),
         }
     }
@@ -992,7 +1016,52 @@ def evaluate_model_on_test_set(
                 all_preds.append(final)
                 all_raw.append(None)
                 all_flagged.extend(new_flags)
+        elif reasoning_mode == "complexity_based":
+            cbp_levels = ["cbp_simple", "cbp_medium", "cbp_complex"]
+            sampling_cbp = SamplingParams(
+                max_tokens=80,
+                temperature=0.7,
+                top_p=0.95,
+                n=1
+            )
+            for sample, base_prompt in zip(test_data, prompts):
+                cbp_preds = []
+                cbp_raws = []
+                for level in cbp_levels:
+                    cbp_template = TASK_CONFIGS[task]["prompt_variants"][level]
+                    cbp_prompt = construct_prompt(
+                        cbp_template,
+                        few_shot_examples_by_emotion[sample["emotion"]],
+                        sample["text"],
+                        sample["emotion"],
+                        task
+                    )
 
+                    def cbp_gen_fn(prompt_text):
+                        return llm.generate([prompt_text], sampling_cbp)[0]
+
+                    pred, raw_texts = try_generate_with_retries(
+                        prompt=cbp_prompt,
+                        generator_fn=cbp_gen_fn,
+                        task=task,
+                        max_retries=max_retries,
+                        flagged_list=all_flagged
+                    )
+                    if pred is not None:
+                        cbp_preds.append(pred)
+                    cbp_raws.append(raw_texts)
+
+                # Aggregate prediction (majority vote for binary, avg for intensity)
+                if cbp_preds:
+                    if task == "binary":
+                        final = max(set(cbp_preds), key=cbp_preds.count)
+                    else:
+                        final = round(sum(cbp_preds) / len(cbp_preds))
+                else:
+                    final = None
+
+                all_preds.append(final)
+                all_raw.append(cbp_raws)
         else:
             raise ValueError(f"Unsupported reasoning_mode: {reasoning_mode}")
 
@@ -1068,11 +1137,15 @@ def evaluate_ablation(
     balancing_strategy,
 ):
     results = {}
+    #Note when running evaulate model on test set here, we don't actaully give a directory that code can save all the results
 
     # 1. Prompt variants
     print("=== Ablation: Prompt Variants ===")
     variant_results = {}
     for variant, tmpl in prompt_variants.items():
+        if reasoning_mode not in ["default", "self_consistency", "self_refine"]:
+            if variant.startswith("cbp_") or variant == "tree_of_thoughts":
+                continue
         scores_dict = evaluate_model_on_test_set(
             test_data=test_data,
             prompt_template=tmpl,
@@ -1132,7 +1205,7 @@ def evaluate_ablation(
                 reasoning_mode=reasoning_mode,
                 max_steps=max_steps,
                 beam_width=tot_beam_width,
-                out_json=out_json
+                out_json=f"..."
             )
             topk_results[k] = scores
             print(f"  top_k = {k}: {scores['macro_f1']:.4f}")
@@ -1177,7 +1250,7 @@ def evaluate_ablation(
             reasoning_mode=reasoning_mode,
             max_steps=max_steps,
             beam_width=tot_beam_width,
-            out_json= out_json
+            out_json= f"..."
         )
         sample_size_results[size] = scores
         score = scores["macro_f1"] if task == "binary" else scores["avg_pearson"]
@@ -1231,7 +1304,7 @@ if __name__ == "__main__":
         "--reasoning_mode",
         type=str,
         default="default",
-        choices=["default", "self_consistency", "tree_of_thoughts","self_refine"],
+        choices=["default", "self_consistency", "tree_of_thoughts","self_refine","complexity_based"],
         help="Choose the reasoning strategy: default (1-shot), self_consistency (vote), or tree_of_thoughts (search)"
     )
     parser.add_argument(
