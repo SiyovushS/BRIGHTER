@@ -390,28 +390,8 @@ def run_self_refine(prompt: str, task: str, llm, flagged_prompts: list, max_refi
         except Exception as e:
             error_msg = str(e).lower()
 
-            # 🔒 Fatal errors → stop the program
-            if isinstance(e, (
-                openai.error.InvalidRequestError,
-                openai.error.AuthenticationError,
-                openai.error.PermissionError,
-                openai.error.ServiceUnavailableError
-            )) or any(kw in error_msg for kw in ["invalid request", "auth", "permission", "unavailable"]):
-                print(f"❌ Fatal error in self_refine(): {e}")
-                sys.exit(1)
-
-            # 🔁 Retry on network/server/rate errors (don’t increment try count)
-            if isinstance(e, (
-                openai.error.APIError,
-                openai.error.APIConnectionError,
-                openai.error.RateLimitError
-            )) or any(kw in error_msg for kw in ["connection", "timeout", "rate", "500"]):
-                print(f"🔁 Recoverable error in self_refine(): {e}")
-                time.sleep(2)
-                continue
-
-            # 📛 Content moderation
-            if "content policy" in error_msg or "violation" in error_msg:
+            # 🔐 Content moderation
+            if "content policy" in error_msg or "violated" in error_msg or "error" in error_msg:
                 flagged_prompts.append({
                     "prompt": prompt,
                     "reason": "content_moderation_violation",
@@ -419,18 +399,26 @@ def run_self_refine(prompt: str, task: str, llm, flagged_prompts: list, max_refi
                 })
                 return None, "flagged"
 
-            # ⚠️ Other unexpected errors → count as one try
-            print(f"⚠️ Error in self_refine(): {e}")
-            try_count += 1
-            continue
+            # 🌐 Retry indefinitely on network errors
+            elif "timeout" in error_msg or "connection" in error_msg or "network" in error_msg:
+                print("⚠️ Network issue. Retrying...")
+                time.sleep(2)
+                continue
 
-    # 📛 Exceeded retry limit due to repeated unparseable outputs
+            # ❌ Other unexpected errors → increment try
+            else:
+                print(f"⚠️ Error in self_refine(): {e}")
+                try_count += 1
+                continue
+
+    # 📛 Exceeded retry limit
     flagged_prompts.append({
         "prompt": prompt,
-        "reason": f"Unparseable after {max_tries} attempts",
+        "reason": "max_tries_exceeded",
         "stage": "self_refine"
     })
     return None, "flagged"
+
 
 def run_tree_of_thoughts(
     prompt_base: str,
@@ -478,32 +466,10 @@ def run_tree_of_thoughts(
                         break  # ✅ got at least one valid child state
 
                 except Exception as e:
-                    import openai  # Ensure this is imported at the top
                     err = str(e).lower()
 
-                    # 🛑 Fatal errors → print and exit
-                    if isinstance(e, (
-                        openai.error.InvalidRequestError,
-                        openai.error.AuthenticationError,
-                        openai.error.PermissionError,
-                        openai.error.ServiceUnavailableError
-                    )) or any(kw in err for kw in ["invalid request", "auth", "permission", "unavailable"]):
-                        print(f"❌ Fatal error in tree_of_thoughts: {e}")
-                        sys.exit(1)
-
-                    # 🔁 Retry on recoverable errors
-                    if isinstance(e, (
-                        openai.error.APIError,
-                        openai.error.APIConnectionError,
-                        openai.error.RateLimitError
-                    )) or any(kw in err for kw in ["connection", "timeout", "rate", "500"]):
-                        print(f"🔁 Recoverable error in tree_of_thoughts: {e}")
-                        time.sleep(2)
-                        thought_retry_count -= 1  # Don’t count this toward max retries
-                        continue
-
-                    # 🚫 Content moderation
-                    if "policy" in err or "violation" in err:
+                    # 1) Content‐policy violation → flag & stop retrying this state
+                    if "policy" in err or "violation" in err or "error" in err:
                         all_flagged.append({
                             "step": step,
                             "state": state,
@@ -512,9 +478,13 @@ def run_tree_of_thoughts(
                             "prompt": full_prompt
                         })
                         break
+                    # 2) Network error → retry indefinitely (don’t count against max_retries)
+                    if isinstance(e, (ConnectionError, socket.gaierror)) or "connection" in err:
+                        time.sleep(2)               # backoff before retry
+                        thought_retry_count -= 1    # undo this attempt
+                        continue
 
-                    # ⚠️ Unknown error → count against retry limit
-                    print(f"⚠️ Unexpected error in tree_of_thoughts: {e}")
+                    # 3) Other errors → simple backoff, count toward retries
                     time.sleep(2)
                     continue
 
@@ -761,29 +731,26 @@ def try_generate_with_retries(
 
         except Exception as e:
             err = str(e).lower()
-            if isinstance(e, (
-                openai.error.APIError,
-                openai.error.APIConnectionError,
-                openai.error.RateLimitError
-            )) or any(kw in err for kw in ["connection", "timeout", "rate", "500"]):
-                print(f"🔁 Retrying due to recoverable error: {e}")
+            # 4) Network errors → retry indefinitely (don’t increment attempt)
+            if "connection" in err or isinstance(e, (ConnectionError, socket.gaierror)):
                 time.sleep(2)
                 continue
 
-            if isinstance(e, (
-                openai.error.InvalidRequestError,
-                openai.error.AuthenticationError,
-                openai.error.PermissionError,
-                openai.error.ServiceUnavailableError
-            )) or any(kw in err for kw in ["invalid request", "auth", "permission", "403", "unavailable"]):
-                print(f"❌ Fatal error: {e}")
-                sys.exit(1)
+            # 5) Policy errors → flag & stop
+            if "policy" in err or "violation" in err or "error" in err:
+                flagged_list.append({
+                    "prompt": prompt,
+                    "reason": "Content policy violation/Error",
+                    "error": err
+                })
+                return None, []
 
+            # 6) Other errors → count against retries
             attempt += 1
             if attempt >= max_retries:
                 flagged_list.append({
                     "prompt": prompt,
-                    "reason": f"Unhandled error after {max_retries} attempts",
+                    "reason": f"Error after {max_retries} attempts",
                     "error": err
                 })
                 return None, []
