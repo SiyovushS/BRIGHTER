@@ -1062,6 +1062,52 @@ def evaluate_model_on_test_set(
 
                 all_preds.append(final)
                 all_raw.append(cbp_raws)
+        elif reasoning_mode == "plan_and_solve":
+            for sample in test_data:
+                input_text = sample["text"]
+                emotion = sample["emotion"]
+
+                # Step 1: Generate a plan
+                plan_prompt = (
+                    f"Analyze the following text and create a high-level plan for determining the level of emotion.\n\n"
+                    f"Text: {input_text}\n"
+                    f"Emotion: {emotion}\n"
+                    f"Plan:"
+                )
+
+                sampling_plan = SamplingParams(max_tokens=100, temperature=0.7, top_p=0.95, n=1)
+                plan_result = llm.generate([plan_prompt], sampling_plan)[0]
+                plan = plan_result.texts[0].strip()
+
+                # Step 2: Solve using the plan
+                if task == "binary":
+                    solve_prompt = (
+                        f"Text: {input_text}\n"
+                        f"Emotion: {emotion}\n"
+                        f"Plan: {plan}\n\n"
+                        f"Based on the plan, decide whether the emotion '{emotion}' is expressed in the text. "
+                        f"Conclude with 'Answer: yes' or 'no'."
+                    )
+                else:  # intensity
+                    solve_prompt = (
+                        f"Text: {input_text}\n"
+                        f"Emotion: {emotion}\n"
+                        f"Plan: {plan}\n\n"
+                        f"Based on the plan, rate the intensity of emotion '{emotion}' in the text on a scale from 0 (none) to 3 (high). "
+                        f"Conclude with 'Answer: 0', 'Answer: 1', 'Answer: 2', or 'Answer: 3'."
+                    )
+
+                # Use retry wrapper
+                pred, raw_texts = try_generate_with_retries(
+                    prompt=solve_prompt,
+                    generator_fn=lambda p: llm.generate([p], SamplingParams(max_tokens=80, temperature=0.7, top_p=0.95, n=top_k))[0],
+                    task=task,
+                    max_retries=max_retries,
+                    flagged_list=all_flagged,
+                )
+
+                all_preds.append(pred)
+                all_raw.append(raw_texts)
         else:
             raise ValueError(f"Unsupported reasoning_mode: {reasoning_mode}")
 
@@ -1304,7 +1350,7 @@ if __name__ == "__main__":
         "--reasoning_mode",
         type=str,
         default="default",
-        choices=["default", "self_consistency", "tree_of_thoughts","self_refine","complexity_based"],
+        choices=["default", "self_consistency", "tree_of_thoughts","self_refine","complexity_based","plan_and_solve"],
         help="Choose the reasoning strategy: default (1-shot), self_consistency (vote), or tree_of_thoughts (search)"
     )
     parser.add_argument(
