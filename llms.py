@@ -7,17 +7,21 @@ import re
 from typing import List, Optional, Tuple, Callable, Union
 import wandb
 import random
+import math
 from openai import AzureOpenAI
 import pathlib
 import socket
 from collections import defaultdict
-wandb.init(mode="disabled")
 import glob
 import time
 import numpy as np
 import pandas as pd
-from sklearn.metrics import f1_score
-from scipy.stats import pearsonr
+from sklearn.metrics import (
+    f1_score, precision_score, recall_score,
+    accuracy_score, roc_auc_score, average_precision_score,
+    confusion_matrix, mean_absolute_error, mean_squared_error, cohen_kappa_score
+)
+from scipy.stats import (pearsonr, spearmanr)
 import sys
 
 class SamplingParams:
@@ -1238,36 +1242,33 @@ def evaluate_model_on_test_set(
             raise ValueError(f"Unsupported reasoning_mode: {reasoning_mode}")
 
 
-    flagged_path = pathlib.Path(out_json).with_name(pathlib.Path(out_json).stem + "_flagged" + pathlib.Path(out_json).suffix)
     if all_flagged:
-        os.makedirs(flagged_path.parent, exist_ok=True)
-        with open(flagged_path, "w", encoding="utf-8") as fp:
-            json.dump(all_flagged, fp, indent=2)
+        wandb.log({"flagged_prompts_count": len(all_flagged)})
+        flagged_table = wandb.Table(columns=["prompt", "reason", "stage"])
+        for item in all_flagged:
+            flagged_table.add_data(item.get("prompt", ""), item.get("reason", ""), item.get("stage", ""))
+        wandb.log({"flagged_prompts": flagged_table})
 
-    preds_csv = pathlib.Path(out_json).with_name(
-        pathlib.Path(out_json).stem + "_predictions" + pathlib.Path(out_json).suffix
-    )
-    os.makedirs(preds_csv.parent, exist_ok=True)
-    with open(preds_csv, "w", encoding="utf-8", newline="") as fp:
-        writer = csv.writer(fp)
-        writer.writerow(["prompt_index", "prompt", "raw_outputs", "parsed", "gold", "emotion"])
-        for idx, (sample, prompt) in enumerate(zip(test_data, prompts)):
-            raw = all_raw[idx] if idx < len(all_raw) else []
-            pred = all_preds[idx] if idx < len(all_preds) else None
-            writer.writerow([
-                idx,
-                prompt,
-                raw,
-                pred,
-                sample["label"],
-                sample["emotion"]
-            ])
+# ✅ Log predictions
+    preds_table = wandb.Table(columns=["index", "prompt", "raw_outputs", "parsed", "gold", "emotion"])
+    for idx, (sample, prompt) in enumerate(zip(test_data, prompts)):
+        raw = all_raw[idx] if idx < len(all_raw) else []
+        pred = all_preds[idx] if idx < len(all_preds) else None
+        preds_table.add_data(idx, prompt, str(raw), pred, sample["label"], sample["emotion"])
+    wandb.log({"predictions_table": preds_table})
 
     # ----------------------------------------
     # 6) Compute metrics
     # ----------------------------------------
     emotion2refs = defaultdict(list)
     emotion2preds = defaultdict(list)
+    f1_per_emotion = {}
+    for emo in emotion2refs:
+        try:
+            f1 = f1_score(emotion2refs[emo], emotion2preds[emo], zero_division=0)
+            f1_per_emotion[emo] = f1
+        except:
+            f1_per_emotion[emo] = 0.0
     for sample, pred in zip(test_data, all_preds):
         if pred is None:
             continue
@@ -1275,20 +1276,125 @@ def evaluate_model_on_test_set(
         emotion2preds[sample["emotion"]].append(pred)
 
     if task == "binary":
-        f1_per_emotion = {
-            emo: f1_score(refs, emotion2preds[emo], average="binary", zero_division=0)
-            for emo, refs in emotion2refs.items()
+        all_preds_flat = []
+        all_labels_flat = []
+        all_emotions_flat = []
+
+        for emo in emotion2refs:
+            all_preds_flat.extend(emotion2preds[emo])
+            all_labels_flat.extend(emotion2refs[emo])
+            all_emotions_flat.extend([emo] * len(emotion2refs[emo]))
+
+        f1_macro = f1_score(all_labels_flat, all_preds_flat, average="macro", zero_division=0)
+        precision_macro = precision_score(all_labels_flat, all_preds_flat, average="macro", zero_division=0)
+        recall_macro = recall_score(all_labels_flat, all_preds_flat, average="macro", zero_division=0)
+        accuracy = accuracy_score(all_labels_flat, all_preds_flat)
+
+        # TNR = TN / (TN + FP)
+        tnrs = []
+        emotions = list(set(all_emotions_flat))
+        for emo in emotions:
+            y_true = [label for label, e in zip(all_labels_flat, all_emotions_flat) if e == emo]
+            y_pred = [pred for pred, e in zip(all_preds_flat, all_emotions_flat) if e == emo]
+            if len(set(y_true)) < 2:
+                continue
+            tn, fp, fn, tp = confusion_matrix(y_true, y_pred, labels=[0, 1]).ravel()
+            tnr = tn / (tn + fp) if (tn + fp) > 0 else 0
+            tnrs.append(tnr)
+        avg_tnr = sum(tnrs) / len(tnrs) if tnrs else 0.0
+
+        try:
+            auroc = roc_auc_score(all_labels_flat, all_preds_flat)
+        except ValueError:
+            auroc = 0.0
+        try:
+            auprc = average_precision_score(all_labels_flat, all_preds_flat)
+        except ValueError:
+            auprc = 0.0
+
+        # Log to WandB
+        wandb.log({
+            "f1_macro": f1_macro,
+            "precision_macro": precision_macro,
+            "recall_macro": recall_macro,
+            "accuracy": accuracy,
+            "true_negative_rate_avg": avg_tnr,
+            "auroc": auroc,
+            "auprc": auprc,
+        })
+
+        return {
+            "f1_macro": f1_macro,
+            "precision_macro": precision_macro,
+            "recall_macro": recall_macro,
+            "accuracy": accuracy,
+            "true_negative_rate_avg": avg_tnr,
+            "auroc": auroc,
+            "auprc": auprc,
+            "f1_per_emotion": f1_per_emotion
         }
-        macro_f1 = sum(f1_per_emotion.values()) / len(f1_per_emotion) if f1_per_emotion else 0.0
-        return {"f1_per_emotion": f1_per_emotion, "macro_f1": macro_f1}
 
     else:  # intensity
+        all_labels_flat = []
+        all_preds_flat = []
+        all_emotions_flat = []
+
+        for emo in emotion2refs:
+            all_labels_flat.extend(emotion2refs[emo])
+            all_preds_flat.extend(emotion2preds[emo])
+            all_emotions_flat.extend([emo] * len(emotion2refs[emo]))
+
+        # Pearson (per emotion + avg)
         pearson_per_emotion = {
-            emo: (pearsonr(refs, emotion2preds[emo])[0] if len(refs) > 1 else 0.0)
-            for emo, refs in emotion2refs.items()
+            emo: (pearsonr(emotion2refs[emo], emotion2preds[emo])[0]
+                if len(emotion2refs[emo]) > 1 else 0.0)
+            for emo in emotion2refs
         }
-        avg_pearson = sum(pearson_per_emotion.values()) / len(pearson_per_emotion) if pearson_per_emotion else 0.0
-        return {"pearson_per_emotion": pearson_per_emotion, "avg_pearson": avg_pearson}
+        avg_pearson = np.mean(list(pearson_per_emotion.values()))
+
+        # Spearman
+        try:
+            spearman_corr = spearmanr(all_labels_flat, all_preds_flat).correlation
+        except Exception:
+            spearman_corr = 0.0
+
+        # MAE + RMSE
+        mse = mean_squared_error(all_labels_flat, all_preds_flat)
+        rmse = math.sqrt(mse)
+
+        # QWK
+        try:
+            qwk = cohen_kappa_score(all_labels_flat, all_preds_flat, weights="quadratic")
+        except Exception:
+            qwk = 0.0
+
+        # Accuracy@1 (exact match)
+        acc_1 = np.mean(np.array(all_labels_flat) == np.array(all_preds_flat))
+
+        # Accuracy@1±
+        acc_1pm = np.mean(np.abs(np.array(all_labels_flat) - np.array(all_preds_flat)) <= 1)
+
+        # Log to WandB
+        wandb.log({
+            "pearson_avg": avg_pearson,
+            "spearman": spearman_corr,
+            "mae": mae,
+            "rmse": rmse,
+            "qwk": qwk,
+            "accuracy_1": acc_1,
+            "accuracy_1pm": acc_1pm,
+        })
+
+        return {
+            "pearson_per_emotion": pearson_per_emotion,
+            "avg_pearson": avg_pearson,
+            "spearman": spearman_corr,
+            "mae": mae,
+            "rmse": rmse,
+            "qwk": qwk,
+            "accuracy_1": acc_1,
+            "accuracy_1pm": acc_1pm,
+        }
                                
 def evaluate_ablation(
     test_data,
@@ -1318,6 +1424,27 @@ def evaluate_ablation(
         if reasoning_mode not in ["default", "self_consistency", "self_refine"]:
             if variant.startswith("cbp_") or variant == "tree_of_thoughts":
                 continue
+
+        wandb_run_name = (
+            f"ablation_{model_name.replace('/', '-')}_{task}_{language}_{reasoning_mode}_prompt_variant={variant}"
+        )
+        wandb.init(
+            entity="CongaAndSiy",
+            project="emotion-eval",
+            name=wandb_run_name,
+            config={
+                "ablation_type": "prompt_variant",
+                "variant": variant,
+                "model": model_name,
+                "task": task,
+                "language": language,
+                "reasoning_mode": reasoning_mode,
+                "top_k": main_top_k,
+                "n_shot": main_n_shot
+            },
+            reinit=True
+        )
+
         scores_dict = evaluate_model_on_test_set(
             test_data=test_data,
             prompt_template=tmpl,
@@ -1325,16 +1452,23 @@ def evaluate_ablation(
             top_k=main_top_k,
             n_shot=main_n_shot,
             model_name=model_name,
-            out_json=f"...",
+            out_json="...",  # not used
             llm=llm,
             reasoning_mode=reasoning_mode,
             max_steps=max_steps,
-            beam_width=tot_beam_width,
+            beam_width=tot_beam_width
         )
-        variant_results[variant] = scores_dict
 
-        score = scores_dict["macro_f1"] if task == "binary" else scores_dict["avg_pearson"]
+        variant_results[variant] = scores_dict
+        wandb.log(scores_dict)
+        wandb.finish()
+
+        score = (
+            scores_dict["f1_macro"] if task == "binary"
+            else scores_dict["avg_pearson"]
+        )
         print(f"  Prompt variant '{variant}': {score:.4f}")
+
 
     results['prompt_variant'] = variant_results
 
@@ -1342,6 +1476,25 @@ def evaluate_ablation(
     print("=== Ablation: Few-shot Examples ===")
     few_shot_results = {}
     for n_shot in shot_counts:
+        wandb_run_name = (
+            f"ablation_{model_name.replace('/', '-')}_{task}_{language}_{reasoning_mode}_n_shot={n_shot}"
+        )
+        wandb.init(
+            entity="CongaAndSiy",
+            project="emotion-eval",
+            name=wandb_run_name,
+            config={
+                "ablation_type": "n_shot",
+                "n_shot": n_shot,
+                "model": model_name,
+                "task": task,
+                "language": language,
+                "reasoning_mode": reasoning_mode,
+                "top_k": main_top_k,
+            },
+            reinit=True
+        )
+
         scores_dict = evaluate_model_on_test_set(
             test_data=test_data,
             prompt_template=main_prompt,
@@ -1349,14 +1502,21 @@ def evaluate_ablation(
             top_k=main_top_k,
             n_shot=n_shot,
             model_name=model_name,
-            out_json=f"...",
+            out_json="...",
             llm=llm,
             reasoning_mode=reasoning_mode,
             max_steps=max_steps,
             beam_width=tot_beam_width,
         )
+
         few_shot_results[n_shot] = scores_dict
-        score = scores_dict["macro_f1"] if task == "binary" else scores_dict["avg_pearson"]
+        wandb.log(scores_dict)
+        wandb.finish()
+
+        score = (
+            scores_dict["f1_macro"] if task == "binary"
+            else scores_dict["avg_pearson"]
+        )
         print(f"  n_shot = {n_shot}: {score:.4f}")
 
     results['few_shot'] = few_shot_results
@@ -1366,6 +1526,25 @@ def evaluate_ablation(
         print("=== Ablation: Top_k Values (self_consistency only) ===")
         topk_results = {}
         for k in topk_list:
+            wandb_run_name = (
+                f"ablation_{model_name.replace('/', '-')}_{task}_{language}_{reasoning_mode}_top_k={k}"
+            )
+            wandb.init(
+                entity="CongaAndSiy",
+                project="emotion-eval",
+                name=wandb_run_name,
+                config={
+                    "ablation_type": "top_k",
+                    "top_k": k,
+                    "model": model_name,
+                    "task": task,
+                    "language": language,
+                    "reasoning_mode": reasoning_mode,
+                    "n_shot": main_n_shot,
+                },
+                reinit=True
+            )
+
             scores = evaluate_model_on_test_set(
                 test_data=test_data,
                 prompt_template=main_prompt,
@@ -1377,10 +1556,15 @@ def evaluate_ablation(
                 reasoning_mode=reasoning_mode,
                 max_steps=max_steps,
                 beam_width=tot_beam_width,
-                out_json=f"..."
+                out_json="..."
             )
+
             topk_results[k] = scores
-            print(f"  top_k = {k}: {scores['macro_f1']:.4f}")
+            wandb.log(scores)
+            wandb.finish()
+
+            score = scores["f1_macro"] if task == "binary" else scores["avg_pearson"]
+            print(f"  top_k = {k}: {score:.4f}")
         results['top_k'] = topk_results
     
     sample_sizes = [30, 48, 60, 90, 120, 150, 180, 240]
@@ -1389,13 +1573,11 @@ def evaluate_ablation(
     for size in sample_sizes:
         print(f"\n  → Sampling {size} examples ...")
         if balanced:
-            # Compute test CSV path inside function
             csv_path = os.path.join(TEST_DIRS[task], f"{language}.csv")
-
             if task == "binary":
-                sampled_df = sample_dataset(csv_path, sample_size= args.sample_size, balanced=args.balanced, balancing_strategy=args.balancing_strategy)
+                sampled_df = sample_dataset(csv_path, sample_size=size, balanced=True, balancing_strategy=balancing_strategy)
             else:
-                sampled_df = sample_dataset_intensity(csv_path, sample_size=args.sample_size, balanced=args.balanced, balancing_strategy=args.balancing_strategy)
+                sampled_df = sample_dataset_intensity(csv_path, sample_size=size, balanced=True, balancing_strategy=balancing_strategy)
 
             new_test_data = []
             for row in sampled_df.itertuples(index=False):
@@ -1408,8 +1590,29 @@ def evaluate_ablation(
                         "label": label
                     })
         else:
-            # Just slice test_data (unbalanced)
             new_test_data = test_data[:size]
+
+        wandb_run_name = (
+            f"ablation_{model_name.replace('/', '-')}_{task}_{language}_{reasoning_mode}_sample_size={size}"
+        )
+        wandb.init(
+            entity="CongaAndSiy",
+            project="emotion-eval",
+            name=wandb_run_name,
+            config={
+                "ablation_type": "sample_size",
+                "sample_size": size,
+                "model": model_name,
+                "task": task,
+                "language": language,
+                "reasoning_mode": reasoning_mode,
+                "n_shot": main_n_shot,
+                "top_k": main_top_k,
+                "balanced": balanced,
+                "balancing_strategy": balancing_strategy
+            },
+            reinit=True
+        )
 
         scores = evaluate_model_on_test_set(
             test_data=new_test_data,
@@ -1422,10 +1625,14 @@ def evaluate_ablation(
             reasoning_mode=reasoning_mode,
             max_steps=max_steps,
             beam_width=tot_beam_width,
-            out_json= f"..."
+            out_json="..."
         )
+
         sample_size_results[size] = scores
-        score = scores["macro_f1"] if task == "binary" else scores["avg_pearson"]
+        wandb.log(scores)
+        wandb.finish()
+
+        score = scores["f1_macro"] if task == "binary" else scores["avg_pearson"]
         print(f"  sample_size = {size}: {score:.4f}")
 
     results["sample_size"] = sample_size_results
@@ -1509,6 +1716,23 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
+
+    wandb.init(
+        entity="CongaAndSiy",
+        project="emotion-eval",  # Change if needed
+        name=f"main_{args.model_name.replace('/', '-')}_{args.task}_{args.language or 'all'}_{args.reasoning_mode}",
+        config={
+            "model": args.model_name,
+            "task": args.task,
+            "language": args.language or "all",
+            "n_shot": args.n_shot,
+            "top_k": args.top_k,
+            "reasoning_mode": args.reasoning_mode,
+            "sample_size": args.sample_size,
+            "balanced": args.balanced
+        }
+    )
+
     if args.reasoning_mode not in ["self_consistency", "rasc"]:
         print(f"[DEBUG] For reasoning_mode={args.reasoning_mode}, forcing top_k=1 (was {args.top_k})")
         args.top_k = 1
@@ -1570,6 +1794,8 @@ if __name__ == "__main__":
 
     langs_to_run = [args.language] if args.language else ALL_LANGUAGES
     for lang in langs_to_run:
+        wandb.define_metric("language")       # Define the custom metric if not already
+        wandb.log({"language": lang}) 
         # Prepare the output file
         if args.output_file is None:
             var_name = args.prompt_variant if args.prompt_variant else main_config["variant"]
@@ -1663,9 +1889,11 @@ if __name__ == "__main__":
             max_steps=args.tot_steps,                
             beam_width=args.tot_beam_width
         )
+        wandb.log(main_res)
+        wandb.finish()
         # Log the main result
         if args.task == "binary":
-            print(f"Main macro-F1 = {main_res['macro_f1']:.4f}")
+            print("Returned results:", main_res)
             print(f"Per-emotion F1s: {main_res['f1_per_emotion']}")
         else:
             print(f"Main avg-Pearson = {main_res['avg_pearson']:.4f}")
