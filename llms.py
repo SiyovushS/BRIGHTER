@@ -456,6 +456,120 @@ def run_self_refine(prompt: str, task: str, llm, flagged_prompts: list, max_refi
     })
     return None, "flagged"
 
+def run_rasc(
+    prompt: str,
+    task: str,
+    llm,
+    max_samples: int = 10,
+    min_confidence: float = 0.7,
+    max_tries: int = 5,
+) -> Tuple[Optional[int], List[str], List[dict]]:
+    """
+    Reasoning-Aware Self-Consistency (RASC) with retry and content moderation.
+    """
+    from collections import Counter
+    import hashlib
+    import openai
+    import time
+
+    sampling = SamplingParams(max_tokens=80, temperature=0.7, top_p=0.95, n=1)
+    seen = set()
+    responses = []
+    flagged = []
+    attempt = 0
+
+    def reasoning_score(response: str) -> float:
+        reasoning_part = response.strip().split("Answer:")[0]
+        word_count = len(reasoning_part.split())
+        return min(1.0, word_count / 30.0)
+
+    while attempt < max_tries and len(responses) < max_samples:
+        attempt += 1
+        try:
+            result = llm.generate([prompt], sampling)[0]
+            text = result.texts[0].strip()
+
+            if not text or "Answer:" not in text:
+                continue
+
+            key = hashlib.md5(text.encode()).hexdigest()
+            if key in seen:
+                continue
+            seen.add(key)
+
+            parsed = parse_output(text, task)
+            if parsed is None:
+                continue
+
+            score = reasoning_score(text)
+            responses.append((parsed, score))
+
+            # Weighted majority vote
+            counter = Counter()
+            for val, s in responses:
+                counter[val] += s
+            best_val, best_weight = counter.most_common(1)[0]
+            total_weight = sum(counter.values())
+            confidence = best_weight / total_weight
+
+            if confidence >= min_confidence:
+                return best_val, [r[0] for r in responses], flagged
+
+        except Exception as e:
+            err = str(e).lower()
+            # Network errors → retry without increment
+            if isinstance(e, (
+                openai.error.APIError,
+                openai.error.APIConnectionError,
+                openai.error.RateLimitError,
+            )) or any(kw in err for kw in ["timeout", "connection", "rate", "500"]):
+                print(f"🔁 Recoverable error in RASC: {e}")
+                attempt -= 1
+                time.sleep(2)
+                continue
+
+            # Fatal errors → exit
+            if isinstance(e, (
+                openai.error.InvalidRequestError,
+                openai.error.AuthenticationError,
+                openai.error.PermissionError,
+                openai.error.ServiceUnavailableError
+            )) or any(kw in err for kw in ["invalid request", "auth", "permission", "unavailable"]):
+                print(f"❌ Fatal error in RASC: {e}")
+                sys.exit(1)
+
+            # Content moderation
+            if "content policy" in err or "violation" in err:
+                flagged.append({
+                    "prompt": prompt,
+                    "reason": "content_moderation_violation",
+                    "stage": "rasc"
+                })
+                return None, [], flagged
+
+            # Other errors → count toward retry limit
+            print(f"⚠️ Unknown error in RASC: {e}")
+            flagged.append({
+                "prompt": prompt,
+                "error": str(e),
+                "stage": "rasc"
+            })
+
+    # Final vote fallback
+    if responses:
+        counter = Counter()
+        for val, s in responses:
+            counter[val] += s
+        final = counter.most_common(1)[0][0]
+        return final, [str(r[0]) for r in responses], flagged
+
+    flagged.append({
+        "prompt": prompt,
+        "reason": f"Unparseable after {max_tries} attempts",
+        "stage": "rasc"
+    })
+    return None, [], flagged
+
 def run_tree_of_thoughts(
     prompt_base: str,
     emotion: str,
@@ -502,7 +616,6 @@ def run_tree_of_thoughts(
                         break  # ✅ got at least one valid child state
 
                 except Exception as e:
-                    import openai  # Ensure this is imported at the top
                     err = str(e).lower()
 
                     # 🛑 Fatal errors → print and exit
@@ -967,6 +1080,19 @@ def evaluate_model_on_test_set(
                 all_preds.append(pred)
                 all_raw.append(raw_texts)
 
+        elif reasoning_mode == "rasc":
+            for prompt in prompts:
+                pred, raw_texts, new_flags = run_rasc(
+                    prompt=prompt,
+                    task=task,
+                    llm=llm,
+                    max_samples=top_k,  # reuse top_k as max_samples
+                    max_tries=max_retries
+                )
+                all_preds.append(pred)
+                all_raw.append(raw_texts)
+                all_flagged.extend(new_flags)
+
         elif reasoning_mode == "self_consistency":
             sampling_sc = SamplingParams(
                 max_tokens=80,
@@ -1350,7 +1476,7 @@ if __name__ == "__main__":
         "--reasoning_mode",
         type=str,
         default="default",
-        choices=["default", "self_consistency", "tree_of_thoughts","self_refine","complexity_based","plan_and_solve"],
+        choices=["default", "self_consistency", "tree_of_thoughts","self_refine","complexity_based","plan_and_solve","rasc"],
         help="Choose the reasoning strategy: default (1-shot), self_consistency (vote), or tree_of_thoughts (search)"
     )
     parser.add_argument(
@@ -1383,7 +1509,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    if args.reasoning_mode != "self_consistency":
+    if args.reasoning_mode not in ["self_consistency", "rasc"]:
         print(f"[DEBUG] For reasoning_mode={args.reasoning_mode}, forcing top_k=1 (was {args.top_k})")
         args.top_k = 1
 
