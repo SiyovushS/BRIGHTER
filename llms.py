@@ -32,27 +32,87 @@ class SamplingParams:
         self.n = n
 
 class MockLLM:
+    def __init__(self, reasoning_mode: str = "default", task: str = "binary"):
+        self.reasoning_mode = reasoning_mode
+        self.task = task
+
+    def set_reasoning_mode(self, mode: str):
+        self.reasoning_mode = mode
+
+    def set_task(self, task: str):
+        self.task = task
+
     def generate(self, prompts: List[str], sampling_params):
         class Result:
             def __init__(self, texts: List[str]):
                 self.texts = texts
 
+        def random_choice():
+            return random.choice(['yes', 'no']) if self.task == "binary" else str(random.randint(0, 3))
+
         dummy_outputs = []
         for prompt in prompts:
-            # Detect intensity prompts by the "0: none" or "0=none" snippet
-            is_intensity = ("0: none" in prompt) or ("0=none" in prompt)
-
-            # Choose from 0..3 for intensity, yes/no for binary
-            choices = ['0', '1', '2', '3'] if is_intensity else ['yes', 'no']
-
             responses = []
             for _ in range(sampling_params.n):
-                responses.append(f"Answer: {random.choice(choices)}")
+                answer = random_choice()
+
+                if self.reasoning_mode == "tree_of_thoughts":
+                    thought_steps = [
+                        "Step 1: Identify emotional cues in the sentence.",
+                        "Step 2: Evaluate their intensity and relevance.",
+                        "Step 3: Cross-check with known examples.",
+                        f"Answer: {answer}"
+                    ]
+                    responses.append("\n".join(random.sample(thought_steps, k=len(thought_steps))))
+
+                elif self.reasoning_mode == "self_refine":
+                    explanation = random.choice([
+                        "The expression of emotion is somewhat present.",
+                        "It's unclear but possible that the emotion is there.",
+                        "The cues suggest a subtle presence of emotion."
+                    ])
+                    responses.append(f"{explanation}\nAnswer: {answer}")
+
+                elif self.reasoning_mode == "plan_and_solve":
+                    plan = random.choice([
+                        "- Look for emotional words.\n- Evaluate tone and intensity.\n- Decide.",
+                        "- Scan for sentiment.\n- Map to emotion scale.\n- Conclude.",
+                        "- Identify triggers.\n- Assess context.\n- Finalize rating."
+                    ])
+                    responses.append(f"Plan:\n{plan}\nAnswer: {answer}")
+
+                elif self.reasoning_mode == "complexity_based":
+                    reasoning = random.choice([
+                        "After analyzing the tone and keywords, I conclude:",
+                        "The emotional content is evaluated based on intensity markers.",
+                        "Considering the phrasing and sentiment, my assessment is:"
+                    ])
+                    responses.append(f"{reasoning}\nAnswer: {answer}")
+
+                elif self.reasoning_mode == "self_consistency":
+                    explanation = random.choice([
+                        "There are some signs of emotion.",
+                        "The wording reflects emotional content.",
+                        "The expression feels neutral with slight emotion."
+                    ])
+                    responses.append(f"{explanation}\nAnswer: {answer}")
+
+                elif self.reasoning_mode == "rasc":
+                    reasoning = random.choice([
+                        "The emotional indicators are strong and repetitive.",
+                        "Subtle hints of the emotion are scattered in the text.",
+                        "The emotion is directly referenced through explicit language."
+                    ])
+                    responses.append(f"{reasoning}\nAnswer: {answer}")
+
+                else:  # "default"
+                    responses.append(f"Answer: {answer}")
 
             dummy_outputs.append(Result(responses))
 
         return dummy_outputs
 USE_MOCK_LLM = True
+
 
 ###########################################################
 # GLOBAL SETTINGS
@@ -1432,7 +1492,7 @@ def evaluate_ablation(
                 f"ablation_{model_name.replace('/', '-')}_{task}_{language}_{reasoning_mode}_prompt_variant={variant}"
             )
             wandb.init(
-                entity="CongaAndSiy",
+                entity="CongAndSiy",
                 project="emotion-eval",
                 name=wandb_run_name,
                 config={
@@ -1483,7 +1543,7 @@ def evaluate_ablation(
                 f"ablation_{model_name.replace('/', '-')}_{task}_{language}_{reasoning_mode}_n_shot={n_shot}"
             )
             wandb.init(
-                entity="CongaAndSiy",
+                entity="CongAndSiy",
                 project="emotion-eval",
                 name=wandb_run_name,
                 config={
@@ -1533,7 +1593,7 @@ def evaluate_ablation(
                     f"ablation_{model_name.replace('/', '-')}_{task}_{language}_{reasoning_mode}_top_k={k}"
                 )
                 wandb.init(
-                    entity="CongaAndSiy",
+                    entity="CongAndSiy",
                     project="emotion-eval",
                     name=wandb_run_name,
                     config={
@@ -1599,7 +1659,7 @@ def evaluate_ablation(
                 f"ablation_{model_name.replace('/', '-')}_{task}_{language}_{reasoning_mode}_sample_size={size}"
             )
             wandb.init(
-                entity="CongaAndSiy",
+                entity="CongAndSiy",
                 project="emotion-eval",
                 name=wandb_run_name,
                 config={
@@ -1724,11 +1784,16 @@ if __name__ == "__main__":
         action="store_true",
         help="If set, only run the main evaluation and skip all ablation loops.",
     )
+    parser.add_argument(
+        "--test_errors",
+        action="store_true",
+        help="If set, run a suite of error-handling tests and exit.",
+    )
     args = parser.parse_args()
 
 
     wandb.init(
-        entity="CongaAndSiy",
+        entity="CongAndSiy",
         project="emotion-eval",  # Change if needed
         name=f"main_{args.model_name.replace('/', '-')}_{args.task}_{args.language or 'all'}_{args.reasoning_mode}",
         config={
@@ -1749,7 +1814,7 @@ if __name__ == "__main__":
 
     if USE_MOCK_LLM:
         print("[DEBUG] Using Mock LLM for offline testing.")
-        llm_engine = MockLLM()
+        llm_engine = MockLLM(reasoning_mode=args.reasoning_mode, task=args.task)
     else:
         client = AzureOpenAI(
             api_key=os.getenv("AZURE_OPENAI_KEY"),
@@ -2052,29 +2117,29 @@ if __name__ == "__main__":
         }
 
         # Write results
-        os.makedirs(os.path.dirname(out_json), exist_ok=True)
-        with open(out_json, "w", encoding="utf-8") as f:
-            json.dump(final_output, f, indent=4)
-        print(f"\nAll done! Wrote results to {out_json}\n")
-        print(f"  → Metadata: prompt_variant={var_name}, n_shot={n_shot_main}, top_k={topk_main}")
-        if args.output_file is None and lang == ALL_LANGUAGES[-1]:
-            combined_results = []
+        #os.makedirs(os.path.dirname(out_json), exist_ok=True)
+        #with open(out_json, "w", encoding="utf-8") as f:
+        #    json.dump(final_output, f, indent=4)
+        #print(f"\nAll done! Wrote results to {out_json}\n")
+        #print(f"  → Metadata: prompt_variant={var_name}, n_shot={n_shot_main}, top_k={topk_main}")
+        #if args.output_file is None and lang == ALL_LANGUAGES[-1]:
+        #    combined_results = []
 
-            for lang_code in ALL_LANGUAGES:
-                # Pattern to match all variants of the filename for this language, task, and model
-                pattern = f"llm_track_ab_results/results_{safe_model}_{args.task}_{lang_code}_*.json"
+        #    for lang_code in ALL_LANGUAGES:
+        #        # Pattern to match all variants of the filename for this language, task, and model
+        #        pattern = f"llm_track_ab_results/results_{safe_model}_{args.task}_{lang_code}_*.json"
+        #        
+        #        # Find all matching files
+        #        matching_files = glob.glob(pattern)
+        #        
+        #        if not matching_files:
+        #            print(f"No result files found for language {lang_code} with pattern {pattern}")
+        #            continue
                 
-                # Find all matching files
-                matching_files = glob.glob(pattern)
-                
-                if not matching_files:
-                    print(f"No result files found for language {lang_code} with pattern {pattern}")
-                    continue
-                
-                for filepath in matching_files:
-                    with open(filepath, "r", encoding="utf-8") as f:
-                        combined_results.append(json.load(f))
-            final_path = f"llm_track_ab_results/final_bothTasks_{safe_model}.json"
-            with open(final_path, "w", encoding="utf-8") as f:
-                json.dump(combined_results, f, indent=2)
-            print(f"[✓] Wrote combined final JSON to: {final_path}")
+        #        for filepath in matching_files:
+        #            with open(filepath, "r", encoding="utf-8") as f:
+        #                combined_results.append(json.load(f))
+        #    final_path = f"llm_track_ab_results/final_bothTasks_{safe_model}.json"
+        #    with open(final_path, "w", encoding="utf-8") as f:
+        #        json.dump(combined_results, f, indent=2)
+        #    print(f"[✓] Wrote combined final JSON to: {final_path}")
