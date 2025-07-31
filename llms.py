@@ -1241,7 +1241,10 @@ def evaluate_model_on_test_set(
         else:
             raise ValueError(f"Unsupported reasoning_mode: {reasoning_mode}")
 
-
+    # ----------------------------------------
+    # 6) Compute metrics
+    # ----------------------------------------
+    
     if all_flagged:
         wandb.log({"flagged_prompts_count": len(all_flagged)})
         flagged_table = wandb.Table(columns=["prompt", "reason", "stage"])
@@ -1249,7 +1252,7 @@ def evaluate_model_on_test_set(
             flagged_table.add_data(item.get("prompt", ""), item.get("reason", ""), item.get("stage", ""))
         wandb.log({"flagged_prompts": flagged_table})
 
-# ✅ Log predictions
+
     preds_table = wandb.Table(columns=["index", "prompt", "raw_outputs", "parsed", "gold", "emotion"])
     for idx, (sample, prompt) in enumerate(zip(test_data, prompts)):
         raw = all_raw[idx] if idx < len(all_raw) else []
@@ -1257,9 +1260,7 @@ def evaluate_model_on_test_set(
         preds_table.add_data(idx, prompt, str(raw), pred, sample["label"], sample["emotion"])
     wandb.log({"predictions_table": preds_table})
 
-    # ----------------------------------------
-    # 6) Compute metrics
-    # ----------------------------------------
+
     emotion2refs = defaultdict(list)
     emotion2preds = defaultdict(list)
     f1_per_emotion = {}
@@ -1361,6 +1362,7 @@ def evaluate_model_on_test_set(
         # MAE + RMSE
         mse = mean_squared_error(all_labels_flat, all_preds_flat)
         rmse = math.sqrt(mse)
+        mae = mean_absolute_error(all_labels_flat, all_preds_flat)
 
         # QWK
         try:
@@ -1414,142 +1416,212 @@ def evaluate_ablation(
     balanced,
     balancing_strategy,
 ):
-    results = {}
-    #Note when running evaulate model on test set here, we don't actaully give a directory that code can save all the results
+    if not args.skip_ablations:
+        results = {}
+        #Note when running evaulate model on test set here, we don't actaully give a directory that code can save all the results
 
-    # 1. Prompt variants
-    print("=== Ablation: Prompt Variants ===")
-    variant_results = {}
-    for variant, tmpl in prompt_variants.items():
-        if reasoning_mode not in ["default", "self_consistency", "self_refine"]:
-            if variant.startswith("cbp_") or variant == "tree_of_thoughts":
-                continue
+        # 1. Prompt variants
+        print("=== Ablation: Prompt Variants ===")
+        variant_results = {}
+        for variant, tmpl in prompt_variants.items():
+            if reasoning_mode not in ["default", "self_consistency", "self_refine"]:
+                if variant.startswith("cbp_") or variant == "tree_of_thoughts":
+                    continue
 
-        wandb_run_name = (
-            f"ablation_{model_name.replace('/', '-')}_{task}_{language}_{reasoning_mode}_prompt_variant={variant}"
-        )
-        wandb.init(
-            entity="CongaAndSiy",
-            project="emotion-eval",
-            name=wandb_run_name,
-            config={
-                "ablation_type": "prompt_variant",
-                "variant": variant,
-                "model": model_name,
-                "task": task,
-                "language": language,
-                "reasoning_mode": reasoning_mode,
-                "top_k": main_top_k,
-                "n_shot": main_n_shot
-            },
-            reinit=True
-        )
-
-        scores_dict = evaluate_model_on_test_set(
-            test_data=test_data,
-            prompt_template=tmpl,
-            task=task,
-            top_k=main_top_k,
-            n_shot=main_n_shot,
-            model_name=model_name,
-            out_json="...",  # not used
-            llm=llm,
-            reasoning_mode=reasoning_mode,
-            max_steps=max_steps,
-            beam_width=tot_beam_width
-        )
-
-        variant_results[variant] = scores_dict
-        wandb.log(scores_dict)
-        wandb.finish()
-
-        score = (
-            scores_dict["f1_macro"] if task == "binary"
-            else scores_dict["avg_pearson"]
-        )
-        print(f"  Prompt variant '{variant}': {score:.4f}")
-
-
-    results['prompt_variant'] = variant_results
-
-    # 2. Few-shot examples
-    print("=== Ablation: Few-shot Examples ===")
-    few_shot_results = {}
-    for n_shot in shot_counts:
-        wandb_run_name = (
-            f"ablation_{model_name.replace('/', '-')}_{task}_{language}_{reasoning_mode}_n_shot={n_shot}"
-        )
-        wandb.init(
-            entity="CongaAndSiy",
-            project="emotion-eval",
-            name=wandb_run_name,
-            config={
-                "ablation_type": "n_shot",
-                "n_shot": n_shot,
-                "model": model_name,
-                "task": task,
-                "language": language,
-                "reasoning_mode": reasoning_mode,
-                "top_k": main_top_k,
-            },
-            reinit=True
-        )
-
-        scores_dict = evaluate_model_on_test_set(
-            test_data=test_data,
-            prompt_template=main_prompt,
-            task=task,
-            top_k=main_top_k,
-            n_shot=n_shot,
-            model_name=model_name,
-            out_json="...",
-            llm=llm,
-            reasoning_mode=reasoning_mode,
-            max_steps=max_steps,
-            beam_width=tot_beam_width,
-        )
-
-        few_shot_results[n_shot] = scores_dict
-        wandb.log(scores_dict)
-        wandb.finish()
-
-        score = (
-            scores_dict["f1_macro"] if task == "binary"
-            else scores_dict["avg_pearson"]
-        )
-        print(f"  n_shot = {n_shot}: {score:.4f}")
-
-    results['few_shot'] = few_shot_results
-
-    # 3. top_k
-    if reasoning_mode == "self_consistency":
-        print("=== Ablation: Top_k Values (self_consistency only) ===")
-        topk_results = {}
-        for k in topk_list:
             wandb_run_name = (
-                f"ablation_{model_name.replace('/', '-')}_{task}_{language}_{reasoning_mode}_top_k={k}"
+                f"ablation_{model_name.replace('/', '-')}_{task}_{language}_{reasoning_mode}_prompt_variant={variant}"
             )
             wandb.init(
                 entity="CongaAndSiy",
                 project="emotion-eval",
                 name=wandb_run_name,
                 config={
-                    "ablation_type": "top_k",
-                    "top_k": k,
+                    "ablation_type": "prompt_variant",
+                    "variant": variant,
+                    "model": model_name,
+                    "task": task,
+                    "language": language,
+                    "reasoning_mode": reasoning_mode,
+                    "top_k": main_top_k,
+                    "n_shot": main_n_shot
+                },
+                reinit=True
+            )
+
+            scores_dict = evaluate_model_on_test_set(
+                test_data=test_data,
+                prompt_template=tmpl,
+                task=task,
+                top_k=main_top_k,
+                n_shot=main_n_shot,
+                model_name=model_name,
+                out_json="...",  # not used
+                llm=llm,
+                reasoning_mode=reasoning_mode,
+                max_steps=max_steps,
+                beam_width=tot_beam_width
+            )
+
+            variant_results[variant] = scores_dict
+            wandb.log(scores_dict)
+            wandb.finish()
+
+            score = (
+                scores_dict["f1_macro"] if task == "binary"
+                else scores_dict["avg_pearson"]
+            )
+            print(f"  Prompt variant '{variant}': {score:.4f}")
+
+
+        results['prompt_variant'] = variant_results
+
+        # 2. Few-shot examples
+        print("=== Ablation: Few-shot Examples ===")
+        few_shot_results = {}
+        for n_shot in shot_counts:
+            wandb_run_name = (
+                f"ablation_{model_name.replace('/', '-')}_{task}_{language}_{reasoning_mode}_n_shot={n_shot}"
+            )
+            wandb.init(
+                entity="CongaAndSiy",
+                project="emotion-eval",
+                name=wandb_run_name,
+                config={
+                    "ablation_type": "n_shot",
+                    "n_shot": n_shot,
+                    "model": model_name,
+                    "task": task,
+                    "language": language,
+                    "reasoning_mode": reasoning_mode,
+                    "top_k": main_top_k,
+                },
+                reinit=True
+            )
+
+            scores_dict = evaluate_model_on_test_set(
+                test_data=test_data,
+                prompt_template=main_prompt,
+                task=task,
+                top_k=main_top_k,
+                n_shot=n_shot,
+                model_name=model_name,
+                out_json="...",
+                llm=llm,
+                reasoning_mode=reasoning_mode,
+                max_steps=max_steps,
+                beam_width=tot_beam_width,
+            )
+
+            few_shot_results[n_shot] = scores_dict
+            wandb.log(scores_dict)
+            wandb.finish()
+
+            score = (
+                scores_dict["f1_macro"] if task == "binary"
+                else scores_dict["avg_pearson"]
+            )
+            print(f"  n_shot = {n_shot}: {score:.4f}")
+
+        results['few_shot'] = few_shot_results
+
+        # 3. top_k
+        if reasoning_mode == "self_consistency":
+            print("=== Ablation: Top_k Values (self_consistency only) ===")
+            topk_results = {}
+            for k in topk_list:
+                wandb_run_name = (
+                    f"ablation_{model_name.replace('/', '-')}_{task}_{language}_{reasoning_mode}_top_k={k}"
+                )
+                wandb.init(
+                    entity="CongaAndSiy",
+                    project="emotion-eval",
+                    name=wandb_run_name,
+                    config={
+                        "ablation_type": "top_k",
+                        "top_k": k,
+                        "model": model_name,
+                        "task": task,
+                        "language": language,
+                        "reasoning_mode": reasoning_mode,
+                        "n_shot": main_n_shot,
+                    },
+                    reinit=True
+                )
+
+                scores = evaluate_model_on_test_set(
+                    test_data=test_data,
+                    prompt_template=main_prompt,
+                    task=task,
+                    top_k=k,
+                    n_shot=main_n_shot,
+                    model_name=model_name,
+                    llm=llm,
+                    reasoning_mode=reasoning_mode,
+                    max_steps=max_steps,
+                    beam_width=tot_beam_width,
+                    out_json="..."
+                )
+
+                topk_results[k] = scores
+                wandb.log(scores)
+                wandb.finish()
+
+                score = scores["f1_macro"] if task == "binary" else scores["avg_pearson"]
+                print(f"  top_k = {k}: {score:.4f}")
+            results['top_k'] = topk_results
+        
+        sample_sizes = [30, 48, 60, 90, 120, 150, 180, 240]
+        print("=== Ablation: Sample Sizes ===")
+        sample_size_results = {}
+        for size in sample_sizes:
+            print(f"\n  → Sampling {size} examples ...")
+            if balanced:
+                csv_path = os.path.join(TEST_DIRS[task], f"{language}.csv")
+                if task == "binary":
+                    sampled_df = sample_dataset(csv_path, sample_size=size, balanced=True, balancing_strategy=balancing_strategy)
+                else:
+                    sampled_df = sample_dataset_intensity(csv_path, sample_size=size, balanced=True, balancing_strategy=balancing_strategy)
+
+                new_test_data = []
+                for row in sampled_df.itertuples(index=False):
+                    for emo in EMOTIONS:
+                        val = getattr(row, emo, 0)
+                        label = 1 if val == 1 else 0 if task == "binary" else max(0, min(3, int(val)))
+                        new_test_data.append({
+                            "text": row.text,
+                            "emotion": emo,
+                            "label": label
+                        })
+            else:
+                new_test_data = test_data[:size]
+
+            wandb_run_name = (
+                f"ablation_{model_name.replace('/', '-')}_{task}_{language}_{reasoning_mode}_sample_size={size}"
+            )
+            wandb.init(
+                entity="CongaAndSiy",
+                project="emotion-eval",
+                name=wandb_run_name,
+                config={
+                    "ablation_type": "sample_size",
+                    "sample_size": size,
                     "model": model_name,
                     "task": task,
                     "language": language,
                     "reasoning_mode": reasoning_mode,
                     "n_shot": main_n_shot,
+                    "top_k": main_top_k,
+                    "balanced": balanced,
+                    "balancing_strategy": balancing_strategy
                 },
                 reinit=True
             )
 
             scores = evaluate_model_on_test_set(
-                test_data=test_data,
+                test_data=new_test_data,
                 prompt_template=main_prompt,
                 task=task,
-                top_k=k,
+                top_k=main_top_k,
                 n_shot=main_n_shot,
                 model_name=model_name,
                 llm=llm,
@@ -1559,85 +1631,18 @@ def evaluate_ablation(
                 out_json="..."
             )
 
-            topk_results[k] = scores
+            sample_size_results[size] = scores
             wandb.log(scores)
             wandb.finish()
 
             score = scores["f1_macro"] if task == "binary" else scores["avg_pearson"]
-            print(f"  top_k = {k}: {score:.4f}")
-        results['top_k'] = topk_results
-    
-    sample_sizes = [30, 48, 60, 90, 120, 150, 180, 240]
-    print("=== Ablation: Sample Sizes ===")
-    sample_size_results = {}
-    for size in sample_sizes:
-        print(f"\n  → Sampling {size} examples ...")
-        if balanced:
-            csv_path = os.path.join(TEST_DIRS[task], f"{language}.csv")
-            if task == "binary":
-                sampled_df = sample_dataset(csv_path, sample_size=size, balanced=True, balancing_strategy=balancing_strategy)
-            else:
-                sampled_df = sample_dataset_intensity(csv_path, sample_size=size, balanced=True, balancing_strategy=balancing_strategy)
+            print(f"  sample_size = {size}: {score:.4f}")
 
-            new_test_data = []
-            for row in sampled_df.itertuples(index=False):
-                for emo in EMOTIONS:
-                    val = getattr(row, emo, 0)
-                    label = 1 if val == 1 else 0 if task == "binary" else max(0, min(3, int(val)))
-                    new_test_data.append({
-                        "text": row.text,
-                        "emotion": emo,
-                        "label": label
-                    })
-        else:
-            new_test_data = test_data[:size]
+        results["sample_size"] = sample_size_results
 
-        wandb_run_name = (
-            f"ablation_{model_name.replace('/', '-')}_{task}_{language}_{reasoning_mode}_sample_size={size}"
-        )
-        wandb.init(
-            entity="CongaAndSiy",
-            project="emotion-eval",
-            name=wandb_run_name,
-            config={
-                "ablation_type": "sample_size",
-                "sample_size": size,
-                "model": model_name,
-                "task": task,
-                "language": language,
-                "reasoning_mode": reasoning_mode,
-                "n_shot": main_n_shot,
-                "top_k": main_top_k,
-                "balanced": balanced,
-                "balancing_strategy": balancing_strategy
-            },
-            reinit=True
-        )
-
-        scores = evaluate_model_on_test_set(
-            test_data=new_test_data,
-            prompt_template=main_prompt,
-            task=task,
-            top_k=main_top_k,
-            n_shot=main_n_shot,
-            model_name=model_name,
-            llm=llm,
-            reasoning_mode=reasoning_mode,
-            max_steps=max_steps,
-            beam_width=tot_beam_width,
-            out_json="..."
-        )
-
-        sample_size_results[size] = scores
-        wandb.log(scores)
-        wandb.finish()
-
-        score = scores["f1_macro"] if task == "binary" else scores["avg_pearson"]
-        print(f"  sample_size = {size}: {score:.4f}")
-
-    results["sample_size"] = sample_size_results
-
-    return results
+        return results
+    else:
+        print("Skipping all ablation loops (–skip_ablations set).")
 
 ###########################################################
 # MAIN: Single task + single language
@@ -1713,6 +1718,11 @@ if __name__ == "__main__":
         type=int,
         default=3,
         help="Beam width for tree_of_thoughts"
+    )
+    parser.add_argument(
+        "--skip_ablations",
+        action="store_true",
+        help="If set, only run the main evaluation and skip all ablation loops.",
     )
     args = parser.parse_args()
 
@@ -1890,7 +1900,42 @@ if __name__ == "__main__":
             beam_width=args.tot_beam_width
         )
         wandb.log(main_res)
+        # 1) Debug-print the raw values
+        if args.task == "binary":
+            f1 = float(main_res.get("f1_macro", 0.0))
+            acc = float(main_res.get("accuracy", 0.0))
+            auroc = float(main_res.get("auroc", 0.0))
+            auprc = float(main_res.get("auprc", 0.0))
+
+            summary_table = wandb.Table(columns=[
+                "model", "task", "reasoning_mode", "prompt_variant", "language",
+                "f1_macro", "accuracy", "auroc", "auprc"
+            ])
+            summary_table.add_data(
+                args.model_name, args.task, args.reasoning_mode, args.prompt_variant, args.language,
+                f1, acc, auroc, auprc
+            )
+            wandb.log({"summary_metrics": summary_table})
+
+        elif args.task == "intensity":
+            pearson = float(main_res.get("avg_pearson", 0.0))
+            spearman = float(main_res.get("avg_spearman", 0.0))
+            mse = float(main_res.get("mse", 0.0))
+            rmse = float(main_res.get("rmse", 0.0))
+            mae = float(main_res.get("mae", 0.0))
+
+            summary_table = wandb.Table(columns=[
+                "model", "task", "reasoning_mode", "prompt_variant", "language",
+                "avg_pearson", "avg_spearman", "mse", "rmse", "mae"
+            ])
+            summary_table.add_data(
+                args.model_name, args.task, args.reasoning_mode, args.prompt_variant, args.language,
+                pearson, spearman, mse, rmse, mae
+            )
+            wandb.log({"summary_metrics": summary_table})
+
         wandb.finish()
+        
         # Log the main result
         if args.task == "binary":
             print("Returned results:", main_res)
@@ -1899,39 +1944,43 @@ if __name__ == "__main__":
             print(f"Main avg-Pearson = {main_res['avg_pearson']:.4f}")
 
         # Possibly run ablations if language is in ablation list
-        ablation_res = {}
-        if lang in FULL_ABLATION_LANGUAGES:
-            task = args.task
-            reasoning_mode = args.reasoning_mode
-            model_name = args.model_name
-            prompt_variants = TASK_CONFIGS[task]['prompt_variants']
-            if args.prompt_variant is not None:
-                if args.prompt_variant not in prompt_variants:
-                    raise ValueError(f"Prompt variant {args.prompt_variant} not found for task {task}")
-                prompt_variants = {args.prompt_variant: prompt_variants[args.prompt_variant]}
-            print("  ~ Running ablations for this language ~")
-            shot_counts = [0, 1, 2, 4, 6]
-            topk_list = [1, 2, 4, 8]
+        ablation_res = None
+        if not args.skip_ablations:
+            ablation_res = {}
+            if lang in FULL_ABLATION_LANGUAGES:
+                task = args.task
+                reasoning_mode = args.reasoning_mode
+                model_name = args.model_name
+                prompt_variants = TASK_CONFIGS[task]['prompt_variants']
+                if args.prompt_variant is not None:
+                    if args.prompt_variant not in prompt_variants:
+                        raise ValueError(f"Prompt variant {args.prompt_variant} not found for task {task}")
+                    prompt_variants = {args.prompt_variant: prompt_variants[args.prompt_variant]}
+                print("  ~ Running ablations for this language ~")
+                shot_counts = [0, 1, 2, 4, 6]
+                topk_list = [1, 2, 4, 8]
 
-            # Call ablation (fix argument names)
-            ablation_res = evaluate_ablation(
-                test_data=data,
-                prompt_variants=prompt_variants,
-                main_prompt=main_prompt,
-                main_top_k=topk_main,
-                main_n_shot=n_shot_main,
-                shot_counts=shot_counts,
-                topk_list=topk_list,
-                task=args.task,
-                model_name=args.model_name,
-                language=lang,
-                llm=llm_engine,
-                reasoning_mode=args.reasoning_mode,
-                max_steps=args.tot_steps,
-                tot_beam_width=args.tot_beam_width,
-                balanced= args.balanced,
-                balancing_strategy = args.balancing_strategy
-            )
+                # Call ablation (fix argument names)
+                ablation_res = evaluate_ablation(
+                    test_data=data,
+                    prompt_variants=prompt_variants,
+                    main_prompt=main_prompt,
+                    main_top_k=topk_main,
+                    main_n_shot=n_shot_main,
+                    shot_counts=shot_counts,
+                    topk_list=topk_list,
+                    task=args.task,
+                    model_name=args.model_name,
+                    language=lang,
+                    llm=llm_engine,
+                    reasoning_mode=args.reasoning_mode,
+                    max_steps=args.tot_steps,
+                    tot_beam_width=args.tot_beam_width,
+                    balanced= args.balanced,
+                    balancing_strategy = args.balancing_strategy
+                )
+        else:
+            print("Skipping all ablation loops (–skip_ablations set).")
         
 #     if lang in NATIVE_PROMPT_ABLATION_LANGUAGES:
 #           if args.task == "binary" and lang in LANG_NATIVE_PROMPTS:
