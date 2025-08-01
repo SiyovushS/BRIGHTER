@@ -12,3 +12,11 @@ LANGUAGE MODELS
 
 COMPLEXITY-BASED PROMPTING FOR MULTI-STEP
 REASONING
+
+Of Intrest
+https://arxiv.org/pdf/2402.13514
+Self-DC: When to Reason and When to Act Self Divide-and-Conquer for Compositional Questions
+
+https://arxiv.org/pdf/2410.22499
+Anticipating Future with Large Language Model for Simultaneous
+Machine Translation
