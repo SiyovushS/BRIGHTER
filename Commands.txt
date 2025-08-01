@@ -27,7 +27,7 @@ python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode def
 python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode rasc --top_k 4 --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
 python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode rasc --top_k 4 --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
 
-python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode complexity_based --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations 
+python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode complexity_based --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
 python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode complexity_based --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
 
 python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode plan_and_solve --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations

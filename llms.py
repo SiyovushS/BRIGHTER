@@ -9,6 +9,8 @@ import wandb
 import random
 import math
 from openai import AzureOpenAI
+from openai import OpenAIError
+import openai
 import pathlib
 import socket
 from collections import defaultdict
@@ -114,6 +116,58 @@ class MockLLM:
 USE_MOCK_LLM = True
 
 
+class ErrorMockLLM(MockLLM):
+    """
+    On each call to .generate(), randomly:
+      - raise an OpenAIError with a specific code (recoverable/fatal/moderation)
+      - return unparseable texts (no 'Answer:')
+      - or delegate to MockLLM for a normal response
+    """
+    def __init__(self, reasoning_mode: str, task: str, error_prob=0.4):
+        super().__init__(reasoning_mode=reasoning_mode, task=task)
+        self.error_prob = error_prob
+
+        # Define error constructors
+        def make_rate_limit_error():
+            e = OpenAIError("rate limit exceeded")
+            e.code = "rate_limit_exceeded"
+            e.http_status = 429
+            return e
+
+        def make_invalid_request_error():
+            e = OpenAIError("invalid request")
+            e.code = "invalid_request_error"
+            e.http_status = 400
+            return e
+
+        def make_content_filter_error():
+            e = OpenAIError("content policy violation")
+            e.code = "content_filter"
+            e.http_status = 200
+            return e
+
+        self.error_constructors = [
+            make_rate_limit_error,
+            make_invalid_request_error,
+            make_content_filter_error,
+        ]
+
+    def generate(self, prompts: List[str], sampling_params):
+        roll = random.random()
+        # 40% chance to simulate an error
+        if roll < self.error_prob:
+            # pick error type
+            err = random.choice(self.error_constructors)()
+            raise err
+
+        # 20% chance to return unparseable text
+        elif roll < self.error_prob + 0.2:
+            class R: pass
+            fake_texts = ["This is gibberish", "No valid answer here"]
+            return [type("R", (), {"texts": fake_texts})()]
+
+        # otherwise: delegate to normal MockLLM
+        return super().generate(prompts, sampling_params)
 ###########################################################
 # GLOBAL SETTINGS
 ###########################################################
@@ -299,7 +353,6 @@ TASK_CONFIGS = {
     }
 }    
 
-
 class AzureEngineWrapper:
     def __init__(self, client, model_name):
         self.client = client
@@ -325,10 +378,6 @@ class AzureEngineWrapper:
             texts = [choice.message.content.strip() for choice in response.choices]
             results.append(Result(texts))
         return results
-
-
-
-
 
 ###########################################################
 # DATA LOADER
@@ -423,96 +472,74 @@ def parse_output(generated_text: str, task: str) -> Optional[int]:
     else:
         return robust_parse_intensity(generated_text)
 
-def run_self_refine(prompt: str, task: str, llm, flagged_prompts: list, max_refinements=3, max_tries=3):
-    """
-    Self-Refine loop with:
-    - content moderation skip + flag
-    - indefinite network retry
-    - max retries for parse failures
-    - flagged_prompts: shared list with main pipeline
-    """
+def handle_openai_error(e, flagged_list, prompt, stage):
+    code = getattr(e, "code", None)
+    status = getattr(e, "http_status", None)
+    msg = str(e).lower()
+
+    # Fatal: bad request, auth, permission
+    if code in {"invalid_request_error", "authentication_error", "permission_error"} \
+       or status in {400, 401, 403}:
+        print(f"❌ Fatal error at {stage}: {e}")
+        return "fatal"
+
+    # Retry: rate limit or 5xx
+    if code == "rate_limit_exceeded" or status in {429, 502, 503, 504}:
+        print(f"🔁 Recoverable error at {stage}: {e}")
+        return "retry"
+
+    # Flag: content moderation
+    if code == "content_filter" or "content policy" in msg or "moderation" in msg:
+        flagged_list.append({
+            "prompt": prompt,
+            "reason": "content_moderation_violation",
+            "stage": stage
+        })
+        return "flagged"
+
+    # Skip/Count as one try
+    print(f"⚠️ Unhandled OpenAIError at {stage}: {e}")
+    return "skip"
+
+def run_self_refine(prompt, task, llm, flagged_prompts, max_refinements=3, max_tries=3):
     try_count = 0
-    original_prompt = prompt
-    current_output = ""
-    sampling_params = SamplingParams(
-        max_tokens=80,
-        temperature=0.7,
-        top_p=0.95,
-        n=1
-    )
+    original = prompt
+
     while try_count < max_tries:
         try:
-            # 1. Generate initial response
-            response = llm.generate([prompt], sampling_params)[0].texts[0]
-
-            if response is None or not isinstance(response, str) or "Answer:" not in response:
+            # generate
+            out = llm.generate([prompt], SamplingParams(80,0.7,0.95,1))[0].texts[0]
+            if not isinstance(out, str) or "Answer:" not in out:
                 try_count += 1
                 continue
 
-            current_output = response.strip()
-
-            # 2. Critique
-            critique_prompt = (
-                f"{original_prompt}\n\nYour previous answer was:\n{current_output}\n\n"
-                f"Critique your response. What was unclear or incorrect?"
-            )
-            critique = llm.generate([critique_prompt], sampling_params)[0].texts[0]
-
-            if critique is None or not isinstance(critique, str):
+            # critique
+            critique = llm.generate([f"{original}\n\nYour previous answer was:\n{out}\n\nCritique your response."],
+                                    SamplingParams(80,0.7,0.95,1))[0].texts[0]
+            # refine
+            revision = llm.generate([f"{original}\n\nYour previous answer was:\n{out}\nCritique: {critique}\nPlease revise:"],
+                                    SamplingParams(80,0.7,0.95,1))[0].texts[0]
+            if not isinstance(revision, str) or "Answer:" not in revision:
                 try_count += 1
                 continue
 
-            # 3. Refine
-            refine_prompt = (
-                f"{original_prompt}\n\nYour previous answer was:\n{current_output}\n"
-                f"Critique: {critique}\n\nPlease revise your answer based on the critique:"
-            )
-            revision = llm.generate([refine_prompt], sampling_params)[0].texts[0]
+            return revision.strip(), None
 
-            if revision is None or not isinstance(revision, str) or "Answer:" not in revision:
-                try_count += 1
-                continue
-
-            return revision.strip(), None  # Success
-
-        except Exception as e:
-            error_msg = str(e).lower()
-
-            # 🔒 Fatal errors → stop the program
-            if isinstance(e, (
-                openai.error.InvalidRequestError,
-                openai.error.AuthenticationError,
-                openai.error.PermissionError,
-                openai.error.ServiceUnavailableError
-            )) or any(kw in error_msg for kw in ["invalid request", "auth", "permission", "unavailable"]):
-                print(f"❌ Fatal error in self_refine(): {e}")
+        except OpenAIError as e:
+            action = handle_openai_error(e, flagged_prompts, prompt, stage="self_refine")
+            if action == "fatal":
                 sys.exit(1)
-
-            # 🔁 Retry on network/server/rate errors (don’t increment try count)
-            if isinstance(e, (
-                openai.error.APIError,
-                openai.error.APIConnectionError,
-                openai.error.RateLimitError
-            )) or any(kw in error_msg for kw in ["connection", "timeout", "rate", "500"]):
-                print(f"🔁 Recoverable error in self_refine(): {e}")
+            if action == "retry":
                 time.sleep(2)
                 continue
-
-            # 📛 Content moderation
-            if "content policy" in error_msg or "violation" in error_msg:
-                flagged_prompts.append({
-                    "prompt": prompt,
-                    "reason": "content_moderation_violation",
-                    "stage": "self_refine"
-                })
+            if action == "flagged":
                 return None, "flagged"
+            # skip → count
+        except Exception as e:
+            print(f"⚠️ Error in self_refine: {e}")
 
-            # ⚠️ Other unexpected errors → count as one try
-            print(f"⚠️ Error in self_refine(): {e}")
-            try_count += 1
-            continue
+        try_count += 1
 
-    # 📛 Exceeded retry limit due to repeated unparseable outputs
     flagged_prompts.append({
         "prompt": prompt,
         "reason": f"Unparseable after {max_tries} attempts",
@@ -520,112 +547,66 @@ def run_self_refine(prompt: str, task: str, llm, flagged_prompts: list, max_refi
     })
     return None, "flagged"
 
-def run_rasc(
-    prompt: str,
-    task: str,
-    llm,
-    max_samples: int = 10,
-    min_confidence: float = 0.7,
-    max_tries: int = 5,
-) -> Tuple[Optional[int], List[str], List[dict]]:
-    """
-    Reasoning-Aware Self-Consistency (RASC) with retry and content moderation.
-    """
+def run_rasc(prompt, task, llm, max_samples=10, min_conf=0.7, max_tries=5):
     from collections import Counter
     import hashlib
-    import openai
-    import time
 
-    sampling = SamplingParams(max_tokens=80, temperature=0.7, top_p=0.95, n=1)
-    seen = set()
-    responses = []
-    flagged = []
-    attempt = 0
+    sampling = SamplingParams(80, 0.7, 0.95, 1)
+    seen, responses, flagged = set(), [], []
+    attempt, samples = 0, 0
 
-    def reasoning_score(response: str) -> float:
-        reasoning_part = response.strip().split("Answer:")[0]
-        word_count = len(reasoning_part.split())
-        return min(1.0, word_count / 30.0)
+    def score_fn(text):
+        words = text.split("Answer:")[0].split()
+        return min(1.0, len(words)/30.0)
 
-    while attempt < max_tries and len(responses) < max_samples:
-        attempt += 1
+    while attempt < max_tries and samples < max_samples:
         try:
-            result = llm.generate([prompt], sampling)[0]
-            text = result.texts[0].strip()
-
-            if not text or "Answer:" not in text:
+            res = llm.generate([prompt], sampling)[0].texts[0].strip()
+            if "Answer:" not in res:
+                attempt += 1
                 continue
 
-            key = hashlib.md5(text.encode()).hexdigest()
+            key = hashlib.md5(res.encode()).hexdigest()
             if key in seen:
                 continue
             seen.add(key)
 
-            parsed = parse_output(text, task)
+            parsed = parse_output(res, task)
             if parsed is None:
+                attempt += 1
                 continue
 
-            score = reasoning_score(text)
-            responses.append((parsed, score))
+            s = score_fn(res)
+            responses.append((parsed, s))
+            samples += 1
 
-            # Weighted majority vote
-            counter = Counter()
-            for val, s in responses:
-                counter[val] += s
-            best_val, best_weight = counter.most_common(1)[0]
-            total_weight = sum(counter.values())
-            confidence = best_weight / total_weight
+            # vote
+            counter = Counter({v: sum(s_ for v_,s_ in responses if v_==v) for v,_ in responses})
+            best, weight = counter.most_common(1)[0]
+            if weight / sum(counter.values()) >= min_conf:
+                return best, [r for r,_ in responses], flagged
 
-            if confidence >= min_confidence:
-                return best_val, [r[0] for r in responses], flagged
-
-        except Exception as e:
-            err = str(e).lower()
-            # Network errors → retry without increment
-            if isinstance(e, (
-                openai.error.APIError,
-                openai.error.APIConnectionError,
-                openai.error.RateLimitError,
-            )) or any(kw in err for kw in ["timeout", "connection", "rate", "500"]):
-                print(f"🔁 Recoverable error in RASC: {e}")
-                attempt -= 1
+        except OpenAIError as e:
+            action = handle_openai_error(e, flagged, prompt, stage="rasc")
+            if action == "fatal":
+                sys.exit(1)
+            if action == "retry":
                 time.sleep(2)
                 continue
-
-            # Fatal errors → exit
-            if isinstance(e, (
-                openai.error.InvalidRequestError,
-                openai.error.AuthenticationError,
-                openai.error.PermissionError,
-                openai.error.ServiceUnavailableError
-            )) or any(kw in err for kw in ["invalid request", "auth", "permission", "unavailable"]):
-                print(f"❌ Fatal error in RASC: {e}")
-                sys.exit(1)
-
-            # Content moderation
-            if "content policy" in err or "violation" in err:
-                flagged.append({
-                    "prompt": prompt,
-                    "reason": "content_moderation_violation",
-                    "stage": "rasc"
-                })
+            if action == "flagged":
                 return None, [], flagged
-
-            # Other errors → count toward retry limit
+            # skip → count
+        except Exception as e:
             print(f"⚠️ Unknown error in RASC: {e}")
-            flagged.append({
-                "prompt": prompt,
-                "error": str(e),
-                "stage": "rasc"
-            })
+            flagged.append({"prompt": prompt, "error": str(e), "stage":"rasc"})
+            attempt += 1
 
-    # Final vote fallback
+        attempt += 1
+
+    # final fallback
     if responses:
-        counter = Counter()
-        for val, s in responses:
-            counter[val] += s
-        final = counter.most_common(1)[0][0]
-        return final, [str(r[0]) for r in responses], flagged
+        avg = Counter({v: sum(s for v_,s in responses if v_==v) for v,_ in responses})
+        return max(avg, key=avg.get), [r for r,_ in responses], flagged
 
     flagged.append({
         "prompt": prompt,
@@ -635,119 +616,67 @@ def run_rasc(
     return None, [], flagged
 
 def run_tree_of_thoughts(
-    prompt_base: str,
-    emotion: str,
-    task: str,
-    input_text: str,
-    llm,
-    max_steps: int = 3,
-    beam_width: int = 3,
-    max_retries: int = 5,
-) -> Tuple[Optional[int], List[dict]]:
-    """
-    Simplified Tree of Thoughts with retry + moderation handling.
-    Returns (final_answer, flagged_prompts).
-    """
-    state_queue = [""]
-    all_flagged = []
-    max_thought_retries = 10
-
+    prompt_base, emotion, task, input_text, llm,
+    max_steps=3, beam_width=3, max_retries=5
+):
+    state_queue, all_flagged = [""], []
     for step in range(max_steps):
         new_states = []
         for state in state_queue:
-            full_prompt = prompt_base + state
-            prompts = [full_prompt] * beam_width
-            sampling = SamplingParams(
-                max_tokens=80, temperature=0.7, top_p=0.95, n=beam_width
-            )
+            full = prompt_base + state
+            prompts = [full]*beam_width
+            sampling = SamplingParams(80,0.7,0.95, beam_width)
+            thought_retries = 0
 
-            
-            thought_retry_count = 0
-            success = False
-            while thought_retry_count < max_thought_retries:
-                thought_retry_count += 1
+            while thought_retries < max_retries:
                 try:
-                    result = llm.generate(prompts, sampling)[0]
-                    parseable_thoughts = 0
-                    for thought in result.texts:
+                    batch = llm.generate(prompts, sampling)[0].texts
+                    for thought in batch:
                         branch = state + thought.strip() + "\n"
                         if parse_output(branch, task) is not None:
                             new_states.append(branch)
-                            parseable_thoughts += 1
-
-                    if parseable_thoughts > 0:
-                        success = True
-                        break  # ✅ got at least one valid child state
-
-                except Exception as e:
-                    err = str(e).lower()
-
-                    # 🛑 Fatal errors → print and exit
-                    if isinstance(e, (
-                        openai.error.InvalidRequestError,
-                        openai.error.AuthenticationError,
-                        openai.error.PermissionError,
-                        openai.error.ServiceUnavailableError
-                    )) or any(kw in err for kw in ["invalid request", "auth", "permission", "unavailable"]):
-                        print(f"❌ Fatal error in tree_of_thoughts: {e}")
-                        sys.exit(1)
-
-                    # 🔁 Retry on recoverable errors
-                    if isinstance(e, (
-                        openai.error.APIError,
-                        openai.error.APIConnectionError,
-                        openai.error.RateLimitError
-                    )) or any(kw in err for kw in ["connection", "timeout", "rate", "500"]):
-                        print(f"🔁 Recoverable error in tree_of_thoughts: {e}")
-                        time.sleep(2)
-                        thought_retry_count -= 1  # Don’t count this toward max retries
-                        continue
-
-                    # 🚫 Content moderation
-                    if "policy" in err or "violation" in err:
-                        all_flagged.append({
-                            "step": step,
-                            "state": state,
-                            "error": err,
-                            "reason": "content policy violation",
-                            "prompt": full_prompt
-                        })
+                    if new_states:
                         break
+                except OpenAIError as e:
+                    action = handle_openai_error(e, all_flagged, full, stage="tree_of_thoughts")
+                    if action == "fatal":
+                        sys.exit(1)
+                    if action == "retry":
+                        time.sleep(2)
+                        continue
+                    if action == "flagged":
+                        break  # this branch flagged
+                    # skip → count
+                except Exception as e:
+                    print(f"⚠️ Unexpected in ToT: {e}")
+                    all_flagged.append({
+                        "prompt": full,
+                        "error": str(e),
+                        "stage": "tree_of_thoughts"
+                    })
 
-                    # ⚠️ Unknown error → count against retry limit
-                    print(f"⚠️ Unexpected error in tree_of_thoughts: {e}")
-                    time.sleep(2)
-                    continue
+                thought_retries += 1
 
-            # ❌ If all retries failed to produce a parseable thought
-            if not success:
+            if thought_retries >= max_retries and not new_states:
                 all_flagged.append({
-                    "input_text": input_text,
-                    "emotion": emotion,
-                    "task": task,
-                    "step": step,
-                    "state": state,
-                    "error": "No parseable thoughts after max retries",
-                    "prompt": full_prompt
+                    "prompt": full,
+                    "reason": "No parseable thoughts after retries",
+                    "stage": "tree_of_thoughts"
                 })
 
-        # prune to top‑beam_width by length
-        state_queue = sorted(new_states, key=lambda s: -len(s))[:beam_width]
+        # prune
+        state_queue = sorted(new_states, key=len, reverse=True)[:beam_width]
         if not state_queue:
             break
 
-    # final voting
-    answers = [parse_output(s, task) for s in state_queue]
-    answers = [a for a in answers if a is not None]
+    # final vote
+    answers = [parse_output(s, task) for s in state_queue if parse_output(s, task) is not None]
     if not answers:
         return None, all_flagged
-
-    if task == "binary":
-        final = max(set(answers), key=answers.count)
-    else:
-        final = round(sum(answers) / len(answers))
-
+    final = (max(set(answers), key=answers.count)
+             if task=="binary" else round(sum(answers)/len(answers)))
     return final, all_flagged
+    
 def sample_dataset(csv_path: str, sample_size: int, balanced: bool, balancing_strategy="approximate") -> pd.DataFrame:
     """
     Load the CSV and greedily sample `sample_size` rows so that
@@ -920,35 +849,26 @@ def try_generate_with_retries(
     task: str,
     max_retries: int,
     flagged_list: List[dict]
-) -> Tuple[Optional[any], List[str]]:
-    """
-    Calls generator_fn(prompt) up to max_retries times, 
-    handles network errors (infinite retry), policy errors (flag & stop),
-    unparseable outputs (counted toward retries), and on success returns
-    (parsed_prediction, raw_texts). On failure returns (None, last_texts).
-    """
+) -> Tuple[Optional[int], List[str]]:
     attempt = 0
     last_texts: List[str] = []
+
     while True:
         try:
             # 1) Call the LLM
             result = generator_fn(prompt)
-            #   - generator_fn should return either a list of strings (texts)
-            #     or a vLLM/Azure-like batch object with `.texts`
             texts = result.texts if hasattr(result, "texts") else result
 
-            # 2) Try parsing
+            # 2) Parse
             parsed = [parse_output(t, task) for t in texts]
             valid = [p for p in parsed if p is not None]
             if valid:
-                # Success
-                if task == "binary":
-                    pred = max(set(valid), key=valid.count)
-                else:
-                    pred = round(sum(valid) / len(valid))
+                pred = (max(set(valid), key=valid.count)
+                        if task == "binary"
+                        else round(sum(valid) / len(valid)))
                 return pred, texts
 
-            # 3) Unparseable → count against retries
+            # 3) Unparseable → count as one try
             attempt += 1
             last_texts = texts
             if attempt >= max_retries:
@@ -958,37 +878,31 @@ def try_generate_with_retries(
                     "reason": f"Unparseable after {max_retries} attempts"
                 })
                 return None, texts
-            # otherwise loop to retry
+
+        except OpenAIError as e:
+            action = handle_openai_error(e, flagged_list, prompt, stage="try_generate")
+            if action == "fatal":
+                sys.exit(1)
+            if action == "retry":
+                time.sleep(2)
+                continue      # retry w/o increment
+            if action == "flagged":
+                return None, []
+            # skip → fall through to count as one try
 
         except Exception as e:
-            err = str(e).lower()
-            if isinstance(e, (
-                openai.error.APIError,
-                openai.error.APIConnectionError,
-                openai.error.RateLimitError
-            )) or any(kw in err for kw in ["connection", "timeout", "rate", "500"]):
-                print(f"🔁 Retrying due to recoverable error: {e}")
-                time.sleep(2)
-                continue
+            print(f"⚠️ Unexpected error at try_generate: {e}")
+            # fall through to count as one try
 
-            if isinstance(e, (
-                openai.error.InvalidRequestError,
-                openai.error.AuthenticationError,
-                openai.error.PermissionError,
-                openai.error.ServiceUnavailableError
-            )) or any(kw in err for kw in ["invalid request", "auth", "permission", "403", "unavailable"]):
-                print(f"❌ Fatal error: {e}")
-                sys.exit(1)
-
-            attempt += 1
-            if attempt >= max_retries:
-                flagged_list.append({
-                    "prompt": prompt,
-                    "reason": f"Unhandled error after {max_retries} attempts",
-                    "error": err
-                })
-                return None, []
-            # else loop to retry
+        # shared “skip” handling
+        attempt += 1
+        if attempt >= max_retries:
+            flagged_list.append({
+                "prompt": prompt,
+                "outputs": last_texts,
+                "reason": f"Unparseable or skip after {max_retries} attempts"
+            })
+            return None, last_texts
 
 ###########################################################
 # EVALUATION
@@ -1266,28 +1180,28 @@ def evaluate_model_on_test_set(
                 )
 
                 sampling_plan = SamplingParams(max_tokens=100, temperature=0.7, top_p=0.95, n=1)
-                plan_result = llm.generate([plan_prompt], sampling_plan)[0]
-                plan = plan_result.texts[0].strip()
+                try:
+                    plan_result = llm.generate([plan_prompt], sampling_plan)[0]
+                    plan = plan_result.texts[0].strip()
+                except OpenAIError as e:
+                    action = handle_openai_error(e, all_flagged, plan_prompt, stage="plan_and_solve-plan")
+                    if action == "fatal":
+                        sys.exit(1)
+                    if action == "retry":
+                        time.sleep(2)
+                        # you might want to retry here or skip this sample
+                        continue
+                    if action == "flagged":
+                        # skip to next sample
+                        continue
+                    # treat as skip/unparseable → skip this sample
+                    continue
 
                 # Step 2: Solve using the plan
                 if task == "binary":
-                    solve_prompt = (
-                        f"Text: {input_text}\n"
-                        f"Emotion: {emotion}\n"
-                        f"Plan: {plan}\n\n"
-                        f"Based on the plan, decide whether the emotion '{emotion}' is expressed in the text. "
-                        f"Conclude with 'Answer: yes' or 'no'."
-                    )
-                else:  # intensity
-                    solve_prompt = (
-                        f"Text: {input_text}\n"
-                        f"Emotion: {emotion}\n"
-                        f"Plan: {plan}\n\n"
-                        f"Based on the plan, rate the intensity of emotion '{emotion}' in the text on a scale from 0 (none) to 3 (high). "
-                        f"Conclude with 'Answer: 0', 'Answer: 1', 'Answer: 2', or 'Answer: 3'."
-                    )
-
-                # Use retry wrapper
+                    solve_prompt = f"...Conclude with 'Answer: yes' or 'no'."
+                else:
+                    solve_prompt = f"...Conclude with 'Answer: 0', 'Answer: 1', 'Answer: 2', or 'Answer: 3'."
                 pred, raw_texts = try_generate_with_retries(
                     prompt=solve_prompt,
                     generator_fn=lambda p: llm.generate([p], SamplingParams(max_tokens=80, temperature=0.7, top_p=0.95, n=top_k))[0],
@@ -1785,9 +1699,9 @@ if __name__ == "__main__":
         help="If set, only run the main evaluation and skip all ablation loops.",
     )
     parser.add_argument(
-        "--test_errors",
+        "--error_test",
         action="store_true",
-        help="If set, run a suite of error-handling tests and exit.",
+        help="If set, use ErrorMockLLM to randomly simulate API errors.",
     )
     args = parser.parse_args()
 
@@ -1813,8 +1727,12 @@ if __name__ == "__main__":
         args.top_k = 1
 
     if USE_MOCK_LLM:
-        print("[DEBUG] Using Mock LLM for offline testing.")
-        llm_engine = MockLLM(reasoning_mode=args.reasoning_mode, task=args.task)
+        if args.error_test:
+            print("[DEBUG] Using ErrorMockLLM (error testing mode).")
+            llm_engine = ErrorMockLLM(reasoning_mode=args.reasoning_mode, task=args.task)
+        else:
+            print("[DEBUG] Using MockLLM for offline testing.")
+            llm_engine = MockLLM(reasoning_mode=args.reasoning_mode, task=args.task)
     else:
         client = AzureOpenAI(
             api_key=os.getenv("AZURE_OPENAI_KEY"),
