@@ -38,12 +38,6 @@ class MockLLM:
         self.reasoning_mode = reasoning_mode
         self.task = task
 
-    def query_confidence_bin(self, step_text: str, sampling=None):
-        """Simulate confidence response randomly for A-J (0.05 to 0.95)."""
-        bin_letter = random.choice(list(confidence_map.keys()))
-        score = confidence_map[bin_letter]
-        return bin_letter, score
-
     def set_reasoning_mode(self, mode: str):
         self.reasoning_mode = mode
 
@@ -507,7 +501,7 @@ def handle_openai_error(e, flagged_list, prompt, stage):
     print(f"⚠️ Unhandled OpenAIError at {stage}: {e}")
     return "skip"
 
-def run_self_refine(prompt, task, llm, flagged_prompts, max_refinements=3, max_tries=3) -> Tuple[Optional[str], Optional[dict]]:
+def run_self_refine(prompt, task, llm, flagged_prompts, max_refinements=3, max_tries=3):
     try_count = 0
     original = prompt
 
@@ -515,7 +509,6 @@ def run_self_refine(prompt, task, llm, flagged_prompts, max_refinements=3, max_t
         try:
             # generate
             out = llm.generate([prompt], SamplingParams(80,0.7,0.95,1))[0].texts[0]
-            pre_conf_bin, pre_conf_score = query_confidence_bin(llm, out, SamplingParams(40, 0.0, 1.0, 1))
             if not isinstance(out, str) or "Answer:" not in out:
                 try_count += 1
                 continue
@@ -526,15 +519,11 @@ def run_self_refine(prompt, task, llm, flagged_prompts, max_refinements=3, max_t
             # refine
             revision = llm.generate([f"{original}\n\nYour previous answer was:\n{out}\nCritique: {critique}\nPlease revise:"],
                                     SamplingParams(80,0.7,0.95,1))[0].texts[0]
-            post_conf_bin, post_conf_score = query_confidence_bin(llm, revision, SamplingParams(40, 0.0, 1.0, 1))
             if not isinstance(revision, str) or "Answer:" not in revision:
                 try_count += 1
                 continue
 
-            return revision.strip(), {
-                "pre_conf_bin": pre_conf, "pre_conf_score": pre_score,
-                "post_conf_bin": post_conf, "post_conf_score": post_score
-            }
+            return revision.strip(), None
 
         except OpenAIError as e:
             action = handle_openai_error(e, flagged_prompts, prompt, stage="self_refine")
@@ -629,9 +618,8 @@ def run_rasc(prompt, task, llm, max_samples=10, min_conf=0.7, max_tries=5):
 def run_tree_of_thoughts(
     prompt_base, emotion, task, input_text, llm,
     max_steps=3, beam_width=3, max_retries=5
-) -> Tuple[Optional[int], List[dict], List[dict]]:
+):
     state_queue, all_flagged = [""], []
-    confidence_trace = []
     for step in range(max_steps):
         new_states = []
         for state in state_queue:
@@ -647,14 +635,6 @@ def run_tree_of_thoughts(
                         branch = state + thought.strip() + "\n"
                         if parse_output(branch, task) is not None:
                             new_states.append(branch)
-                            conf_bin, conf_score = query_confidence_bin(llm, thought.strip(), sampling)
-                            confidence_trace.append({
-                                "step": step,
-                                "beam": len(new_states),
-                                "text": thought.strip(),
-                                "conf_bin": conf_bin,
-                                "conf_score": conf_score
-                            })
                     if new_states:
                         break
                 except OpenAIError as e:
@@ -695,7 +675,7 @@ def run_tree_of_thoughts(
         return None, all_flagged
     final = (max(set(answers), key=answers.count)
              if task=="binary" else round(sum(answers)/len(answers)))
-    return final, confidence_trace, all_flagged
+    return final, all_flagged
     
 def sample_dataset(csv_path: str, sample_size: int, balanced: bool, balancing_strategy="approximate") -> pd.DataFrame:
     """
@@ -924,37 +904,6 @@ def try_generate_with_retries(
             })
             return None, last_texts
 
-confidence_map = {
-    'A': 0.05, 'B': 0.15, 'C': 0.25, 'D': 0.35, 'E': 0.45,
-    'F': 0.55, 'G': 0.65, 'H': 0.75, 'I': 0.85, 'J': 0.95
-}
-
-def query_confidence_bin(llm, step_text: str, sampling) -> Tuple[Optional[str], Optional[float]]:
-    """Ask the model to self-report its confidence about a step."""
-    if hasattr(llm, "query_confidence_bin"):
-        # Use shortcut for mock model
-        return llm.query_confidence_bin(step_text, sampling)
-
-    confidence_prompt = (
-        f"Based on your reasoning so far:\n\n"
-        f"{step_text.strip()}\n\n"
-        "How confident are you that your answer is correct?\n"
-        "Please choose one of the following options:\n"
-        "A. 0-10%\nB. 10-20%\nC. 20-30%\nD. 30-40%\nE. 40-50%\n"
-        "F. 50-60%\nG. 60-70%\nH. 70-80%\nI. 80-90%\nJ. 90-100%\n\n"
-        "Confidence:"
-    )
-
-    try:
-        response = llm.generate([confidence_prompt], sampling)[0]
-        match = re.search(r"\b([A-J])\b", response.upper())
-        if match:
-            bin_letter = match.group(1)
-            return bin_letter, confidence_map.get(bin_letter)
-    except Exception as e:
-        print("Error in confidence query:", e)
-    return None, None
-
 ###########################################################
 # EVALUATION
 ###########################################################
@@ -1084,23 +1033,20 @@ def evaluate_model_on_test_set(
     # Only OpenAI GPT models support these advanced methods
     if model_name.startswith("openai"):
         if reasoning_mode == "default":
-            default_confidence = []
-
             sampling = SamplingParams(
                 max_tokens=80,
                 temperature=0.0,
                 top_p=0.95,
-                n=top_k  # note: top_k is forced to 1 for default
+                n=top_k
             )
-
+            # prepare a generator function that returns a batch-like object
             def gen_fn(prompt_text):
                 if model_name.startswith("openai/"):
                     return llm.generate([prompt_text], sampling)[0]
                 else:
-                    raise NotImplementedError(
-                        f"Only Azure OpenAI models supported currently. Got model_name={model_name}"
-                    )
+                    raise NotImplementedError(f"Only Azure OpenAI models supported currently. Got model_name={model_name}")
 
+                # Loop through each prompt
             for prompt in prompts:
                 pred, raw_texts = try_generate_with_retries(
                     prompt=prompt,
@@ -1112,36 +1058,7 @@ def evaluate_model_on_test_set(
                 all_preds.append(pred)
                 all_raw.append(raw_texts)
 
-                # self-reported confidence on the final output
-                conf_bin, conf_score = None, None
-                if pred is not None and raw_texts:
-                    last_response = raw_texts[-1]
-                    conf_bin, conf_score = query_confidence_bin(llm, last_response, sampling)
-
-                default_confidence.append({
-                    "conf_bin": conf_bin,
-                    "conf_score": conf_score
-                })
-
-            confidence_table = wandb.Table(columns=[
-                "index", "prompt", "gold", "pred", "conf_bin", "conf_score", "emotion"
-            ])
-            for idx, (sample, conf_dict, pred) in enumerate(
-                zip(test_data, default_confidence, all_preds)
-            ):
-                confidence_table.add_data(
-                    idx,
-                    prompts[idx],
-                    sample["label"],
-                    pred,
-                    conf_dict["conf_bin"],
-                    conf_dict["conf_score"],
-                    sample["emotion"]
-                )
-            wandb.log({"confidence_table_default": confidence_table})
-        
         elif reasoning_mode == "rasc":
-            rasc_confidence = []
             for prompt in prompts:
                 pred, raw_texts, new_flags = run_rasc(
                     prompt=prompt,
@@ -1153,139 +1070,6 @@ def evaluate_model_on_test_set(
                 all_preds.append(pred)
                 all_raw.append(raw_texts)
                 all_flagged.extend(new_flags)
-                conf_bin, conf_score = (None, None)
-                if pred is not None and isinstance(raw_texts, list) and len(raw_texts) > 0:
-                    last = raw_texts[-1]
-                    conf_bin, conf_score = query_confidence_bin(llm, last, SamplingParams(40, 0.0, 1.0, 1))
-
-                rasc_confidence.append({
-                    "raw_response": last if pred is not None else "",
-                    "conf_bin": conf_bin,
-                    "conf_score": conf_score
-                })
-            confidence_rasc_table = wandb.Table(columns=[
-                "index", "prompt", "gold", "pred",
-                "raw_response", "conf_bin", "conf_score", "emotion"
-            ])
-            for idx, (sample, pred, conf_data) in enumerate(zip(test_data, all_preds, rasc_confidence)):
-                if conf_data is None:
-                    continue
-                confidence_rasc_table.add_data(
-                    idx,
-                    prompts[idx],
-                    sample["label"],
-                    pred,
-                    conf_data["raw_response"],
-                    conf_data["conf_bin"],
-                    conf_data["conf_score"],
-                    sample["emotion"]
-                )
-            wandb.log({"confidence_table_rasc": confidence_rasc_table})
-        
-        elif reasoning_mode == "rankcot":
-            # ── Local storage for confidence only ──
-            rankcot_confidence = []
-
-            # ── Hyperparameters ──
-            retrieval_k    = 5
-            cot_sampling   = SamplingParams(150, 0.7, 0.95, 1)
-            refine_sampling= SamplingParams(100, 0.7, 0.95, 1)
-            final_sampling = SamplingParams( 80, 0.0, 0.95, 1)
-            conf_sampling  = SamplingParams( 40, 0.0, 1.00, 1)
-
-            for sample in test_data:
-                query   = sample["text"]
-                emotion = sample["emotion"]
-
-                # Step A: Retrieve top-k documents
-                docs = retrieve_docs(query)[:retrieval_k]
-
-                # Step B: Generate + optionally refine a CoT per doc
-                cots = []
-                for doc in docs:
-                    cot_prompt = (
-                        f"Context Document:\n{doc}\n\n"
-                        f"Question: {query}\n"
-                        f"Emotion: {emotion}\n"
-                        "Think step by step and generate your chain of thought."
-                    )
-                    cot_pred, cot_raws = try_generate_with_retries(
-                        prompt=cot_prompt,
-                        generator_fn=lambda p: llm.generate([p], cot_sampling)[0],
-                        task=task,
-                        max_retries=max_retries,
-                        flagged_list=all_flagged
-                    )
-                    cot = cot_raws[0].strip() if cot_raws else ""
-
-                    # optional self-refine
-                    refine_prompt = (
-                        f"{cot}\n\nReview your chain of thought above and improve it if needed:"
-                    )
-                    ref_pred, ref_raws = try_generate_with_retries(
-                        prompt=refine_prompt,
-                        generator_fn=lambda p: llm.generate([p], refine_sampling)[0],
-                        task=task,
-                        max_retries=max_retries,
-                        flagged_list=all_flagged
-                    )
-                    refined = ref_raws[0].strip() if ref_raws else cot
-
-                    cots.append(refined)
-
-                # Step C: Rank the CoTs (here: pick longest; swap in your own scorer)
-                best_idx = max(range(len(cots)), key=lambda i: len(cots[i].split()))
-                best_cot = cots[best_idx]
-
-                # Step D: Generate final answer conditioned on best CoT
-                final_prompt = (
-                    f"{best_cot}\n\n"
-                    "Based on the above reasoning, answer: "
-                    "'Answer: yes' or 'no' (binary), "
-                    "or 'Answer: 0-3' (intensity)."
-                )
-                final_pred, final_raws = try_generate_with_retries(
-                    prompt=final_prompt,
-                    generator_fn=lambda p: llm.generate([p], final_sampling)[0],
-                    task=task,
-                    max_retries=max_retries,
-                    flagged_list=all_flagged
-                )
-                final_out = final_raws[0].strip() if final_raws else ""
-                pred = parse_output(final_out, task)
-
-                # ── Append to global accumulators ──
-                all_preds.append(pred)
-                all_raw.append([best_cot, final_out])
-
-                # Step E: Self-report confidence on the final output
-                conf_bin, conf_score = query_confidence_bin(llm, final_out, conf_sampling)
-                rankcot_confidence.append({
-                    "best_doc_index": best_idx,
-                    "conf_bin":       conf_bin,
-                    "conf_score":     conf_score
-                })
-
-            # ── Log RankCoT confidence only ──
-            table = wandb.Table(columns=[
-                "index", "prompt", "gold", "pred",
-                "best_doc_index", "conf_bin", "conf_score", "emotion"
-            ])
-            for idx, (sample, pred, diag) in enumerate(
-                zip(test_data, all_preds[-len(test_data):], rankcot_confidence)
-            ):
-                # note: all_preds[-len(test_data):] picks only this mode’s preds
-                table.add_data(
-                    idx,
-                    sample["text"],
-                    sample["label"],
-                    pred,
-                    diag["best_doc_index"],
-                    diag["conf_bin"],
-                    diag["conf_score"],
-                    sample["emotion"]
-                )
-            wandb.log({"confidence_table_rankcot": table})
 
         elif reasoning_mode == "self_consistency":
             sampling_sc = SamplingParams(
@@ -1300,9 +1084,6 @@ def evaluate_model_on_test_set(
                     return llm.generate([prompt_text], sampling_sc)[0]
                 else:
                     raise NotImplementedError(f"Only Azure OpenAI models supported currently. Got model_name={model_name}")
-            
-            sc_conf_bins_all = []
-            sc_conf_scores_all = []
 
             for prompt in prompts:
                 pred, raw_texts = try_generate_with_retries(
@@ -1315,68 +1096,19 @@ def evaluate_model_on_test_set(
                 all_preds.append(pred)
                 all_raw.append(raw_texts)
 
-                chain_bins = []
-                chain_scores = []
-                for text in raw_texts or []:
-                    bin_letter, score = query_confidence_bin(llm, text, sampling_sc)
-                    chain_bins.append(bin_letter)
-                    chain_scores.append(score)
-
-                sc_conf_bins_all.append(chain_bins)
-                sc_conf_scores_all.append(chain_scores)
-            confidence_sc_table = wandb.Table(columns=["index", "prompt", "gold", "pred", "conf_bins", "conf_scores", "avg_conf", "emotion"])
-            for idx, (sample, bins, scores, pred) in enumerate(zip(test_data, sc_conf_bins_all, sc_conf_scores_all, all_preds)):
-                avg_conf = np.mean([s for s in scores if s is not None]) if scores else None
-                confidence_sc_table.add_data(
-                    idx,
-                    prompts[idx],
-                    sample["label"],
-                    pred,
-                    str(bins),
-                    str(scores),
-                    avg_conf,
-                    sample["emotion"]
-                )
-            wandb.log({"confidence_table_self_consistency": confidence_sc_table})
-        
         elif reasoning_mode == "self_refine":
-            self_refine_conf = []
             for prompt in prompts:
                 pred, diagnostics = run_self_refine(prompt, task, llm, all_flagged, max_refinements=3, max_tries=max_retries)
                 if pred is not None:
-                    all_preds.append(parse_output(pred, task))
+                    all_preds.append(parse_output(pred, task)) 
                     all_raw.append([pred])
                 else:
                     all_preds.append(None)
                     all_raw.append([])
-                self_refine_conf.append(diagnostics)
-            
-            confidence_refine_table = wandb.Table(columns=[
-                "index", "prompt", "gold", "pred",
-                "pre_conf_bin", "pre_conf_score",
-                "post_conf_bin", "post_conf_score",
-                "emotion"
-            ])
-            for idx, (sample, pred, diag) in enumerate(zip(test_data, all_preds, self_refine_conf)):
-                if diag is None:
-                    continue
-                confidence_refine_table.add_data(
-                    idx,
-                    prompts[idx],
-                    sample["label"],
-                    pred,
-                    diag.get("pre_conf_bin"),
-                    diag.get("pre_conf_score"),
-                    diag.get("post_conf_bin"),
-                    diag.get("post_conf_score"),
-                    sample["emotion"]
-                )
-            wandb.log({"confidence_table_self_refine": confidence_refine_table})
-        
+
         elif reasoning_mode == "tree_of_thoughts":
-            tot_conf_traces = []
             for prompt, sample in zip(prompts, test_data):
-                final, conf_trace, new_flags = run_tree_of_thoughts(
+                final, new_flags = run_tree_of_thoughts(
                 prompt_base=prompt,
                 input_text=sample["text"],
                 emotion=sample["emotion"],
@@ -1388,23 +1120,7 @@ def evaluate_model_on_test_set(
                 all_preds.append(final)
                 all_raw.append(None)
                 all_flagged.extend(new_flags)
-                tot_conf_traces.append(conf_trace)
-            confidence_curve_table = wandb.Table(columns=["index", "step", "beam", "text", "conf_bin", "conf_score", "emotion"])
-            for idx, (trace, sample) in enumerate(zip(tot_conf_traces, test_data)):
-                for item in trace:
-                    confidence_curve_table.add_data(
-                        idx,
-                        item["step"],
-                        item["beam"],
-                        item["text"],
-                        item["conf_bin"],
-                        item["conf_score"],
-                        sample["emotion"]
-                    )
-            wandb.log({"confidence_curve_table": confidence_curve_table})
-        
         elif reasoning_mode == "complexity_based":
-            cb_confidence = []
             cbp_levels = ["cbp_simple", "cbp_medium", "cbp_complex"]
             sampling_cbp = SamplingParams(
                 max_tokens=80,
@@ -1435,16 +1151,6 @@ def evaluate_model_on_test_set(
                         max_retries=max_retries,
                         flagged_list=all_flagged
                     )
-                    conf_bin, conf_score = (None, None)
-                    if pred is not None and isinstance(raw, list) and len(raw) > 0:
-                        conf_bin, conf_score = query_confidence_bin(llm, raw[-1], SamplingParams(40, 0.0, 1.0, 1))
-
-                    cb_confidence.append({
-                        "reasoning_mode": chosen_mode,
-                        "conf_bin": conf_bin,
-                        "conf_score": conf_score,
-                        "raw_response": raw[-1] if raw else ""
-                    })
                     if pred is not None:
                         cbp_preds.append(pred)
                     cbp_raws.append(raw_texts)
@@ -1460,27 +1166,7 @@ def evaluate_model_on_test_set(
 
                 all_preds.append(final)
                 all_raw.append(cbp_raws)
-            confidence_cb_table = wandb.Table(columns=[
-                "index", "prompt", "gold", "pred", "raw_response",
-                "reasoning_mode", "conf_bin", "conf_score", "emotion"
-            ])
-            for idx, (sample, pred, diag) in enumerate(zip(test_data, all_preds, cb_confidence)):
-                if diag is None:
-                    continue
-                confidence_cb_table.add_data(
-                    idx,
-                    prompts[idx],
-                    sample["label"],
-                    pred,
-                    diag["raw_response"],
-                    diag["reasoning_mode"],
-                    diag["conf_bin"],
-                    diag["conf_score"],
-                    sample["emotion"]
-                )
-            wandb.log({"confidence_table_complexity_based": confidence_cb_table})
         elif reasoning_mode == "plan_and_solve":
-            plan_and_solve_conf = []
             for sample in test_data:
                 input_text = sample["text"]
                 emotion = sample["emotion"]
@@ -1509,7 +1195,6 @@ def evaluate_model_on_test_set(
                         # skip to next sample
                         continue
                     # treat as skip/unparseable → skip this sample
-                    plan_and_solve_conf.append(None)
                     continue
 
                 # Step 2: Solve using the plan
@@ -1524,41 +1209,9 @@ def evaluate_model_on_test_set(
                     max_retries=max_retries,
                     flagged_list=all_flagged,
                 )
-                conf_bin, conf_score = (None, None)
-                if pred is not None and isinstance(raw_texts, list) and len(raw_texts) > 0:
-                    conf_bin, conf_score = query_confidence_bin(llm, raw_texts[-1], SamplingParams(40, 0.0, 1.0, 1))
-
-                plan_and_solve_conf.append({
-                    "plan": plan,
-                    "solve_response": raw_texts[-1] if raw_texts else "",
-                    "conf_bin": conf_bin,
-                    "conf_score": conf_score
-                })
 
                 all_preds.append(pred)
                 all_raw.append(raw_texts)
-            
-            confidence_plan_table = wandb.Table(columns=[
-                "index", "prompt", "gold", "pred",
-                "plan", "solve_text",
-                "conf_bin", "conf_score",
-                "emotion"
-            ])
-            for idx, (sample, conf_data, pred) in enumerate(zip(test_data, plan_and_solve_conf, all_preds)):
-                if conf_data is None:
-                    continue
-                confidence_plan_table.add_data(
-                    idx,
-                    prompts[idx],
-                    sample["label"],
-                    pred,
-                    conf_data["plan"],
-                    conf_data["solve_response"],
-                    conf_data["conf_bin"],
-                    conf_data["conf_score"],
-                    sample["emotion"]
-                )
-            wandb.log({"confidence_table_plan_and_solve": confidence_plan_table})
         else:
             raise ValueError(f"Unsupported reasoning_mode: {reasoning_mode}")
 
@@ -1580,6 +1233,7 @@ def evaluate_model_on_test_set(
         pred = all_preds[idx] if idx < len(all_preds) else None
         preds_table.add_data(idx, prompt, str(raw), pred, sample["label"], sample["emotion"])
     wandb.log({"predictions_table": preds_table})
+
 
     emotion2refs = defaultdict(list)
     emotion2preds = defaultdict(list)
@@ -2008,7 +1662,7 @@ if __name__ == "__main__":
         "--reasoning_mode",
         type=str,
         default="default",
-        choices=["default", "self_consistency", "tree_of_thoughts","self_refine","complexity_based","plan_and_solve","rasc","rankcot"],
+        choices=["default", "self_consistency", "tree_of_thoughts","self_refine","complexity_based","plan_and_solve","rasc"],
         help="Choose the reasoning strategy: default (1-shot), self_consistency (vote), or tree_of_thoughts (search)"
     )
     parser.add_argument(

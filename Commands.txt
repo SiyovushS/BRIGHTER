@@ -32,4 +32,7 @@ python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode com
 
 python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode plan_and_solve --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
 python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode plan_and_solve --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
+
+python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode rankcot --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
+python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode rankcot --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
 v
