@@ -120,7 +120,7 @@ class MockLLM:
             dummy_outputs.append(Result(responses))
 
         return dummy_outputs
-USE_MOCK_LLM = False # Set this to false if wanted to use actuall LLM
+USE_MOCK_LLM = True # Set this to false if wanted to use actuall LLM
 
 
 class ErrorMockLLM(MockLLM):
@@ -359,75 +359,7 @@ TASK_CONFIGS = {
             ),
         }
     }
-}
-
-rankcot_docs = [
-    # Document 1: Greater Good Science Center - Reading Emotions in Text Messages https://greatergood.berkeley.edu/article/item/six_tips_for_reading_emotions_in_text_messages?utm_source=chatgpt.com
-    """
-    How do we know what a person is feeling when they don’t tell us? Here are six tips to help you better detect emotions in text messages—or, failing that, prevent yourself from jumping to conclusions based on scant evidence. Keep in mind that texts are a difficult medium for communicating emotion. We have no facial expressions, tone of voice, or conversation to give us more information.
-
-    The words people use often have emotional undertones. Think about some common words, like love, hate, wonderful, hard, work, explore, or kitten. If a text reads, ‘I love this wonderful kitten,’ we can easily conclude that it is expressing positive emotion. But if it reads, ‘This wonderful kitten is hard work,’ what emotion do we think is being conveyed? Exploring the emotional cores of individual words helps anchor our interpretations.
-    """,
-
-    # Document 2: Frontiers in Psychology - Mimicking Spoken Pauses in Text Messages https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2025.1410698/full?utm_source=chatgpt.com
-    """
-    In contrast with face-to-face conversations, text messages lack important extralinguistic cues such as tone of voice and gestures. We ask how texters are able to communicate the same nuanced social and emotional meaning without access to this rich set of multimodal cues.
-
-    The inclusion of a period after a single-word text (e.g., ‘yup.’) can convey abruptness or insincerity. All of these cues—prosodic and nonverbal—can significantly influence meaning. Texters strategically use punctuation, spacing, and ‘textisms’ to stand in for missing vocal and facial signals.
-    """,
-
-    # Document 3: WIRED - The Meaning of All Caps https://www.wired.com/story/all-caps-because-internet-gretchen-mcculloch/?utm_source=chatgpt.com
-    """
-    WHEN YOU WRITE IN ALL CAPS IT SOUNDS LIKE YOU’RE SHOUTING. Using capital letters to indicate strong feeling may be the most famous example of typographical tone of voice.
-
-    A single capped word, on the other hand, is simply EMPHATIC. Examples like ‘NOT’, ‘ALL’, ‘YOU’, and ‘SO’ are often the same kinds of words we stress in spoken conversation (or commercials). All-caps is a typographic way of conveying the cues of louder, faster, or higher-pitched speech.
-    """,
-
-    # Document 4: Purdue OWL - Tone, Mood, and Audience https://owl.purdue.edu/owl/general_writing/writing_style/diction/tone_mood_audience.html?utm_source=chatgpt.com
-    """
-    Tone is the author’s attitude toward the subject. In written English, it is conveyed through word choice (diction) and the details an author includes or omits. To identify tone, look for words that carry strong connotations—positive, negative, or neutral—and consider why the author chose them.
-
-    Sentence structure also shapes tone. Short, clipped sentences often feel abrupt or urgent; long, flowing sentences can feel reflective or lyrical. By mapping patterns of diction and syntax, readers can infer the author’s stance and emotional coloring.
-    """,
-
-    # Document 5: Writers.com - What Is Tone in Literature? https://writers.com/what-is-tone-in-literature?utm_source=chatgpt.com
-    """
-    Tone is the author’s stance toward a story’s events and characters. It emerges when you examine the words the author selects—whether they’re harsh, playful, formal, or colloquial—and how those words make you feel as a reader.
-
-    To detect tone, ask yourself: What details does the narrator emphasize? Are descriptions vivid or restrained? Do word choices carry irony, warmth, or distance? Close‐reading those elements reveals the undercurrent of feeling guiding the narrative.
-    """,
-
-    # Document 6: Albert.io Blog - How To Identify Author’s Tone https://www.albert.io/blog/how-to-identify-authors-tone/?utm_source=chatgpt.com
-    """
-    Start with word choice. Look for exaggerated adjectives ("brilliant," "terrifying") or adverbs ("eagerly," "coldly") that signal an attitude. Ask: Are these words inflating the positive or negative aspects of the subject?
-
-    Next, examine sentence patterns. Rhetorical questions, exclamations, and varied punctuation (dashes, ellipses) all create shifts in pace and emphasis, which in turn mirror shifts in the author’s emotional stance. Track how these devices recur to pinpoint tone.
-    """,
-
-    # Document 7: MasterClass - Examples of Tone Words in Writing https://www.masterclass.com/articles/examples-of-tone-words-in-writing?utm_source=chatgpt.com
-    """
-    Authors convey tone through diction that evokes specific emotions—solemn, satirical, earnest, sarcastic. Recognizing these ‘tone words’ in context helps readers label the underlying attitude.
-
-    To sharpen your sense of tone, practice matching tone words to short excerpts. Notice which adjectives capture the mood and why—for instance, a scene described with ‘drab,’ ‘dreary,’ and ‘monotonous’ feels despondent, whereas ‘vibrant,’ ‘bubbling,’ and ‘radiant’ feels buoyant.
-    """,
-]
-
-def retrieve_docs(query, k=5):
-    query_tokens = set(query.lower().split())
-    doc_scores = []
-
-    for doc in rankcot_docs:
-        doc_tokens = set(doc.lower().split())
-        overlap = len(query_tokens & doc_tokens)
-        doc_scores.append((overlap, doc))
-
-    # Sort by score (descending), then return top-k
-    ranked_docs = [doc for _, doc in sorted(doc_scores, key=lambda x: -x[0])]
-    return ranked_docs[:k]
-
-
-AZURE_OPENAI_DEPLOYMENT = "gpt-4o"
-AZURE_OPENAI_VERSION = "2024-12-01-preview"
+}    
 
 class AzureEngineWrapper:
     def __init__(self, client, model_name):
@@ -646,8 +578,8 @@ def run_self_refine(prompt, task, llm, flagged_prompts, max_refinements=3, max_t
                 continue
 
             return revision.strip(), {
-                "pre_conf_bin": pre_conf_bin, "pre_conf_score": pre_conf_score,
-                "post_conf_bin": post_conf_bin, "post_conf_score": post_conf_score
+                "pre_conf_bin": pre_conf, "pre_conf_score": pre_score,
+                "post_conf_bin": post_conf, "post_conf_score": post_score
             }
 
         except OpenAIError as e:
@@ -821,8 +753,6 @@ def sample_dataset(csv_path: str, sample_size: int, balanced: bool, balancing_st
     current imbalance vs. the ideal target count per emotion.
     """
     df = pd.read_csv(csv_path)
-    if not sample_size:
-        sample_size = len(df)
     all_emotions = ["anger", "disgust", "fear", "joy", "sadness", "surprise"]
     emotions     = [emo for emo in all_emotions if emo in df.columns]
     if not emotions:
@@ -841,11 +771,9 @@ def sample_dataset(csv_path: str, sample_size: int, balanced: bool, balancing_st
         emotion_groups = {emo: g for emo, g in emotion_groups.items() if len(g) > 0}
         if not emotion_groups:
             raise ValueError("No emotion groups with samples found for strict balancing.")
+        
         min_count = min(len(g) for g in emotion_groups.values())
-        if sample_size == len(df) or sample_size == None or sample_size == 0:
-            per_emo_sample = min_count  # use full possible balanced set
-        else:
-            per_emo_sample = min(min_count, sample_size // len(emotion_groups))
+        per_emo_sample = min(min_count, sample_size // len(emotion_groups))
 
         sampled_dfs = [g.sample(n=per_emo_sample, random_state=42) for g in emotion_groups.values()]
         sampled = pd.concat(sampled_dfs).sample(frac=1, random_state=42).reset_index(drop=True)
@@ -894,8 +822,6 @@ def sample_dataset_intensity(csv_path: str, sample_size: int, balanced: bool, ba
     pick the row that best reduces the squared‑error to the ideal counts.
     """
     df = pd.read_csv(csv_path)
-    if not sample_size:
-        sample_size = len(df)
     all_emotions = ["anger", "disgust", "fear", "joy", "sadness", "surprise"]
     emotions     = [emo for emo in all_emotions if emo in df.columns]
     if not emotions:
@@ -917,11 +843,7 @@ def sample_dataset_intensity(csv_path: str, sample_size: int, balanced: bool, ba
             raise ValueError("No emotion-level groups with samples found for strict balancing.")
 
         min_count = min(len(g) for g in groups)
-
-        if sample_size == len(df) or sample_size == None or sample_size == 0:
-            per_group_sample = min_count
-        else:
-            per_group_sample = min(min_count, sample_size // len(groups))
+        per_group_sample = min(min_count, sample_size // len(groups))
 
         sampled_dfs = [g.sample(n=per_group_sample, random_state=42) for g in groups]
         sampled = pd.concat(sampled_dfs).sample(frac=1, random_state=42).reset_index(drop=True)
@@ -1054,10 +976,11 @@ confidence_map = {
 }
 
 def query_confidence_bin(llm, step_text: str, sampling) -> Tuple[Optional[str], Optional[float]]:
-    """
-    Ask the model to self-report its confidence, with retry logic.
-    Returns a bin letter (A–J) and its mapped score, or (None, None) on failure.
-    """
+    """Ask the model to self-report its confidence about a step."""
+    if hasattr(llm, "query_confidence_bin"):
+        # Use shortcut for mock model
+        return llm.query_confidence_bin(step_text, sampling)
+
     confidence_prompt = (
         f"Based on your reasoning so far:\n\n"
         f"{step_text.strip()}\n\n"
@@ -1068,39 +991,14 @@ def query_confidence_bin(llm, step_text: str, sampling) -> Tuple[Optional[str], 
         "Confidence:"
     )
 
-    max_tries = 3
-    attempts = 0
-    flagged = []  # collect any flagged prompts, if desired
-
-    while attempts < max_tries:
-        try:
-            response = llm.generate([confidence_prompt], sampling)[0]
-            text = response if isinstance(response, str) else response.strip()
-            match = re.search(r"\b([A-J])\b", text.upper())
-            if match:
-                letter = match.group(1)
-                return letter, confidence_map.get(letter)
-            # no parse → retry
-            attempts += 1
-
-        except OpenAIError as e:
-            action = handle_openai_error(e, flagged, confidence_prompt, stage="query_confidence")
-            if action == "retry":
-                time.sleep(2 ** attempts)
-                attempts += 1
-                continue
-            if action == "flagged":
-                # record in flagged list but don’t crash
-                return None, None
-            if action == "fatal":
-                # let fatal errors bubble
-                raise
-
-        except Exception:
-            # unexpected issue (parsing, etc.) → count as a failed attempt
-            attempts += 1
-
-    # exhausted retries
+    try:
+        response = llm.generate([confidence_prompt], sampling)[0]
+        match = re.search(r"\b([A-J])\b", response.upper())
+        if match:
+            bin_letter = match.group(1)
+            return bin_letter, confidence_map.get(bin_letter)
+    except Exception as e:
+        print("Error in confidence query:", e)
     return None, None
 
 ###########################################################
@@ -1233,7 +1131,6 @@ def evaluate_model_on_test_set(
     if model_name.startswith("openai"):
         if reasoning_mode == "default":
             default_confidence = []
-            all_conf_scores = [] 
 
             sampling = SamplingParams(
                 max_tokens=80,
@@ -1261,16 +1158,16 @@ def evaluate_model_on_test_set(
                 all_preds.append(pred)
                 all_raw.append(raw_texts)
 
-                # self-reported confidence → treat conf_score as P(correct)
+                # self-reported confidence on the final output
                 conf_bin, conf_score = None, None
-                if raw_texts:
+                if pred is not None and raw_texts:
                     last_response = raw_texts[-1]
                     conf_bin, conf_score = query_confidence_bin(llm, last_response, sampling)
-                default_confidence.append({"conf_bin": conf_bin, "conf_score": conf_score})
-                # for final AUROC/AUPRC, we need a flat list of confidences
-                # and define correctness = (pred == gold)
-                if conf_score is not None:
-                    all_conf_scores.append(conf_score)
+
+                default_confidence.append({
+                    "conf_bin": conf_bin,
+                    "conf_score": conf_score
+                })
 
             confidence_table = wandb.Table(columns=[
                 "index", "prompt", "gold", "pred", "conf_bin", "conf_score", "emotion"
@@ -1278,40 +1175,18 @@ def evaluate_model_on_test_set(
             for idx, (sample, conf_dict, pred) in enumerate(
                 zip(test_data, default_confidence, all_preds)
             ):
-                bin_label  = conf_dict["conf_bin"] or "error"
-                score_val  = conf_dict["conf_score"] if conf_dict["conf_score"] is not None else None
                 confidence_table.add_data(
                     idx,
                     prompts[idx],
                     sample["label"],
                     pred,
-                    bin_label,
-                    score_val,
+                    conf_dict["conf_bin"],
+                    conf_dict["conf_score"],
                     sample["emotion"]
                 )
             wandb.log({"confidence_table_default": confidence_table})
-            
-            y_and_conf = [
-                (1 if p == g else 0, conf)
-                for p, g, conf in zip(all_preds, [s["label"] for s in test_data], all_conf_scores)
-                if conf is not None
-            ]
-
-            if y_and_conf:
-                y_correct, confs = zip(*y_and_conf)
-                auroc = roc_auc_score(y_correct, confs)
-                auprc = average_precision_score(y_correct, confs)
-            else:
-                auroc = float("nan")
-                auprc = float("nan")
-
-            wandb.log({
-                "auroc": auroc,
-                "auprc": auprc
-            })
         
         elif reasoning_mode == "rasc":
-            all_conf_scores = []
             rasc_confidence = []
             for prompt in prompts:
                 pred, raw_texts, new_flags = run_rasc(
@@ -1334,16 +1209,11 @@ def evaluate_model_on_test_set(
                     "conf_bin": conf_bin,
                     "conf_score": conf_score
                 })
-                # collect for AUROC/AUPRC as “confidence-as-corrector”
-                if conf_score is not None:
-                    all_conf_scores.append(conf_score)
             confidence_rasc_table = wandb.Table(columns=[
                 "index", "prompt", "gold", "pred",
                 "raw_response", "conf_bin", "conf_score", "emotion"
             ])
             for idx, (sample, pred, conf_data) in enumerate(zip(test_data, all_preds, rasc_confidence)):
-                bin_label  = conf_dict["conf_bin"] or "error"
-                score_val  = conf_dict["conf_score"] if conf_dict["conf_score"] is not None else None
                 if conf_data is None:
                     continue
                 confidence_rasc_table.add_data(
@@ -1352,39 +1222,19 @@ def evaluate_model_on_test_set(
                     sample["label"],
                     pred,
                     conf_data["raw_response"],
-                    bin_label,
-                    score_val,
+                    conf_data["conf_bin"],
+                    conf_data["conf_score"],
                     sample["emotion"]
                 )
             wandb.log({"confidence_table_rasc": confidence_rasc_table})
-            # log AUROC/AUPRC over confidence-vs-correctness
-            y_and_conf = [
-                (1 if p == g else 0, conf)
-                for p, g, conf in zip(all_preds, [s["label"] for s in test_data], all_conf_scores)
-                if conf is not None
-            ]
-
-            if y_and_conf:
-                y_correct, confs = zip(*y_and_conf)
-                auroc = roc_auc_score(y_correct, confs)
-                auprc = average_precision_score(y_correct, confs)
-            else:
-                auroc = float("nan")
-                auprc = float("nan")
-
-            wandb.log({
-                "auroc": auroc,
-                "auprc": auprc
-            })
         
         elif reasoning_mode == "rankcot":
             # ── Local storage for confidence only ──
             rankcot_confidence = []
-            all_conf_scores = []
 
             # ── Hyperparameters ──
-            retrieval_k = args.top_k
-            cot_sampling = SamplingParams(150, 0.7, 0.95, 1)
+            retrieval_k    = 5
+            cot_sampling   = SamplingParams(150, 0.7, 0.95, 1)
             refine_sampling= SamplingParams(100, 0.7, 0.95, 1)
             final_sampling = SamplingParams( 80, 0.0, 0.95, 1)
             conf_sampling  = SamplingParams( 40, 0.0, 1.00, 1)
@@ -1461,8 +1311,6 @@ def evaluate_model_on_test_set(
                     "conf_bin":       conf_bin,
                     "conf_score":     conf_score
                 })
-                if conf_score is not None:
-                    all_conf_scores.append(conf_score)
 
             # ── Log RankCoT confidence only ──
             table = wandb.Table(columns=[
@@ -1473,37 +1321,17 @@ def evaluate_model_on_test_set(
                 zip(test_data, all_preds[-len(test_data):], rankcot_confidence)
             ):
                 # note: all_preds[-len(test_data):] picks only this mode’s preds
-                bin_label  = conf_dict["conf_bin"] or "error"
-                score_val  = conf_dict["conf_score"] if conf_dict["conf_score"] is not None else None
                 table.add_data(
                     idx,
                     sample["text"],
                     sample["label"],
                     pred,
                     diag["best_doc_index"],
-                    bin_label,
-                    score_val,
+                    diag["conf_bin"],
+                    diag["conf_score"],
                     sample["emotion"]
                 )
             wandb.log({"confidence_table_rankcot": table})
-            y_and_conf = [
-                (1 if p == g else 0, conf)
-                for p, g, conf in zip(all_preds, [s["label"] for s in test_data], all_conf_scores)
-                if conf is not None
-            ]
-
-            if y_and_conf:
-                y_correct, confs = zip(*y_and_conf)
-                auroc = roc_auc_score(y_correct, confs)
-                auprc = average_precision_score(y_correct, confs)
-            else:
-                auroc = float("nan")
-                auprc = float("nan")
-
-            wandb.log({
-                "auroc": auroc,
-                "auprc": auprc
-            })
 
         elif reasoning_mode == "self_consistency":
             sampling_sc = SamplingParams(
@@ -1512,10 +1340,6 @@ def evaluate_model_on_test_set(
                 top_p=0.95, #Nucleus Sampling
                 n=top_k #number of prompt generation is depended on top_k
             )
-
-            sc_conf_bins_all = []
-            sc_conf_scores_all = []
-            all_conf_scores = []
 
             def gen_fn_sc(prompt_text: str):
                 if model_name.startswith("openai/"):
@@ -1543,8 +1367,6 @@ def evaluate_model_on_test_set(
                     bin_letter, score = query_confidence_bin(llm, text, sampling_sc)
                     chain_bins.append(bin_letter)
                     chain_scores.append(score)
-                    if score is not None:
-                        all_conf_scores.append(score)
 
                 sc_conf_bins_all.append(chain_bins)
                 sc_conf_scores_all.append(chain_scores)
@@ -1556,33 +1378,15 @@ def evaluate_model_on_test_set(
                     prompts[idx],
                     sample["label"],
                     pred,
-                    str([b or "error" for b in bins]),  # mark missing bins
-                    str([s for s in scores]), 
+                    str(bins),
+                    str(scores),
                     avg_conf,
                     sample["emotion"]
                 )
             wandb.log({"confidence_table_self_consistency": confidence_sc_table})
-            y_and_conf = [
-                (1 if p == g else 0, conf)
-                for p, g, conf in zip(all_preds, [s["label"] for s in test_data], all_conf_scores)
-                if conf is not None
-            ]
-
-            if y_and_conf:
-                y_true, confs = zip(*y_and_conf)
-                auroc = roc_auc_score(y_true, confs)
-                auprc = average_precision_score(y_true, confs)
-            else:
-                auroc = float("nan")
-                auprc = float("nan")
-
-            wandb.log({
-                "auroc": auroc,
-                "auprc": auprc
-            })
+        
         elif reasoning_mode == "self_refine":
             self_refine_conf = []
-            all_conf_scores = []
             for prompt in prompts:
                 pred, diagnostics = run_self_refine(prompt, task, llm, all_flagged, max_refinements=3, max_tries=max_retries)
                 if pred is not None:
@@ -1592,10 +1396,6 @@ def evaluate_model_on_test_set(
                     all_preds.append(None)
                     all_raw.append([])
                 self_refine_conf.append(diagnostics)
-                if isinstance(diagnostics, dict):
-                    post_score = diagnostics.get("post_conf_score")
-                    if post_score is not None:
-                        all_conf_scores.append(post_score)
             
             confidence_refine_table = wandb.Table(columns=[
                 "index", "prompt", "gold", "pred",
@@ -1604,46 +1404,23 @@ def evaluate_model_on_test_set(
                 "emotion"
             ])
             for idx, (sample, pred, diag) in enumerate(zip(test_data, all_preds, self_refine_conf)):
-                if not isinstance(diag, dict):
-                    # still log a row if you want to capture skips?
+                if diag is None:
                     continue
-
-                pre_bin   = diag.get("pre_conf_bin") or "error"
-                pre_score = diag.get("pre_conf_score")       # may be None
-                post_bin  = diag.get("post_conf_bin")  or "error"
-                post_score= diag.get("post_conf_score")      # may be None
-
                 confidence_refine_table.add_data(
                     idx,
                     prompts[idx],
                     sample["label"],
                     pred,
-                    pre_bin,
-                    pre_score,
-                    post_bin,
-                    post_score,
+                    diag.get("pre_conf_bin"),
+                    diag.get("pre_conf_score"),
+                    diag.get("post_conf_bin"),
+                    diag.get("post_conf_score"),
                     sample["emotion"]
                 )
             wandb.log({"confidence_table_self_refine": confidence_refine_table})
-            y_and_conf = [
-                (1 if p == s["label"] else 0, diag["post_conf_score"])
-                for p, s, diag in zip(all_preds, test_data, self_refine_conf)
-                if isinstance(diag, dict) and diag.get("post_conf_score") is not None
-            ]
-
-            if y_and_conf:
-                ys, cs = zip(*y_and_conf)
-                auroc = roc_auc_score(ys, cs)
-                auprc = average_precision_score(ys, cs)
-            else:
-                auroc = float("nan")
-                auprc = float("nan")
-
-            wandb.log({"auroc": auroc, "auprc": auprc})
         
         elif reasoning_mode == "tree_of_thoughts":
             tot_conf_traces = []
-            all_conf_scores = []
             for prompt, sample in zip(prompts, test_data):
                 final, conf_trace, new_flags = run_tree_of_thoughts(
                 prompt_base=prompt,
@@ -1658,43 +1435,22 @@ def evaluate_model_on_test_set(
                 all_raw.append(None)
                 all_flagged.extend(new_flags)
                 tot_conf_traces.append(conf_trace)
-                if conf_trace:
-                    last_score = conf_trace[-1].get("conf_score")
-                    if last_score is not None:
-                        all_conf_scores.append(last_score)
             confidence_curve_table = wandb.Table(columns=["index", "step", "beam", "text", "conf_bin", "conf_score", "emotion"])
             for idx, (trace, sample) in enumerate(zip(tot_conf_traces, test_data)):
                 for item in trace:
-                    bin_label = item.get("conf_bin")   or "error"
-                    score_val = item.get("conf_score") # may be None
                     confidence_curve_table.add_data(
                         idx,
                         item["step"],
                         item["beam"],
                         item["text"],
-                        bin_label,
-                        score_val,
+                        item["conf_bin"],
+                        item["conf_score"],
                         sample["emotion"]
                     )
             wandb.log({"confidence_curve_table": confidence_curve_table})
-            y_and_conf = [
-                (1 if p == s["label"] else 0, score)
-                for p, s, score in zip(all_preds, test_data, all_conf_scores)
-                if score is not None
-            ]
-            if y_and_conf:
-                ys, cs = zip(*y_and_conf)
-                auroc = roc_auc_score(ys, cs)
-                auprc = average_precision_score(ys, cs)
-            else:
-                auroc = float("nan")
-                auprc = float("nan")
-
-            wandb.log({"auroc": auroc, "auprc": auprc})
         
         elif reasoning_mode == "complexity_based":
             cb_confidence = []
-            all_conf_scores = []
             cbp_levels = ["cbp_simple", "cbp_medium", "cbp_complex"]
             sampling_cbp = SamplingParams(
                 max_tokens=80,
@@ -1726,16 +1482,14 @@ def evaluate_model_on_test_set(
                         flagged_list=all_flagged
                     )
                     conf_bin, conf_score = (None, None)
-                    if pred is not None and isinstance(raw_texts, list) and len(raw_texts) > 0:
-                        conf_bin, conf_score = query_confidence_bin(llm, raw_texts[-1], SamplingParams(40, 0.0, 1.0, 1))
-                    if conf_score is not None:
-                        all_conf_scores.append(conf_score)
+                    if pred is not None and isinstance(raw, list) and len(raw) > 0:
+                        conf_bin, conf_score = query_confidence_bin(llm, raw[-1], SamplingParams(40, 0.0, 1.0, 1))
+
                     cb_confidence.append({
-                        "reasoning_mode": reasoning_mode,
-                        "prompt_variant": level,
+                        "reasoning_mode": chosen_mode,
                         "conf_bin": conf_bin,
                         "conf_score": conf_score,
-                        "raw_response": raw_texts[-1] if raw_texts else ""
+                        "raw_response": raw[-1] if raw else ""
                     })
                     if pred is not None:
                         cbp_preds.append(pred)
@@ -1754,13 +1508,11 @@ def evaluate_model_on_test_set(
                 all_raw.append(cbp_raws)
             confidence_cb_table = wandb.Table(columns=[
                 "index", "prompt", "gold", "pred", "raw_response",
-                "reasoning_mode", "prompt_variant", "conf_bin", "conf_score", "emotion"
+                "reasoning_mode", "conf_bin", "conf_score", "emotion"
             ])
             for idx, (sample, pred, diag) in enumerate(zip(test_data, all_preds, cb_confidence)):
                 if diag is None:
                     continue
-                bin_label = diag.get("conf_bin")   or "error"
-                score_val = diag.get("conf_score") # may be None
                 confidence_cb_table.add_data(
                     idx,
                     prompts[idx],
@@ -1768,29 +1520,13 @@ def evaluate_model_on_test_set(
                     pred,
                     diag["raw_response"],
                     diag["reasoning_mode"],
-                    diag["prompt_variant"],
-                    bin_label,
-                    score_val,
+                    diag["conf_bin"],
+                    diag["conf_score"],
                     sample["emotion"]
                 )
             wandb.log({"confidence_table_complexity_based": confidence_cb_table})
-            y_and_conf = [
-                (1 if p == s["label"] else 0, score)
-                for p, s, score in zip(all_preds, test_data, all_conf_scores)
-                if score is not None
-            ]
-            if y_and_conf:
-                ys, cs = zip(*y_and_conf)
-                auroc = roc_auc_score(ys, cs)
-                auprc = average_precision_score(ys, cs)
-            else:
-                auroc = float("nan")
-                auprc = float("nan")
-
-            wandb.log({"auroc": auroc, "auprc": auprc})
         elif reasoning_mode == "plan_and_solve":
             plan_and_solve_conf = []
-            all_conf_scores = []
             for sample in test_data:
                 input_text = sample["text"]
                 emotion = sample["emotion"]
@@ -1837,8 +1573,7 @@ def evaluate_model_on_test_set(
                 conf_bin, conf_score = (None, None)
                 if pred is not None and isinstance(raw_texts, list) and len(raw_texts) > 0:
                     conf_bin, conf_score = query_confidence_bin(llm, raw_texts[-1], SamplingParams(40, 0.0, 1.0, 1))
-                if conf_score is not None:
-                    all_conf_scores.append(conf_score)
+
                 plan_and_solve_conf.append({
                     "plan": plan,
                     "solve_response": raw_texts[-1] if raw_texts else "",
@@ -1858,8 +1593,6 @@ def evaluate_model_on_test_set(
             for idx, (sample, conf_data, pred) in enumerate(zip(test_data, plan_and_solve_conf, all_preds)):
                 if conf_data is None:
                     continue
-                bin_label = diag.get("conf_bin")   or "error"
-                score_val = diag.get("conf_score") # may be None
                 confidence_plan_table.add_data(
                     idx,
                     prompts[idx],
@@ -1867,25 +1600,11 @@ def evaluate_model_on_test_set(
                     pred,
                     conf_data["plan"],
                     conf_data["solve_response"],
-                    bin_label,
-                    score_val,
+                    conf_data["conf_bin"],
+                    conf_data["conf_score"],
                     sample["emotion"]
                 )
             wandb.log({"confidence_table_plan_and_solve": confidence_plan_table})
-            y_and_conf = [
-                (1 if p == s["label"] else 0, score)
-                for p, s, score in zip(all_preds, test_data, all_conf_scores)
-                if score is not None
-            ]
-            if y_and_conf:
-                ys, cs = zip(*y_and_conf)
-                auroc = roc_auc_score(ys, cs)
-                auprc = average_precision_score(ys, cs)
-            else:
-                auroc = float("nan")
-                auprc = float("nan")
-
-            wandb.log({"auroc": auroc, "auprc": auprc})
         else:
             raise ValueError(f"Unsupported reasoning_mode: {reasoning_mode}")
 
@@ -1951,13 +1670,24 @@ def evaluate_model_on_test_set(
             tnrs.append(tnr)
         avg_tnr = sum(tnrs) / len(tnrs) if tnrs else 0.0
 
+        try:
+            auroc = roc_auc_score(all_labels_flat, all_preds_flat)
+        except ValueError:
+            auroc = 0.0
+        try:
+            auprc = average_precision_score(all_labels_flat, all_preds_flat)
+        except ValueError:
+            auprc = 0.0
+
         # Log to WandB
         wandb.log({
             "f1_macro": f1_macro,
             "precision_macro": precision_macro,
             "recall_macro": recall_macro,
             "accuracy": accuracy,
-            "true_negative_rate_avg": avg_tnr
+            "true_negative_rate_avg": avg_tnr,
+            "auroc": auroc,
+            "auprc": auprc,
         })
 
         return {
@@ -1966,9 +1696,9 @@ def evaluate_model_on_test_set(
             "recall_macro": recall_macro,
             "accuracy": accuracy,
             "true_negative_rate_avg": avg_tnr,
-            "f1_per_emotion": f1_per_emotion,
             "auroc": auroc,
-            "auprc": auprc
+            "auprc": auprc,
+            "f1_per_emotion": f1_per_emotion
         }
 
     else:  # intensity
@@ -2011,6 +1741,7 @@ def evaluate_model_on_test_set(
 
         # Accuracy@1±
         acc_1pm = np.mean(np.abs(np.array(all_labels_flat) - np.array(all_preds_flat)) <= 1)
+
         # Log to WandB
         wandb.log({
             "pearson_avg": avg_pearson,
@@ -2031,8 +1762,6 @@ def evaluate_model_on_test_set(
             "qwk": qwk,
             "accuracy_1": acc_1,
             "accuracy_1pm": acc_1pm,
-            "auroc": auroc,
-            "auprc": auprc
         }
                                
 def evaluate_ablation(
@@ -2365,8 +2094,25 @@ if __name__ == "__main__":
         help="If set, use ErrorMockLLM to randomly simulate API errors.",
     )
     args = parser.parse_args()
-    
-    if args.reasoning_mode not in ["self_consistency", "rasc", "rankcot"]:
+
+
+    wandb.init(
+        entity="CongAndSiy",
+        project="emotion-eval",  # Change if needed
+        name=f"main_{args.model_name.replace('/', '-')}_{args.task}_{args.language or 'all'}_{args.reasoning_mode}",
+        config={
+            "model": args.model_name,
+            "task": args.task,
+            "language": args.language or "all",
+            "n_shot": args.n_shot,
+            "top_k": args.top_k,
+            "reasoning_mode": args.reasoning_mode,
+            "sample_size": args.sample_size,
+            "balanced": args.balanced
+        }
+    )
+
+    if args.reasoning_mode not in ["self_consistency", "rasc"]:
         print(f"[DEBUG] For reasoning_mode={args.reasoning_mode}, forcing top_k=1 (was {args.top_k})")
         args.top_k = 1
 
@@ -2384,31 +2130,6 @@ if __name__ == "__main__":
             base_url=os.getenv("AZURE_OPENAI_ENDPOINT") + f"/openai/deployments/{AZURE_OPENAI_DEPLOYMENT}"
         )
         llm_engine = AzureEngineWrapper(client, AZURE_OPENAI_DEPLOYMENT)
-
-
-    prefix = ""
-    if isinstance(llm_engine, ErrorMockLLM):
-        prefix = "error_"
-    elif isinstance(llm_engine, MockLLM):
-        prefix = "mock_"
-
-    wandb.init(
-        entity="CongAndSiy",
-        project="emotion-eval",  # Change if needed
-        name=f"{prefix}_main_{args.model_name.replace('/', '-')}_{args.task}_{args.language or 'all'}_{args.reasoning_mode}",
-        config={
-            "model": args.model_name,
-            "task": args.task,
-            "language": args.language or "all",
-            "n_shot": args.n_shot,
-            "top_k": args.top_k,
-            "reasoning_mode": args.reasoning_mode,
-            "sample_size": args.sample_size,
-            "balanced": args.balanced
-        }
-    )
-
-
 
     if args.model_name.startswith("openai/"):
         vllm_engine = None
@@ -2515,36 +2236,7 @@ if __name__ == "__main__":
                         "emotion": emo,
                         "label": label
                     })
-        elif args.balanced and args.balancing_strategy:
-            if args.task == "binary":
-                csv_path = os.path.join(TEST_DIRS["binary"], f"{args.language}.csv")
-                df = sample_dataset(
-                    csv_path=csv_path,
-                    sample_size=args.sample_size,
-                    balanced=args.balanced,
-                    balancing_strategy=args.balancing_strategy
-                )
-            elif args.task == "intensity":
-                csv_path = os.path.join(TEST_DIRS["intensity"], f"{args.language}.csv")
-                df = sample_dataset_intensity(
-                    csv_path=csv_path,
-                    sample_size=args.sample_size,
-                    balanced=args.balanced,
-                    balancing_strategy=args.balancing_strategy
-                )
-            data = []
-            for row in df.itertuples(index=False):
-                for emo in EMOTIONS:
-                    label = (1 if getattr(row, emo, 0) == 1
-                                else 0 if args.task=="binary"
-                                else max(0, min(3, int(getattr(row, emo, 0)))))
-                    data.append({
-                        "text": row.text,
-                        "emotion": emo,
-                        "label": label
-                    })
-        else:
-            raise ValueError(f"Unknown task: {args.task}")
+
 
         # Prepare the main prompt template + few shot examples
         config = TASK_CONFIGS[args.task]
@@ -2567,7 +2259,6 @@ if __name__ == "__main__":
 
         # Evaluate single-run
         print(f"Running main evaluation for task={args.task}, lang={lang} ...")
-        
         main_res = evaluate_model_on_test_set(
             model_name=model_name,
             llm=llm_engine,
@@ -2581,7 +2272,7 @@ if __name__ == "__main__":
             max_steps=args.tot_steps,                
             beam_width=args.tot_beam_width
         )
-        #wandb.log(main_res)
+        wandb.log(main_res)
         # 1) Debug-print the raw values
         if args.task == "binary":
             f1 = float(main_res.get("f1_macro", 0.0))
@@ -2605,16 +2296,14 @@ if __name__ == "__main__":
             mse = float(main_res.get("mse", 0.0))
             rmse = float(main_res.get("rmse", 0.0))
             mae = float(main_res.get("mae", 0.0))
-            auroc = float(main_res.get("auroc", 0.0))
-            auprc = float(main_res.get("auprc", 0.0))
 
             summary_table = wandb.Table(columns=[
                 "model", "task", "reasoning_mode", "prompt_variant", "language",
-                "avg_pearson", "avg_spearman", "mse", "rmse", "mae", "auroc", "auprc"
+                "avg_pearson", "avg_spearman", "mse", "rmse", "mae"
             ])
             summary_table.add_data(
                 args.model_name, args.task, args.reasoning_mode, args.prompt_variant, args.language,
-                pearson, spearman, mse, rmse, mae, auroc, auprc
+                pearson, spearman, mse, rmse, mae
             )
             wandb.log({"summary_metrics": summary_table})
 

@@ -353,6 +353,9 @@ TASK_CONFIGS = {
     }
 }    
 
+AZURE_DEPLOYMENT_NAME = "gpt-4o"
+AZURE_OPENAI_VERSION = "2024-12-01-preview"
+
 class AzureEngineWrapper:
     def __init__(self, client, model_name):
         self.client = client
