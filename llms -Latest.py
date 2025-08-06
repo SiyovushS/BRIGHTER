@@ -62,7 +62,6 @@ class MockLLM:
         dummy_outputs = []
         for prompt in prompts:
             responses = []
-
             for _ in range(sampling_params.n):
                 answer = random_choice()
 
@@ -121,7 +120,7 @@ class MockLLM:
             dummy_outputs.append(Result(responses))
 
         return dummy_outputs
-USE_MOCK_LLM = True # Set this to false if wanted to use actuall LLM
+USE_MOCK_LLM = False # Set this to false if wanted to use actuall LLM
 
 
 class ErrorMockLLM(MockLLM):
@@ -441,7 +440,7 @@ class AzureEngineWrapper:
                 self.texts = texts
         results = []
         for prompt in prompts:
-            response = self.client.ChatCompletion.create(
+            response = self.client.chat.completions.create(
                 model=self.model_name,
                 messages=[
                     {"role": "system", "content": "You are a helpful assistant."},
@@ -452,7 +451,7 @@ class AzureEngineWrapper:
                 top_p=sampling_params.top_p,
                 n=sampling_params.n
             )
-            texts = [choice.message["content"].strip() for choice in response.choices]
+            texts = [choice.message.content.strip() for choice in response.choices]
             results.append(Result(texts))
         return results
 
@@ -1072,8 +1071,6 @@ def query_confidence_bin(llm, step_text: str, sampling) -> Tuple[Optional[str], 
     max_tries = 3
     attempts = 0
     flagged = []  # collect any flagged prompts, if desired
-    if isinstance(llm, MockLLM):
-        return llm.query_confidence_bin(step_text, sampling)
 
     while attempts < max_tries:
         try:
@@ -1942,17 +1939,17 @@ def evaluate_model_on_test_set(
         accuracy = accuracy_score(all_labels_flat, all_preds_flat)
 
         # TNR = TN / (TN + FP)
-        tnrs, tprs = [], []
-        for emo in emotion2refs:
-            y_true = [l for l,e in zip(all_labels_flat, all_emotions_flat) if e==emo]
-            y_pred = [p for p,e in zip(all_preds_flat,  all_emotions_flat) if e==emo]
+        tnrs = []
+        emotions = list(set(all_emotions_flat))
+        for emo in emotions:
+            y_true = [label for label, e in zip(all_labels_flat, all_emotions_flat) if e == emo]
+            y_pred = [pred for pred, e in zip(all_preds_flat, all_emotions_flat) if e == emo]
             if len(set(y_true)) < 2:
                 continue
-            tn, fp, fn, tp = confusion_matrix(y_true, y_pred, labels=[0,1]).ravel()
-            tnrs.append(tn/(tn+fp) if (tn+fp)>0 else 0)
-            tprs.append(tp/(tp+fn) if (tp+fn)>0 else 0)
-        avg_tnr = np.mean(tnrs) if tnrs else float("nan")
-        avg_tpr = np.mean(tprs) if tprs else float("nan")
+            tn, fp, fn, tp = confusion_matrix(y_true, y_pred, labels=[0, 1]).ravel()
+            tnr = tn / (tn + fp) if (tn + fp) > 0 else 0
+            tnrs.append(tnr)
+        avg_tnr = sum(tnrs) / len(tnrs) if tnrs else 0.0
 
         # Log to WandB
         wandb.log({
@@ -1960,8 +1957,7 @@ def evaluate_model_on_test_set(
             "precision_macro": precision_macro,
             "recall_macro": recall_macro,
             "accuracy": accuracy,
-            "true_negative_rate_avg": avg_tnr,
-            "true_positive_rate_avg": avg_tpr,
+            "true_negative_rate_avg": avg_tnr
         })
 
         return {
@@ -1970,7 +1966,6 @@ def evaluate_model_on_test_set(
             "recall_macro": recall_macro,
             "accuracy": accuracy,
             "true_negative_rate_avg": avg_tnr,
-            "true_positive_rate_avg": avg_tpr,
             "f1_per_emotion": f1_per_emotion,
             "auroc": auroc,
             "auprc": auprc
@@ -1987,27 +1982,18 @@ def evaluate_model_on_test_set(
             all_emotions_flat.extend([emo] * len(emotion2refs[emo]))
 
         # Pearson (per emotion + avg)
-        pearson_per_emotion = {}
-        for emo in emotion2refs:
-            refs = emotion2refs[emo]
-            preds = emotion2preds[emo]
-            if len(refs) > 1 and len(set(refs)) > 1 and len(set(preds)) > 1:
-                try:
-                    pearson_per_emotion[emo] = pearsonr(refs, preds)[0]
-                except Exception:
-                    pearson_per_emotion[emo] = float("nan")
-            else:
-                pearson_per_emotion[emo] = float("nan")
-        avg_pearson = np.nanmean(list(pearson_per_emotion.values()))
+        pearson_per_emotion = {
+            emo: (pearsonr(emotion2refs[emo], emotion2preds[emo])[0]
+                if len(emotion2refs[emo]) > 1 else 0.0)
+            for emo in emotion2refs
+        }
+        avg_pearson = np.mean(list(pearson_per_emotion.values()))
 
         # Spearman
-        if len(set(all_labels_flat)) > 1 and len(set(all_preds_flat)) > 1:
-            try:
-                spearman_corr = spearmanr(all_labels_flat, all_preds_flat).correlation
-            except Exception:
-                spearman_corr = float("nan")
-        else:
-            spearman_corr = float("nan")
+        try:
+            spearman_corr = spearmanr(all_labels_flat, all_preds_flat).correlation
+        except Exception:
+            spearman_corr = 0.0
 
         # MAE + RMSE
         mse = mean_squared_error(all_labels_flat, all_preds_flat)
@@ -2018,7 +2004,7 @@ def evaluate_model_on_test_set(
         try:
             qwk = cohen_kappa_score(all_labels_flat, all_preds_flat, weights="quadratic")
         except Exception:
-            qwk = float("nan")
+            qwk = 0.0
 
         # Accuracy@1 (exact match)
         acc_1 = np.mean(np.array(all_labels_flat) == np.array(all_preds_flat))
@@ -2392,8 +2378,12 @@ if __name__ == "__main__":
             print("[DEBUG] Using MockLLM for offline testing.")
             llm_engine = MockLLM(reasoning_mode=args.reasoning_mode, task=args.task)
     else:
-        openai.api_key = os.getenv("OPENAI_API_KEY")
-        llm_engine = AzureEngineWrapper(openai, args.model_name.replace("openai/", ""))
+        client = AzureOpenAI(
+            api_key=os.getenv("AZURE_OPENAI_KEY"),
+            api_version=AZURE_OPENAI_VERSION,
+            base_url=os.getenv("AZURE_OPENAI_ENDPOINT") + f"/openai/deployments/{AZURE_OPENAI_DEPLOYMENT}"
+        )
+        llm_engine = AzureEngineWrapper(client, AZURE_OPENAI_DEPLOYMENT)
 
 
     prefix = ""
@@ -2598,16 +2588,14 @@ if __name__ == "__main__":
             acc = float(main_res.get("accuracy", 0.0))
             auroc = float(main_res.get("auroc", 0.0))
             auprc = float(main_res.get("auprc", 0.0))
-            tnr = float(main_res.get("true_negative_rate_avg", 0.0))
-            tpr = float(main_res.get("true_positive_rate_avg", 0.0))
 
             summary_table = wandb.Table(columns=[
                 "model", "task", "reasoning_mode", "prompt_variant", "language",
-                "f1_macro", "accuracy", "auroc", "auprc", "tnr","tpr"
+                "f1_macro", "accuracy", "auroc", "auprc"
             ])
             summary_table.add_data(
                 args.model_name, args.task, args.reasoning_mode, args.prompt_variant, args.language,
-                f1, acc, auroc, auprc, tnr, tpr
+                f1, acc, auroc, auprc
             )
             wandb.log({"summary_metrics": summary_table})
 
