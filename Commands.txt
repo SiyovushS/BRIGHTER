@@ -5,34 +5,76 @@ conda init
 
 conda --version
 conda activate brighter-llm
-set AZURE_OPENAI_KEY=18W17o5SWFUi6HTmovJNqtPn7xbMw4wvqwOZ6dX16u189b4Xg4qNJQQJ99BGACYeBjFXJ3w3AAABACOGDWaH
-set AZURE_OPENAI_ENDPOINT=https://gpt4t.openai.azure.com/
+set OPENAI_API_KEY=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
 cd C:\Users\caoca\Documents\GitHub\BRIGHTER
 cd C:\Users\siyov\Documents\GitHub\BRIGHTER
 
 
 Mock Run
-python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode self_consistency --top_k 4 --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
-python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode self_consistency --top_k 4 --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
+python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode self_consistency --top_k 4 --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations --error_test Passed Mock and Error
+python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode self_consistency --top_k 4 --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations --error_test Passed Mock and Error
 
-python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode tree_of_thoughts --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant tree_of_thoughts --skip_ablations
-python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode tree_of_thoughts --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant tree_of_thoughts --skip_ablations
+python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode tree_of_thoughts --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant tree_of_thoughts --skip_ablations --error_test Passed Mock and Error
+python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode tree_of_thoughts --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant tree_of_thoughts --skip_ablations --error_test Passed Mock and Error
 
-python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode self_refine --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations  
-python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode self_refine --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations  
+python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode self_refine --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations --error_test Passed Mock and Error
+python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode self_refine --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations --error_test Passed Mock and Error
 
-python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode default --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
-python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode default --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
+python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode default --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations --error_test Passed Mock and Error
+python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode default --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations --error_test Passed Mock and Error
 
-python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode rasc --top_k 4 --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
-python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode rasc --top_k 4 --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
+python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode rasc --top_k 4 --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations --error_test Passed Mock and Error
+python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode rasc --top_k 4 --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict  --prompt_variant v1 --skip_ablations --error_test Passed Mock and Error
 
-python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode complexity_based --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations 
-python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode complexity_based --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations 
+python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode complexity_based --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --skip_ablations --error_test Passed Mock and Error
+python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode complexity_based --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --skip_ablations --error_test Passed Mock and Error
 
-python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode plan_and_solve --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
-python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode plan_and_solve --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
+python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode plan_and_solve --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations --error_test Passed Mock and Error
+python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode plan_and_solve --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations --error_test Passed Mock and Error
 
-python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode rankcot --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations #Not Working
-python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode rankcot --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations #Not Working
+python llms.py --model_name "openai/gpt-4" --task binary --reasoning_mode rankcot --top_k 4 --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --skip_ablations --error_test Passed Mock and Error
+python llms.py --model_name "openai/gpt-4" --task intensity --reasoning_mode rankcot --top_k 4 --n_shot 0 --language eng --sample_size 200 --balanced --balancing_strategy strict --skip_ablations --error_test Passed Mock and Error
+v
+
+
+Test Run For ChatGPT
+python llms.py --model_name "openai/gpt-4.1" --task binary --reasoning_mode self_consistency --top_k 4 --n_shot 0 --language eng --sample_size 10 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
+python llms.py --model_name "openai/gpt-4.1" --task intensity --reasoning_mode self_consistency --top_k 4 --n_shot 0 --language eng --sample_size 20 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
+python llms.py --model_name "openai/gpt-4.1" --task binary --reasoning_mode self_consistency --top_k 4 --n_shot 1 --language eng --sample_size 20 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
+python llms.py --model_name "openai/gpt-4.1" --task intensity --reasoning_mode self_consistency --top_k 4 --n_shot 1 --language eng --sample_size 20 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
+
+python llms.py --model_name "openai/gpt-4.1" --task binary --reasoning_mode tree_of_thoughts --top_k 4 --n_shot 0 --language eng --sample_size 10 --balanced --balancing_strategy strict --prompt_variant tree_of_thoughts --skip_ablations --tot_steps 3 --tot_search bfs --tot_vth 0.6 --tot_value_trials 1
+python llms.py --model_name "openai/gpt-4.1" --task intensity --reasoning_mode tree_of_thoughts --top_k 4 --n_shot 0 --language eng --sample_size 20 --balanced --balancing_strategy strict --prompt_variant tree_of_thoughts --skip_ablations --tot_steps 3 --tot_search bfs --tot_vth 0.6 --tot_value_trials 1
+python llms.py --model_name "openai/gpt-4.1" --task binary --reasoning_mode tree_of_thoughts --top_k 4 --n_shot 1 --language eng --sample_size 10 --balanced --balancing_strategy strict --prompt_variant tree_of_thoughts --skip_ablations --tot_steps 3 --tot_search bfs --tot_vth 0.6 --tot_value_trials 1
+python llms.py --model_name "openai/gpt-4.1" --task intensity --reasoning_mode tree_of_thoughts --top_k 4 --n_shot 1 --language eng --sample_size 20 --balanced --balancing_strategy strict --prompt_variant tree_of_thoughts --skip_ablations --tot_steps 3 --tot_search bfs --tot_vth 0.6 --tot_value_trials 1
+
+python llms.py --model_name "openai/gpt-4.1" --task binary --reasoning_mode self_refine --n_shot 0 --language eng --sample_size 10 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
+python llms.py --model_name "openai/gpt-4.1" --task intensity --reasoning_mode self_refine --n_shot 0 --language eng --sample_size 20 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
+python llms.py --model_name "openai/gpt-4.1" --task binary --reasoning_mode self_refine --n_shot 1 --language eng --sample_size 10 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
+python llms.py --model_name "openai/gpt-4.1" --task intensity --reasoning_mode self_refine --n_shot 1 --language eng --sample_size 20 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
+
+python llms.py --model_name "openai/gpt-4.1" --task binary --reasoning_mode default --n_shot 0 --language eng --sample_size 10 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
+python llms.py --model_name "openai/gpt-4.1" --task intensity --reasoning_mode default --n_shot 0 --language eng --sample_size 20 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
+python llms.py --model_name "openai/gpt-4.1" --task binary --reasoning_mode default --n_shot 1 --language eng --sample_size 10 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
+python llms.py --model_name "openai/gpt-4.1" --task intensity --reasoning_mode default --n_shot 1 --language eng --sample_size 20 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
+
+python llms.py --model_name "openai/gpt-4.1" --task binary --reasoning_mode rasc --top_k 4 --n_shot 0 --language eng --sample_size 10 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
+python llms.py --model_name "openai/gpt-4.1" --task intensity --reasoning_mode rasc --top_k 4 --n_shot 0 --language eng --sample_size 20 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
+python llms.py --model_name "openai/gpt-4.1" --task binary --reasoning_mode rasc --top_k 4 --n_shot 1 --language eng --sample_size 10 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
+python llms.py --model_name "openai/gpt-4.1" --task intensity --reasoning_mode rasc --top_k 4 --n_shot 1 --language eng --sample_size 20 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
+
+python llms.py --model_name "openai/gpt-4.1" --task binary --reasoning_mode complexity_based --n_shot 0 --language eng --sample_size 10 --balanced --balancing_strategy strict --skip_ablations
+python llms.py --model_name "openai/gpt-4.1" --task intensity --reasoning_mode complexity_based --n_shot 0 --language eng --sample_size 20 --balanced --balancing_strategy strict --skip_ablations
+python llms.py --model_name "openai/gpt-4.1" --task binary --reasoning_mode complexity_based --n_shot 1 --language eng --sample_size 10 --balanced --balancing_strategy strict --skip_ablations
+python llms.py --model_name "openai/gpt-4.1" --task intensity --reasoning_mode complexity_based --n_shot 1 --language eng --sample_size 20 --balanced --balancing_strategy strict --skip_ablations
+
+python llms.py --model_name "openai/gpt-4.1" --task binary --reasoning_mode plan_and_solve --n_shot 0 --language eng --sample_size 10 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
+python llms.py --model_name "openai/gpt-4.1" --task intensity --reasoning_mode plan_and_solve --n_shot 0 --language eng --sample_size 20 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
+python llms.py --model_name "openai/gpt-4.1" --task binary --reasoning_mode plan_and_solve --n_shot 1 --language eng --sample_size 10 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
+python llms.py --model_name "openai/gpt-4.1" --task intensity --reasoning_mode plan_and_solve --n_shot 1 --language eng --sample_size 20 --balanced --balancing_strategy strict --prompt_variant v1 --skip_ablations
+
+python llms.py --model_name "openai/gpt-4.1" --task binary --reasoning_mode rankcot --top_k 4 --n_shot 0 --language eng --sample_size 10 --balanced --balancing_strategy strict --skip_ablations
+python llms.py --model_name "openai/gpt-4.1" --task intensity --reasoning_mode rankcot --top_k 4 --n_shot 0 --language eng --sample_size 20 --balanced --balancing_strategy strict --skip_ablations
+python llms.py --model_name "openai/gpt-4.1" --task binary --reasoning_mode rankcot --top_k 4 --n_shot 1 --language eng --sample_size 10 --balanced --balancing_strategy strict --skip_ablations
+python llms.py --model_name "openai/gpt-4.1" --task intensity --reasoning_mode rankcot --top_k 4 --n_shot 1 --language eng --sample_size 20 --balanced --balancing_strategy strict --skip_ablations
 v

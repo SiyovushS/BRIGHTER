@@ -8,11 +8,12 @@ from typing import List, Optional, Tuple, Callable, Union
 import wandb
 import random
 import math
-from openai import AzureOpenAI
+from openai import OpenAI
 from openai import OpenAIError
 import openai
 import pathlib
 import socket
+from collections import Counter
 from hashlib import md5
 from collections import defaultdict
 import glob
@@ -26,6 +27,7 @@ from sklearn.metrics import (
 )
 from scipy.stats import (pearsonr, spearmanr)
 import sys
+
 
 class SamplingParams:
     def __init__(self, max_tokens, temperature, top_p, n):
@@ -121,7 +123,7 @@ class MockLLM:
             dummy_outputs.append(Result(responses))
 
         return dummy_outputs
-USE_MOCK_LLM = True # Set this to false if wanted to use actuall LLM
+USE_MOCK_LLM = False # Set this to false if wanted to use actuall LLM
 
 
 class ErrorMockLLM(MockLLM):
@@ -289,25 +291,34 @@ TASK_CONFIGS = {
     "binary": {
         "prompt_variants": {
             "v1": (
-                "Evaluate whether the following text conveys the emotion of {{EMOTION}}.\n"
-                "Think step by step before you answer. Finish your response with 'Answer:' followed by 'yes' or 'no'."
+                "Evaluate whether the following text conveys the emotion {{EMOTION}}.\n"
+                "Think step by step before you answer.\n"
+                "If the emotion is present, reply with “1”; if not, reply with “0”.\n"
+                "Finish your response with exactly “Answer: 1” or “Answer: 0”."
             ),
             "v2": (
                 "Analyze the text below for the presence of {{EMOTION}}.\n"
-                "Explain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'."
+                "Explain your reasoning briefly.\n"
+                "If {{EMOTION}} is present, reply with “1”; otherwise, reply with “0”.\n"
+                "Finish with exactly “Answer: 1” or “Answer: 0”."
             ),
             "v3": (
-                "Examine the following text to determine whether {{EMOTION}} is present.\n"
-                "Provide a concise explanation for your assessment and end with 'Answer:' followed by either 'yes' or 'no'."
+                "Examine the following text to determine whether it conveys {{EMOTION}}.\n"
+                "Provide a concise explanation for your assessment.\n"
+                "Reply with “1” if the emotion is present or “0” if it is not.\n"
+                "End your answer with exactly “Answer: 1” or “Answer: 0”."
             ),
             "v4": (
-               "You are an expert analyzer. Read the text and think step by step about whether it conveys {{EMOTION}}.\n"
-               "Show your chain of thought, then conclude with 'Answer:' followed by 'yes' or 'no'."
+                "You are an expert in emotional analysis. Read the text and think step by step about whether it conveys {{EMOTION}}.\n"
+                "Show your chain of thought briefly.\n"
+                "Respond with “1” if you detect the emotion, or “0” if you do not.\n"
+                "Conclude with exactly “Answer: 1” or “Answer: 0”."
             ),
             "tree_of_thoughts": (
                 "You are solving the task of identifying whether the emotion {{EMOTION}} is present in a text.\n"
                 "Reason through multiple steps if needed. Each step should bring you closer to the final answer.\n"
-                "After thinking it through, answer clearly: 'Answer: yes' or 'no'."
+                "After thinking it through, return exactly one line:\n"
+                "'Answer: 1' (if the emotion is present) or 'Answer: 0' (if not)."
             ),
             "cbp_simple": (
                 "Determine whether the emotion {{EMOTION}} is expressed in the text.\n"
@@ -431,17 +442,18 @@ AZURE_OPENAI_DEPLOYMENT = "gpt-4o"
 AZURE_OPENAI_VERSION = "2024-12-01-preview"
 
 class AzureEngineWrapper:
-    def __init__(self, client, model_name):
-        self.client = client
+    def __init__(self, model_name):
+        self.client = OpenAI()
         self.model_name = model_name
 
     def generate(self, prompts, sampling_params):
         class Result:
             def __init__(self, texts):
                 self.texts = texts
+
         results = []
         for prompt in prompts:
-            response = self.client.ChatCompletion.create(
+            response = self.client.chat.completions.create(
                 model=self.model_name,
                 messages=[
                     {"role": "system", "content": "You are a helpful assistant."},
@@ -452,7 +464,7 @@ class AzureEngineWrapper:
                 top_p=sampling_params.top_p,
                 n=sampling_params.n
             )
-            texts = [choice.message["content"].strip() for choice in response.choices]
+            texts = [choice.message.content.strip() for choice in response.choices]
             results.append(Result(texts))
         return results
 
@@ -467,21 +479,35 @@ def load_test_data_multicolumn(filepath: str, task: str) -> List[dict]:
             if reader.fieldnames is None:
                 print(f"Warning: No headers found in {filepath}")
                 return data_expanded
-            available_emotions = [emo for emo in EMOTIONS if emo in reader.fieldnames]
-            for row in reader:
-                text_val = row.get("text", "").strip()
+
+            rows = list(reader)  # materialize once
+
+            # keep emotions that actually have any non-empty/non-zero cell
+            available_emotions = []
+            for emo in EMOTIONS:
+                if emo not in (reader.fieldnames or []):
+                    continue
+                if any((r.get(emo, "").strip() not in ("", "0", "0.0")) for r in rows):
+                    available_emotions.append(emo)
+
+            for row in rows:
+                text_val = (row.get("text") or "").strip()
                 if not text_val:
-                    continue  # Skip empty texts
+                    continue
                 for emo in available_emotions:
-                    val_str = row.get(emo, "").strip()
+                    val_str = (row.get(emo) or "").strip()
                     try:
                         numeric_val = int(float(val_str)) if val_str else 0
                     except ValueError:
                         numeric_val = 0
+
                     if task == "binary":
-                        label_val = 1 if numeric_val == 1 else 0
+                        # treat *any* positive as presence
+                        label_val = 1 if numeric_val > 0 else 0
                     else:
+                        # clamp 0..3
                         label_val = max(0, min(3, numeric_val))
+
                     data_expanded.append({
                         "text": text_val,
                         "emotion": emo,
@@ -525,11 +551,40 @@ def construct_prompt(prompt_template: str,
 
     return out
 
-def llm_score_reasoning(text: str, llm, sampling, flagged_list) -> float:
+def llm_score_reasoning(text: str, llm, sampling, flagged_list, prior_texts: Optional[List[str]] = None, alpha: float = 0.5) -> float:
+    """
+    Ask the LLM for two scores in [0,1]:
+      - QUALITY: logical soundness & relevance of this path alone
+      - CONSISTENCY: agreement with prior sampled paths (if provided)
+    Returns a combined score in [0,1] as alpha*QUALITY + (1-alpha)*CONSISTENCY.
+
+    Backward compatible: if the model doesn't return the new format,
+    we fall back to parsing a single 1..10 number and map to [0,1].
+    """
+    prior_snippet = ""
+    if prior_texts:
+        # Keep prompt short—include up to 3 previous unique snippets
+        uniq = []
+        seen = set()
+        for p in prior_texts:
+            k = (p or "").strip()
+            if not k or k in seen:
+                continue
+            uniq.append(k)
+            seen.add(k)
+            if len(uniq) >= 3:
+                break
+        if uniq:
+            prior_snippet = "\n\nPrior sampled paths (for consistency reference):\n- " + "\n- ".join(uniq)
+
     prompt = (
-        f"Here is a reasoning path:\n{text}\n\n"
-        f"On a scale from 1 to 10, how logically sound and relevant is this reasoning path?\n"
-        f"Just return a number from 1 to 10.\nScore:"
+        f"Here is a candidate reasoning path:\n{text}\n"
+        f"{prior_snippet}\n\n"
+        "Score this path with two numbers in [0,1]:\n"
+        "QUALITY: <float between 0 and 1>\n"
+        "CONSISTENCY: <float between 0 and 1>\n"
+        "Only output two lines exactly in this format.\n"
+        "QUALITY: "
     )
 
     max_tries = 3
@@ -537,8 +592,23 @@ def llm_score_reasoning(text: str, llm, sampling, flagged_list) -> float:
     while attempt < max_tries:
         try:
             response = llm.generate([prompt], sampling)[0].texts[0]
-            match = re.search(r"\b(10|[1-9])\b", response.strip())
-            return int(match.group(1)) / 10.0 if match else 0.0
+            # Try new format first
+            q_match = re.search(r"QUALITY:\s*([01](?:\.\d+)?)", response, re.IGNORECASE)
+            c_match = re.search(r"CONSISTENCY:\s*([01](?:\.\d+)?)", response, re.IGNORECASE)
+            if q_match and c_match:
+                q = float(q_match.group(1)); c = float(c_match.group(1))
+                q = min(max(q, 0.0), 1.0); c = min(max(c, 0.0), 1.0)
+                return float(alpha*q + (1.0 - alpha)*c)
+
+            # Fallback: old single 1..10 score → map to [0,1]
+            single = re.search(r"\b(10|[1-9])\b", response.strip())
+            if single:
+                return int(single.group(1)) / 10.0
+
+            # Unparseable → try again
+            attempt += 1
+            continue
+
         except OpenAIError as e:
             action = handle_openai_error(e, flagged_list, prompt, stage="rasc_score")
             if action == "fatal":
@@ -548,42 +618,98 @@ def llm_score_reasoning(text: str, llm, sampling, flagged_list) -> float:
                 continue
             if action == "flagged":
                 return 0.0
+            attempt += 1
         except Exception as e:
             print(f"⚠️ Unknown error in scoring: {e}")
-            flagged_list.append({
-                "prompt": prompt,
-                "reason": str(e),
-                "stage": "rasc_score"
-            })
+            flagged_list.append({"prompt": prompt, "reason": str(e), "stage": "rasc_score"})
             return 0.0
-        attempt += 1
 
-    flagged_list.append({
-        "prompt": prompt,
-        "reason": "Unparseable after 3 attempts",
-        "stage": "rasc_score"
-    })
+    flagged_list.append({"prompt": prompt, "reason": "Unparseable after 3 attempts", "stage": "rasc_score"})
     return 0.0
 
-def robust_parse_binary(output: str) -> Optional[int]:
-    # Only use the LAST "Answer: ..." line
-    lines = output.strip().splitlines()
-    for line in reversed(lines):
-        match = re.match(r"^Answer:\s*(yes|no)$", line.strip(), re.IGNORECASE)
-        if match:
-            return 1 if match.group(1).lower() == "yes" else 0
+def robust_parse_binary(generated_text: str) -> Optional[int]:
+    """
+    Parse binary output (0 or 1) from model response.
+    Filters out reasoning text that speculates about possible answers.
+    Returns None if no clear, final answer is found.
+    """
+    if not generated_text:
+        return None
+
+    # Normalize whitespace and lowercase
+    text = generated_text.strip().lower()
+
+    # Remove common "thinking" lead-ins
+    thinking_patterns = [
+        r"i think it might be",
+        r"it could be",
+        r"maybe it's",
+        r"possibly",
+        r"i believe",
+        r"i guess"
+    ]
+    for pat in thinking_patterns:
+        text = re.sub(pat, "", text)
+
+    # Look for an explicit "final answer" or answer section
+    final_match = re.search(r"(final answer|answer\s*[:\-]?)\s*(\d)", text)
+    if final_match:
+        val = final_match.group(2)
+        if val in ["0", "1"]:
+            return int(val)
+
+    # Otherwise, look for the first standalone 0 or 1 at the end
+    matches = re.findall(r"\b[01]\b", text)
+    if matches:
+        # Prefer last occurrence as final decision
+        return int(matches[-1])
+    yn = re.search(r"\b(answer\s*[:\-]?\s*)?(yes|no)\b", text)
+    if yn:
+        return 1 if yn.group(2) == "yes" else 0
+
     return None
 
 
-def robust_parse_intensity(output: str) -> Optional[int]:
-    lines = output.strip().splitlines()
-    for line in reversed(lines):
-        match = re.match(r"^Answer:\s*([0-3])$", line.strip())
-        if match:
-            return int(match.group(1))
+def robust_parse_intensity(generated_text: str) -> Optional[int]:
+    """
+    Parse intensity rating (e.g., 0-4) from model response.
+    Filters out speculation and only returns clear, final values.
+    """
+    if not generated_text:
+        return None
+
+    text = generated_text.strip().lower()
+
+    thinking_patterns = [
+        r"i think it might be",
+        r"it could be",
+        r"maybe it's",
+        r"possibly",
+        r"i believe",
+        r"i guess"
+    ]
+    for pat in thinking_patterns:
+        text = re.sub(pat, "", text)
+
+    final_match = re.search(r"(final answer|answer\s*[:\-]?)\s*([0-3])\b", text)
+    if final_match:
+        val = final_match.group(2)
+        if val.isdigit():
+            val_int = int(val)
+            if 0 <= val_int <= 3:
+                return val_int
+
+    matches = re.findall(r"\b[0-3]\b", text)
+    if matches:
+        return int(matches[-1])
+
     return None
+
 
 def parse_output(generated_text: str, task: str) -> Optional[int]:
+    """
+    Route to appropriate parser based on task type.
+    """
     if task == "binary":
         return robust_parse_binary(generated_text)
     else:
@@ -622,95 +748,207 @@ def get_semantic_key(text):
     stripped = text.lower().split("answer:")[0]
     return md5(stripped.encode()).hexdigest()
 
-def run_self_refine(prompt, task, llm, flagged_prompts, max_refinements=3, max_tries=3) -> Tuple[Optional[str], Optional[dict]]:
-    try_count = 0
-    original = prompt
+def run_self_refine(
+    prompt: str,
+    task: str,
+    llm,
+    max_refinements: int,
+    flagged_prompts: List[dict],
+    max_tries: int = 3
+) -> Tuple[Optional[str], dict, List[dict]]:
+    """
+    Returns: (final_text_or_none, meta_dict_with_pre/post_conf, flagged_list)
+    meta_dict keys: pre_conf_bin, pre_conf_score, post_conf_bin, post_conf_score
+    """
+    local_flagged: List[dict] = []
+    conf_sampling = SamplingParams(160, 0.0, 1.0, 1)
+    gen_sampling  = SamplingParams(220, 0.7, 0.95, 1)
 
-    while try_count < max_tries:
+    # 1) initial generation with retries + error routing
+    attempt = 0
+    out = None
+    while attempt < max_tries:
         try:
-            # generate
-            out = llm.generate([prompt], SamplingParams(80,0.7,0.95,1))[0].texts[0]
-            pre_conf_bin, pre_conf_score = query_confidence_bin(llm, out, SamplingParams(40, 0.0, 1.0, 1))
-            if not isinstance(out, str) or "Answer:" not in out:
-                try_count += 1
+            out = llm.generate([prompt], gen_sampling)[0].texts[0]
+            break
+        except OpenAIError as e:
+            action = handle_openai_error(e, local_flagged, prompt, stage="self_refine:init")
+            if action == "fatal":
+                flagged_prompts.extend(local_flagged)
+                return None, {}, local_flagged
+            if action == "retry":
+                time.sleep(2 ** attempt)
                 continue
+        except Exception as e:
+            local_flagged.append({"prompt": prompt, "reason": f"initial gen failed: {e}", "stage": "self_refine:init"})
+        attempt += 1
 
-            # critique
-            critique = llm.generate([f"{original}\n\nYour previous answer was:\n{out}\n\nCritique your response."],
-                                    SamplingParams(80,0.7,0.95,1))[0].texts[0]
-            # refine
-            revision = llm.generate([f"{original}\n\nYour previous answer was:\n{out}\nCritique: {critique}\nPlease revise:"],
-                                    SamplingParams(80,0.7,0.95,1))[0].texts[0]
-            post_conf_bin, post_conf_score = query_confidence_bin(llm, revision, SamplingParams(40, 0.0, 1.0, 1))
-            if not isinstance(revision, str) or "Answer:" not in revision:
-                try_count += 1
-                continue
+    if out is None:
+        flagged_prompts.extend(local_flagged)
+        return None, {}, local_flagged
 
-            return revision.strip(), {
-                "pre_conf_bin": pre_conf_bin, "pre_conf_score": pre_conf_score,
-                "post_conf_bin": post_conf_bin, "post_conf_score": post_conf_score
-            }
+    pre_conf_bin, pre_conf_score = (None, None)
+    if parse_output(out, task) is not None:
+        pre_conf_bin, pre_conf_score = query_confidence_bin(llm, out, conf_sampling)
+
+    # 2) refine loop (critique -> revise) with recoverable retries
+    revision = out
+    refinements = 0
+    best_conf = pre_conf_score if pre_conf_score is not None else 0.0
+    last_pred = parse_output(revision, task)
+    stable_pred_count = 0
+    no_improve_count = 0
+    K_min = 2
+    CONF_TARGET = 0.85
+    CONF_DELTA = 0.05
+    PATIENCE = 1
+    best_text = revision
+    best_conf_bin = pre_conf_bin
+    best_conf_score = pre_conf_score
+
+    while refinements < max_refinements:
+        try:
+            critique = llm.generate(
+                [f"{prompt}\n\nYour previous answer was:\n{revision}\n\nCritique your response."],
+                gen_sampling
+            )[0].texts[0]
+
+            new_text = llm.generate(
+                [f"{prompt}\n\nYour previous answer was:\n{revision}\nCritique: {critique}\nPlease revise:"],
+                gen_sampling
+            )[0].texts[0]
+
+            revision = new_text
+            pred_now = parse_output(revision, task)
+            conf_bin_now, conf_score_now = query_confidence_bin(llm, revision, conf_sampling) if pred_now is not None else (None, None)
+
+            if pred_now == last_pred:
+                stable_pred_count += 1
+            else:
+                stable_pred_count = 0
+            last_pred = pred_now
+
+            if conf_score_now is not None:
+                if conf_score_now >= best_conf + CONF_DELTA:
+                    best_conf = conf_score_now
+                    no_improve_count = 0
+                else:
+                    no_improve_count += 1
+            if conf_score_now is not None and (
+                best_conf_score is None or
+                conf_score_now >= best_conf + CONF_DELTA or
+                conf_score_now > best_conf_score
+            ):
+                best_conf = conf_score_now
+                best_conf_score = conf_score_now
+                best_conf_bin = conf_bin_now
+                best_text = revision
+
+            # Smart early stop
+            if refinements + 1 >= K_min and (
+                (conf_score_now is not None and conf_score_now >= CONF_TARGET) or
+                no_improve_count >= PATIENCE or
+                stable_pred_count >= 2 or
+                (pred_now is not None)
+            ):
+                break
+            refinements += 1
 
         except OpenAIError as e:
-            action = handle_openai_error(e, flagged_prompts, prompt, stage="self_refine")
+            action = handle_openai_error(e, local_flagged, prompt, stage="self_refine:loop")
             if action == "fatal":
-                sys.exit(1)
+                flagged_prompts.extend(local_flagged)
+                return None, {}, local_flagged
             if action == "retry":
                 time.sleep(2)
                 continue
             if action == "flagged":
-                return None, "flagged"
-            # skip → count
+                flagged_prompts.extend(local_flagged)
+                return None, {}, local_flagged
+            refinements += 1  # count only non-recoverables
         except Exception as e:
-            print(f"⚠️ Error in self_refine: {e}")
+            local_flagged.append({"prompt": prompt, "reason": str(e), "stage": "self_refine:loop"})
+            refinements += 1
 
-        try_count += 1
+    revision = best_text
+    post_conf_bin = best_conf_bin
+    post_conf_score = best_conf_score
+    if (post_conf_score is None) and parse_output(revision, task) is not None:
+        post_conf_bin, post_conf_score = query_confidence_bin(llm, revision, conf_sampling)
 
-    flagged_prompts.append({
-        "prompt": prompt,
-        "reason": f"Unparseable after {max_tries} attempts",
-        "stage": "self_refine"
-    })
-    return None, "flagged"
+    meta = {
+        "pre_conf_bin":  pre_conf_bin,  "pre_conf_score":  pre_conf_score,
+        "post_conf_bin": post_conf_bin, "post_conf_score": post_conf_score,
+    }
+    flagged_prompts.extend(local_flagged)
+    return revision.strip() if isinstance(revision, str) else None, meta, local_flagged
 
-def run_rasc(prompt, task, llm, max_samples=10, min_conf=0.7, max_tries=5):
+def run_rasc(
+    prompt: str,
+    task: str,
+    llm,
+    max_samples: int = 10,
+    min_conf: float = 0.7,
+    alpha: float = 0.5,   
+    max_tries: int = 5
+) -> Tuple[Optional[int], dict, List[dict]]:
     from collections import Counter
 
     semantic_seen = set()
-    sampling = SamplingParams(80, 0.7, 0.95, 1)
-    responses, flagged = [], []
+    responses = []  # list of tuples: (raw_text, parsed_label, score, semantic_key)
+    flagged = []
     samples, attempt = 0, 0
+    sampling = SamplingParams(200, 0.7, 0.95, 1)
+    conf_sampling = SamplingParams(160, 0.0, 1.0, 1)
+
+    samples_to_stop = None
+    winner_label = None
+    winner_text = ""
 
     while attempt < max_tries and samples < max_samples:
         try:
-            out = llm.generate([prompt], sampling)[0].texts[0].strip()
+            result_text = llm.generate([prompt], sampling)[0].texts[0].strip()
 
-            if "Answer:" not in out:
+            if "Answer:" not in result_text:
                 attempt += 1
                 continue
 
-            semantic_key = get_semantic_key(out)
+            semantic_key = get_semantic_key(result_text)
             if semantic_key in semantic_seen:
+                attempt += 1
                 continue
             semantic_seen.add(semantic_key)
 
-            parsed = parse_output(out, task)
+            parsed = parse_output(result_text, task)
             if parsed is None:
                 attempt += 1
                 continue
 
-            # Use LLM to score the reasoning path
-            s = llm_score_reasoning(out, llm, SamplingParams(40, 0.0, 1.0, 1), flagged)
+            # Prior paths for consistency scoring
+            prior_paths = [r for (r, _, _, _) in responses] if responses else None
+            score = llm_score_reasoning(result_text, llm, conf_sampling, flagged, prior_texts=prior_paths, alpha=alpha)
 
-            responses.append((parsed, s))
+            responses.append((result_text, parsed, score, semantic_key))
             samples += 1
 
             # Weighted voting
-            counter = Counter({v: sum(s_ for v_, s_ in responses if v_ == v) for v, _ in responses})
-            best, weight = counter.most_common(1)[0]
+            counter = Counter({
+                v: sum(s for (_, v_, s, _) in responses if v_ == v)
+                for v in {v_ for (_, v_, _, _) in responses}
+            })
+            best_label, best_weight = counter.most_common(1)[0]
             total_weight = sum(counter.values())
-            if total_weight > 0 and weight / total_weight >= min_conf:
-                return best, [r for r, _ in responses], flagged
+
+            if total_weight > 0 and (best_weight / total_weight) >= min_conf:
+                samples_to_stop = samples
+                winner_label = best_label
+                # keep the highest-scoring rationale among those with winner_label
+                winner_text = max(
+                    (r for (r, v_, s, _) in responses if v_ == best_label),
+                    key=lambda r: next(s for (rr, vv, s, _) in responses if rr == r and vv == best_label),
+                    default=""
+                )
+                break  # early exit
 
         except OpenAIError as e:
             action = handle_openai_error(e, flagged, prompt, stage="rasc")
@@ -720,98 +958,436 @@ def run_rasc(prompt, task, llm, max_samples=10, min_conf=0.7, max_tries=5):
                 time.sleep(2)
                 continue
             if action == "flagged":
-                return None, [], flagged
-
+                return None, {}, flagged
+            attempt += 1
         except Exception as e:
-            print(f"⚠️ Unknown error in RASC: {e}")
             flagged.append({"prompt": prompt, "error": str(e), "stage": "rasc"})
             attempt += 1
 
-        attempt += 1
+    # Fallback if no early stop
+    if winner_label is None:
+        if responses:
+            counter = Counter({
+                v: sum(s for (_, v_, s, _) in responses if v_ == v)
+                for v in {v_ for (_, v_, _, _) in responses}
+            })
+            winner_label = max(counter, key=counter.get)
+            samples_to_stop = samples_to_stop or samples
+            # highest-scoring rationale for the winning label
+            winner_text = max(
+                (r for (r, v_, s, _) in responses if v_ == winner_label),
+                key=lambda r: next(s for (rr, vv, s, _) in responses if rr == r and vv == winner_label),
+                default=""
+            )
+        else:
+            winner_label = None
+            winner_text = ""
+            flagged.append({"prompt": prompt, "reason": f"Unparseable after {max_tries} attempts", "stage": "rasc"})
 
-    # Fallback: use highest weighted answer if any
+    # Average self-reported confidence across parseable responses (optional; keep as before)
+    conf_scores = []
+    conf_bin = None
     if responses:
-        avg = Counter({v: sum(s for v_, s in responses if v_ == v) for v, _ in responses})
-        return max(avg, key=avg.get), [r for r, _ in responses], flagged
+        for raw, parsed, _score, _ in responses:
+            if parsed is not None:
+                bin_label, cscore = query_confidence_bin(llm, raw, conf_sampling)
+                if cscore is not None:
+                    conf_scores.append(cscore)
+                if conf_bin is None:
+                    conf_bin = bin_label
+    avg_conf = np.mean(conf_scores) if conf_scores else None
 
-    flagged.append({
-        "prompt": prompt,
-        "reason": f"Unparseable after {max_tries} attempts",
-        "stage": "rasc"
-    })
-    return None, [], flagged
+    meta = {
+        "conf_bin": conf_bin,
+        "conf_score": avg_conf,
+        "n_samples": len(responses),
+        "samples_to_stop": samples_to_stop,
+        "winning_rationale": winner_text
+    }
+    return winner_label, meta, flagged
+
+_value_sampling = SamplingParams(max_tokens=160, temperature=0.0, top_p=1.0, n=1)
+
+def _parse_score(text: str) -> Optional[float]:
+    """
+    Parse 'SCORE: x.y' from the model output and clamp to [0,1].
+    """
+    if not text:
+        return None
+    import re
+    m = re.search(r"SCORE:\s*([0-9]*\.?[0-9]+)", text, re.IGNORECASE)
+    if not m:
+        return None
+    try:
+        v = float(m.group(1))
+        if v < 0: v = 0.0
+        if v > 1: v = 1.0
+        return v
+    except Exception:
+        return None
+
+def evaluate_state(llm, prompt_prefix: str, state_text: str, value_trials: int, max_retries: int, flagged_list: List[dict]) -> Tuple[Optional[float], str]:
+    """
+    Ask the LM to self-evaluate a partial branch. Returns (score, raw_eval_text).
+    """
+    eval_prompt = (
+        f"{prompt_prefix}{state_text}\n\n"
+        "You are evaluating whether the above partial reasoning is promising.\n"
+        "On a 0 to 1 scale, where 1 is 'very promising' and 0 is 'impossible', "
+        "give a single line 'SCORE: <float>'. No other text."
+    )
+
+    best_score, raw_text = None, ""
+    trials = max(1, value_trials)
+    for _ in range(trials):
+        score_i, raw_i = None, ""
+        def _gen(p):
+            return llm.generate([p], _value_sampling)[0]
+        parsed, raw_texts = try_generate_with_retries(
+            prompt=eval_prompt,
+            generator_fn=_gen,
+            task="binary",   # parsing is custom; 'task' unused for value prompts
+            max_retries=max_retries,
+            flagged_list=flagged_list
+        )
+        # raw_texts is the generation object; be defensive:
+        try:
+            raw_i = (raw_texts.texts[0] if raw_texts and raw_texts.texts else "") or ""
+        except Exception:
+            raw_i = ""
+        score_i = _parse_score(raw_i)
+        if score_i is not None and (best_score is None or score_i > best_score):
+            best_score, raw_text = score_i, raw_i
+    return best_score, raw_text
+
+def _bin_from_score(s: Optional[float]) -> Optional[str]:
+    if s is None:
+        return None
+    if s >= 0.75:
+        return "sure"
+    if s >= 0.5:
+        return "maybe"
+    return "impossible"
 
 def run_tree_of_thoughts(
-    prompt_base, emotion, task, input_text, llm,
-    max_steps=3, beam_width=3, max_retries=5
+    prompt_base,
+    emotion,
+    task,
+    input_text,
+    llm,
+    beam_width,
+    max_steps=3,
+    max_retries=5,
+    search="bfs",
+    vth=0.5,
+    value_trials=1
 ) -> Tuple[Optional[int], List[dict], List[dict]]:
-    state_queue, all_flagged = [""], []
-    confidence_trace = []
-    for step in range(max_steps):
-        new_states = []
-        for state in state_queue:
-            full = prompt_base + state
-            prompts = [full]*beam_width
-            sampling = SamplingParams(80,0.7,0.95, beam_width)
-            thought_retries = 0
+    """
+    Tree of Thoughts (paper-style):
+      * BFS (top-b) or DFS with backtracking
+      * LM self-evaluation (value function) in [0,1]
+      * Prune when value < vth
+      * Choose final branch by highest value; get answer conditioned on that branch
 
-            while thought_retries < max_retries:
+    Returns:
+      pred: Optional[int] parsed prediction
+      all_raw: list of generation artifacts (dicts) for logging
+      all_flagged: list of flagged prompts for logging
+    """
+    # --- bookkeeping
+    all_raw: List[dict] = []
+    all_flagged: List[dict] = []
+
+    # --- sampling for "thought expansion" (one-shot; you can tune as needed)
+    thought_sampling = SamplingParams(
+        max_tokens=160,
+        temperature=0.7,
+        top_p=1.0,
+        n=beam_width  # branch factor: produce up to b thoughts per expansion
+    )
+
+    # --- helper: prompt constructors
+    def thought_prompt(prefix: str, state: str) -> str:
+        # Encourage short, atomic progress steps (like ToT paper)
+        return (
+            f"{prefix}{state}\n\n"
+            "Think step by step. Propose the NEXT short, concrete reasoning step that helps solve the task.\n"
+            "Return ONLY the next step as a single sentence."
+        )
+
+    def answer_prompt(prefix: str, best_branch: str) -> str:
+        if task == "binary":
+            # require 0/1 so robust_parse_binary can parse it
+            return (
+                f"{prefix}{best_branch}\n\n"
+                "Now give the FINAL ANSWER for the task above.\n"
+                "Return ONLY one line in this exact format:\n"
+                "Answer: 1  (if the emotion is present)  OR  Answer: 0 (if not)."
+            )
+        else:  # intensity
+            return (
+                f"{prefix}{best_branch}\n\n"
+                "Now give the FINAL ANSWER for the task above.\n"
+                "Return ONLY one line in this exact format:\n"
+                "Answer: <0|1|2|3>"
+            )
+
+    # --- initial state (empty chain)
+    initial_state = ""
+    # Track states as dicts: {text, step, value, value_bin}
+    from collections import deque
+
+    def make_state(text: str, step: int, value: Optional[float]) -> dict:
+        return {
+            "text": text,
+            "step": step,
+            "value": value,
+            "value_bin": _bin_from_score(value),
+        }
+
+    # Evaluate the initial state (optional but keeps code uniform)
+    init_val, init_raw = evaluate_state(
+        llm=llm,
+        prompt_prefix=prompt_base,
+        state_text=initial_state,
+        value_trials=value_trials,
+        max_retries=max_retries,
+        flagged_list=all_flagged
+    )
+    all_raw.append({"stage": "value_init", "prompt": "(initial)", "outputs": [init_raw], "score": init_val})
+
+    if search == "bfs":
+        frontier = [make_state(initial_state, 0, init_val)]
+    else:
+        frontier = [make_state(initial_state, 0, init_val)]  # will use as a stack for DFS
+
+    best_states: List[dict] = []
+
+    # --- main search
+    if search == "bfs":
+        # Level-by-level expansion, keep top-b each level by value
+        for step in range(1, max_steps + 1):
+            print(f"[ToT][BFS] Step {step}/{max_steps} — Expanding {len(frontier)} states...")
+            candidates: List[dict] = []
+
+            # Expand each frontier state with up to 'beam_width' thoughts
+            for st in frontier:
+                # Skip hopeless states early
+                if st["value"] is not None and st["value"] < vth:
+                    continue
+
+                # Generate next-step thoughts
+                p = thought_prompt(prompt_base, st["text"])
+                # Generate next-step thoughts directly (don’t parse these as final answers)
                 try:
-                    batch = llm.generate(prompts, sampling)[0].texts
-                    for thought in batch:
-                        branch = state + thought.strip() + "\n"
-                        if parse_output(branch, task) is not None:
-                            new_states.append(branch)
-                            conf_bin, conf_score = query_confidence_bin(llm, thought.strip(), sampling)
-                            confidence_trace.append({
-                                "step": step,
-                                "beam": len(new_states),
-                                "text": thought.strip(),
-                                "conf_bin": conf_bin,
-                                "conf_score": conf_score
-                            })
-                    if new_states:
-                        break
-                except OpenAIError as e:
-                    action = handle_openai_error(e, all_flagged, full, stage="tree_of_thoughts")
-                    if action == "fatal":
-                        sys.exit(1)
-                    if action == "retry":
-                        time.sleep(2)
-                        continue
-                    if action == "flagged":
-                        break  # this branch flagged
-                    # skip → count
-                except Exception as e:
-                    print(f"⚠️ Unexpected in ToT: {e}")
-                    all_flagged.append({
-                        "prompt": full,
-                        "error": str(e),
-                        "stage": "tree_of_thoughts"
-                    })
+                    result = llm.generate([p], thought_sampling)[0]
+                    raw_texts = result.texts if hasattr(result, "texts") else []
+                except Exception:
+                    raw_texts = []
+                all_raw.append({"stage": f"thought_s{step}", "prompt": p, "outputs": raw_texts})
 
-                thought_retries += 1
+                # Create child states
+                for t in raw_texts:
+                    child_text = (st["text"] + ("\n" if st["text"] else "") + t).strip()
+                    score, raw_eval = evaluate_state(
+                        llm=llm,
+                        prompt_prefix=prompt_base,
+                        state_text=child_text,
+                        value_trials=value_trials,
+                        max_retries=max_retries,
+                        flagged_list=all_flagged
+                    )
+                    all_raw.append({"stage": f"value_s{step}", "prompt": child_text, "outputs": [raw_eval], "score": score})
+                    if score is None or score >= vth:
+                        candidates.append(make_state(child_text, step, score))
+                print(f"[ToT][BFS] Step {step} complete — kept {len(frontier)} states for next step.")
+            if not candidates:
+                break
 
-            if thought_retries >= max_retries and not new_states:
-                all_flagged.append({
-                    "prompt": full,
-                    "reason": "No parseable thoughts after retries",
-                    "stage": "tree_of_thoughts"
-                })
+            # Keep only top-b by value (fallback: None treated as 0)
+            candidates.sort(key=lambda d: (d["value"] if d["value"] is not None else 0.0), reverse=True)
+            frontier = candidates[:beam_width]
+            best_states = frontier[:]  # track last level’s kept states
 
-        # prune
-        state_queue = sorted(new_states, key=len, reverse=True)[:beam_width]
-        if not state_queue:
-            break
+    else:
+        # DFS with backtracking: expand the most promising branch first; backtrack on low value
+        stack: List[dict] = [make_state(initial_state, 0, init_val)]
+        visited = 0
 
-    # final vote
-    answers = [parse_output(s, task) for s in state_queue if parse_output(s, task) is not None]
-    if not answers:
-        return None, all_flagged
-    final = (max(set(answers), key=answers.count)
-             if task=="binary" else round(sum(answers)/len(answers)))
-    return final, confidence_trace, all_flagged
-    
+        while stack and visited < 10000:  # safety
+            visited += 1
+            st = stack.pop()
+            print(f"[ToT][DFS] Visited {visited} states so far, stack size={len(stack)}")
+
+            # If reached depth
+            if st["step"] >= max_steps:
+                # treat as a completed candidate
+                best_states.append(st)
+                continue
+
+            # Prune weak states
+            if st["value"] is not None and st["value"] < vth:
+                continue
+
+            # Expand this state: get up to b thoughts
+            p = thought_prompt(prompt_base, st["text"])
+            try:
+                result = llm.generate([p], thought_sampling)[0]
+                raw_texts = result.texts if hasattr(result, "texts") else []
+            except Exception:
+                raw_texts = []
+            all_raw.append({"stage": f"thought_s{st['step']+1}", "prompt": p, "outputs": raw_texts})
+
+            children: List[dict] = []
+            for t in raw_texts:
+                child_text = (st["text"] + ("\n" if st["text"] else "") + t).strip()
+                score, raw_eval = evaluate_state(
+                    llm=llm,
+                    prompt_prefix=prompt_base,
+                    state_text=child_text,
+                    value_trials=value_trials,
+                    max_retries=max_retries,
+                    flagged_list=all_flagged
+                )
+                all_raw.append({"stage": f"value_s{st['step']+1}", "prompt": child_text, "outputs": [raw_eval], "score": score})
+                if score is None or score >= vth:
+                    children.append(make_state(child_text, st["step"] + 1, score))
+
+            # Push children onto stack in descending score so we explore best first
+            children.sort(key=lambda d: (d["value"] if d["value"] is not None else 0.0), reverse=True)
+            stack.extend(children)
+
+        # If DFS never added candidates at depth == max_steps, fall back to whatever we have
+        if not best_states and stack:
+            best_states = stack[:beam_width]
+
+    # --- pick best branch (highest value; tie-break by length)
+    if not best_states:
+        # final attempt: use initial state
+        best_branch = initial_state
+    else:
+        best_states.sort(
+            key=lambda d: (
+                d["value"] if d["value"] is not None else 0.0,
+                len(d["text"])
+            ),
+            reverse=True
+        )
+        best_branch = best_states[0]["text"]
+
+    # --- ask for final answer, conditioned on best branch
+    final_p = answer_prompt(prompt_base, best_branch)
+    final_sampling = SamplingParams(max_tokens=160, temperature=0.0, top_p=1.0, n=1)
+
+    def _gen_final(pp):
+        return llm.generate([pp], final_sampling)[0]
+
+    parsed, raw_obj = try_generate_with_retries(
+        prompt=final_p,
+        generator_fn=_gen_final,
+        task=task,
+        max_retries=max_retries,
+        flagged_list=all_flagged
+    )
+    final_text = (raw_obj.texts[0] if getattr(raw_obj, "texts", None) else "")
+    all_raw.append({"stage": "final_answer", "prompt": final_p, "outputs": [final_text]})
+
+    pred = parsed
+    # ---------- ToT confidence (search-based + model-declared) ----------
+    # Collect leaf scores from the last kept states (best_states).
+    leaf_scores = []
+    if 'best_states' in locals() and best_states:
+        leaf_scores = [(s.get("value") if s.get("value") is not None else 0.0) for s in best_states]
+    # If we somehow have none, fallback to any recorded scores from value stages at the deepest step
+    if not leaf_scores and isinstance(all_raw, list):
+        try:
+            # take scores from the latest 'value_s*' entries
+            last_value_entries = [r for r in all_raw if isinstance(r, dict) and str(r.get("stage","")).startswith("value_s")]
+            if last_value_entries:
+                max_step = max(int(e["stage"].split("_s")[1]) for e in last_value_entries if "_s" in e["stage"])
+                leaf_scores = [(e.get("score") or 0.0) for e in last_value_entries if e["stage"] == f"value_s{max_step}"]
+        except Exception:
+            pass
+
+    # Compute search-based confidence
+    def _sigmoid(x: float) -> float:
+        try:
+            return 1.0 / (1.0 + math.exp(-x))
+        except Exception:
+            return 0.5
+    def _safe_std(vals):
+        try:
+            return float(np.std(vals)) if len(vals) > 1 else 0.0
+        except Exception:
+            return 0.0
+
+    if leaf_scores:
+        # softmax mass for top leaf
+        tau = 8.0
+        exps = [math.exp(tau*s) for s in leaf_scores]
+        Z = sum(exps) or 1.0
+        softmax = [x / Z for x in exps]
+        # chosen is index 0 if we sorted best_states earlier by value desc;
+        # but to be safe, recompute the argmax:
+        best_idx = int(max(range(len(leaf_scores)), key=lambda i: leaf_scores[i]))
+        p_star = softmax[best_idx]
+        sorted_scores = sorted(leaf_scores, reverse=True)
+        delta = (sorted_scores[0] - sorted_scores[1]) if len(sorted_scores) >= 2 else sorted_scores[0]
+        sigma = _safe_std(leaf_scores)
+        # pass-rate above vth
+        try:
+            pass_rate = (sum(1 for s in leaf_scores if s is not None and s >= vth) / max(1, len(leaf_scores)))
+        except Exception:
+            pass_rate = 0.0
+        # weights tuned lightly; you can revisit after calibration
+        conf_search = _sigmoid(2.0*p_star + 1.0*delta - 1.0*sigma - 0.5*pass_rate)
+    else:
+        conf_search = None
+
+    # Model-declared confidence on the final answer
+    conf_sampling = SamplingParams(160, 0.0, 1.0, 1)
+    conf_model = None
+    try:
+        # Only ask if we produced any final text that parses
+        if parse_output(final_text, task) is not None:
+            _bin, _score = query_confidence_bin(llm, final_text, conf_sampling)
+            conf_model = _score
+    except Exception:
+        conf_model = None
+
+    # Geometric blend (search has more weight initially). Clamp to [0,1].
+    def _geo_blend(vals, weights):
+        eps = 1e-6
+        vs = [max(eps, v) for v in vals]
+        wsum = sum(weights)
+        prod = 1.0
+        for v, w in zip(vs, weights):
+            prod *= v**w
+        return prod ** (1.0 / max(1e-6, wsum))
+
+    parts = []
+    ws    = []
+    if conf_search is not None:
+        parts.append(conf_search); ws.append(2.0)
+    if conf_model is not None:
+        parts.append(conf_model);  ws.append(1.0)
+    conf_tot = None
+    if parts:
+        try:
+            conf_tot = max(0.0, min(1.0, _geo_blend(parts, ws)))
+        except Exception:
+            conf_tot = None
+
+    # Log a single structured record so the caller can read confidence cleanly
+    all_raw.append({
+        "stage": "tot_confidence",
+        "leaf_scores": leaf_scores,
+        "conf_search": conf_search,
+        "conf_model": conf_model,
+        "conf_tot": conf_tot
+    })
+
+    return pred, all_raw, all_flagged
 def sample_dataset(csv_path: str, sample_size: int, balanced: bool, balancing_strategy="approximate") -> pd.DataFrame:
     """
     Load the CSV and greedily sample `sample_size` rows so that
@@ -995,59 +1571,62 @@ def try_generate_with_retries(
     max_retries: int,
     flagged_list: List[dict]
 ) -> Tuple[Optional[int], List[str]]:
+    """
+    Calls the generator function until we get a parseable output or hit max_retries.
+    Returns:
+        pred (int or None): Final parsed prediction
+        texts (list[str]): Raw model outputs from the last attempt
+    """
     attempt = 0
     last_texts: List[str] = []
 
-    while True:
+    while attempt < max_retries:
         try:
-            # 1) Call the LLM
             result = generator_fn(prompt)
             texts = result.texts if hasattr(result, "texts") else result
 
-            # 2) Parse
+            # Parse outputs
             parsed = [parse_output(t, task) for t in texts]
             valid = [p for p in parsed if p is not None]
+
             if valid:
-                pred = (max(set(valid), key=valid.count)
-                        if task == "binary"
-                        else round(sum(valid) / len(valid)))
+                pred = (
+                    max(set(valid), key=valid.count)  # majority vote for binary
+                    if task == "binary"
+                    else Counter(valid).most_common(1)[0][0]  # majority vote for intensity
+                )
                 return pred, texts
 
-            # 3) Unparseable → count as one try
-            attempt += 1
+            # No valid parse — record and retry
             last_texts = texts
-            if attempt >= max_retries:
-                flagged_list.append({
-                    "prompt": prompt,
-                    "outputs": texts,
-                    "reason": f"Unparseable after {max_retries} attempts"
-                })
-                return None, texts
+            attempt += 1
+            continue
 
         except OpenAIError as e:
             action = handle_openai_error(e, flagged_list, prompt, stage="try_generate")
             if action == "fatal":
                 sys.exit(1)
             if action == "retry":
-                time.sleep(2)
-                continue      # retry w/o increment
+                time.sleep(2 ** attempt)  # exponential backoff
+                continue  # don't increment attempt for recoverables
             if action == "flagged":
                 return None, []
-            # skip → fall through to count as one try
+            attempt += 1
 
         except Exception as e:
-            print(f"⚠️ Unexpected error at try_generate: {e}")
-            # fall through to count as one try
-
-        # shared “skip” handling
-        attempt += 1
-        if attempt >= max_retries:
             flagged_list.append({
                 "prompt": prompt,
-                "outputs": last_texts,
-                "reason": f"Unparseable or skip after {max_retries} attempts"
+                "reason": f"Unexpected error: {e}"
             })
-            return None, last_texts
+            attempt += 1
+
+    # Out of retries — flag final failure
+    flagged_list.append({
+        "prompt": prompt,
+        "outputs": last_texts if isinstance(last_texts, list) else [str(last_texts)],
+        "reason": f"Unparseable after {max_retries} attempts"
+    })
+    return None, last_texts
 
 confidence_map = {
     'A': 0.05, 'B': 0.15, 'C': 0.25, 'D': 0.35, 'E': 0.45,
@@ -1059,13 +1638,15 @@ def query_confidence_bin(llm, step_text: str, sampling) -> Tuple[Optional[str], 
     Ask the model to self-report its confidence, with retry logic.
     Returns a bin letter (A–J) and its mapped score, or (None, None) on failure.
     """
+    print("[DEBUG-ENTER] query_confidence_bin() called")
     confidence_prompt = (
         f"Based on your reasoning so far:\n\n"
         f"{step_text.strip()}\n\n"
         "How confident are you that your answer is correct?\n"
-        "Please choose one of the following options:\n"
+        "Please choose one of the following options exactly:\n"
         "A. 0-10%\nB. 10-20%\nC. 20-30%\nD. 30-40%\nE. 40-50%\n"
         "F. 50-60%\nG. 60-70%\nH. 70-80%\nI. 80-90%\nJ. 90-100%\n\n"
+        "**Only respond with a single letter (A-J).**\n"
         "Confidence:"
     )
 
@@ -1077,13 +1658,29 @@ def query_confidence_bin(llm, step_text: str, sampling) -> Tuple[Optional[str], 
 
     while attempts < max_tries:
         try:
-            response = llm.generate([confidence_prompt], sampling)[0]
-            text = response if isinstance(response, str) else response.strip()
+            result = llm.generate([confidence_prompt], sampling)[0]
+
+            # ── 2) unwrap the actual text string ──
+            if hasattr(result, "texts"):
+                text = result.texts[0].strip()
+            elif isinstance(result, str):
+                text = result.strip()
+            else:
+                text = str(result)
+
+            # ── DEBUG: see exactly what the model said ──
+            print(f"[DEBUG] Confidence response for step_text={step_text!r}:\n{text!r}", flush=True)
+
+            # ── 3) try to parse A–J ──
             match = re.search(r"\b([A-J])\b", text.upper())
+            if not match:
+                # fallback: pick up any A–J anywhere
+                match = re.search(r"([A-J])", text.upper())
             if match:
                 letter = match.group(1)
                 return letter, confidence_map.get(letter)
-            # no parse → retry
+
+            # no valid letter → count as a failed attempt and retry
             attempts += 1
 
         except OpenAIError as e:
@@ -1106,21 +1703,113 @@ def query_confidence_bin(llm, step_text: str, sampling) -> Tuple[Optional[str], 
     # exhausted retries
     return None, None
 
+def cbp_score_complexity(prompt_base: str, llm, sampling, flagged_list) -> Tuple[str, float, str]:
+    """
+    Ask the LLM to rate reasoning complexity in {simple, medium, complex} with a 0..1 score.
+    Returns: (level, score, raw_text)
+    Fallbacks to 'medium', 0.5 if unparseable.
+    """
+    probe = (
+        f"{prompt_base}\n\n"
+        "Before answering, assess the inherent reasoning complexity required.\n"
+        "Reply with exactly two lines:\n"
+        "LEVEL: simple|medium|complex\n"
+        "SCORE: <float between 0 and 1>\n"
+        "LEVEL: "
+    )
+    try:
+        out = llm.generate([probe], SamplingParams(160, 0.0, 1.0, 1))[0].texts[0]
+        import re
+        m_level = re.search(r"LEVEL:\s*(simple|medium|complex)", out, re.IGNORECASE)
+        m_score = re.search(r"SCORE:\s*([01](?:\.\d+)?)", out, re.IGNORECASE)
+        level = (m_level.group(1).lower() if m_level else "medium")
+        try:
+            score = float(m_score.group(1)) if m_score else 0.5
+        except Exception:
+            score = 0.5
+        score = max(0.0, min(1.0, score))
+        return level, score, out
+    except OpenAIError as e:
+        action = handle_openai_error(e, flagged_list, probe, stage="cbp_score_complexity")
+        if action in ("fatal", "flagged"):
+            return "medium", 0.5, ""
+        # retry-ish fallback not needed; keep it tiny
+        return "medium", 0.5, ""
+    except Exception as e:
+        flagged_list.append({"prompt": probe, "reason": str(e), "stage": "cbp_score_complexity"})
+        return "medium", 0.5, ""
+
+def rankcot_score_cot(query_text: str, doc_text: str, cot_text: str, llm, sampling, flagged_list, alpha: float = 0.5) -> float:
+    """
+    Score a chain-of-thought on two axes in [0,1]:
+      - RELEVANCE to the query
+      - FAITHFULNESS to the provided doc
+    Returns combined score = alpha*REL + (1-alpha)*FAITH.
+    Falls back gracefully to a single 1..10 score if needed.
+    """
+    prompt = (
+        "You are ranking a chain-of-thought for answering a query using a retrieved document.\n\n"
+        f"QUERY:\n{query_text}\n\n"
+        f"DOCUMENT:\n{doc_text}\n\n"
+        f"CHAIN-OF-THOUGHT:\n{cot_text}\n\n"
+        "Output two lines ONLY:\n"
+        "RELEVANCE: <float 0..1>\n"
+        "FAITHFULNESS: <float 0..1>\n"
+        "RELEVANCE: "
+    )
+    try:
+        resp = llm.generate([prompt], sampling)[0].texts[0]
+        import re
+        m_r = re.search(r"RELEVANCE:\s*([01](?:\.\d+)?)", resp, re.IGNORECASE)
+        m_f = re.search(r"FAITHFULNESS:\s*([01](?:\.\d+)?)", resp, re.IGNORECASE)
+        if m_r and m_f:
+            r = float(m_r.group(1)); f = float(m_f.group(1))
+            r = max(0.0, min(1.0, r)); f = max(0.0, min(1.0, f))
+            return float(alpha*r + (1.0 - alpha)*f)
+
+        # fallback: single 1..10 somewhere in the text
+        m10 = re.search(r"\b(10|[1-9])\b", resp.strip())
+        if m10:
+            return int(m10.group(1)) / 10.0
+    except OpenAIError as e:
+        action = handle_openai_error(e, flagged_list, prompt, stage="rankcot_score")
+        if action == "retry":
+            try:
+                resp = llm.generate([prompt], sampling)[0].texts[0]
+                m10 = re.search(r"\b(10|[1-9])\b", resp.strip())
+                if m10:
+                    return int(m10.group(1)) / 10.0
+            except Exception:
+                pass
+        if action in ("fatal", "flagged"):
+            return 0.0
+    except Exception as e:
+        flagged_list.append({"prompt": prompt, "reason": str(e), "stage": "rankcot_score"})
+    return 0.0
+
 ###########################################################
 # EVALUATION
 ###########################################################
 def evaluate_model_on_test_set(
-    model_name: str,                         
-    llm: Union["AzureEngineWrapper", "MockLLM"],  
+    model_name: str,
+    llm: Union["AzureEngineWrapper", "MockLLM"],
     test_data: List[dict],
     prompt_template: str,
     task: str,
     top_k: int,
     n_shot: int,
-    reasoning_mode: str,            
-    max_steps: int,                 
+    reasoning_mode: str,
+    max_steps: int,
     beam_width: int,
-    out_json: str #Usless do not use
+    out_json: str,
+    # ---- NEW OPTIONAL ABLATION HOOKS ----
+    rasc_min_conf: float = None,
+    rasc_alpha: float = None,
+    self_refine_max_refinements: int = None,
+    cbp_force_level: str = None,          # "simple" | "medium" | "complex"
+    tot_search: str = None,               # "bfs" | "dfs"
+    tot_vth: float = None,
+    tot_value_trials: int = None,
 ) -> dict:
     # ------------------------------------------------------
     # 1) Sample few-shot examples from test_data
@@ -1217,43 +1906,41 @@ def evaluate_model_on_test_set(
         few_shot_examples_by_emotion = {emotion: [] for emotion in set(d["emotion"] for d in test_data)}
 
     # Update the prompt construction to use emotion-specific examples
-    prompts = [
-        construct_prompt(
-            prompt_template, 
-            few_shot_examples_by_emotion[sample["emotion"]], 
-            sample["text"], 
+    prompts = []
+    for sample in test_data:
+        # grab the few-shot examples for this sample’s emotion
+        fs = few_shot_examples_by_emotion[sample["emotion"]]
+        # filter out any example whose input text equals the test text
+        fs_filtered = [ex for ex in fs if ex["input"] != sample["text"]]
+
+        # build the prompt using the filtered few-shot list
+        p = construct_prompt(
+            prompt_template,
+            fs_filtered,
+            sample["text"],
             sample["emotion"],
             task
         )
-        for sample in test_data
-    ]
+        prompts.append(p)
     all_raw = []
     all_preds = []
     all_flagged = []
     max_retries = 5
+    auroc = float("nan")
+    auprc = float("nan")
 
     # Only OpenAI GPT models support these advanced methods
     if model_name.startswith("openai"):
         if reasoning_mode == "default":
             default_confidence = []
-            all_conf_scores = [] 
+            conf_sampling = SamplingParams(160, 0.0, 1.0, 1)
+            y_conf_pairs = []
 
-            sampling = SamplingParams(
-                max_tokens=80,
-                temperature=0.0, #How much variance
-                top_p=0.95, #Nucleus Sampling
-                n=1  # number of generations per prompt
-            )
+            sampling = SamplingParams(max_tokens=200, temperature=0.0, top_p=0.95, n=1)
+            def gen_fn(prompt_text: str):
+                return llm.generate([prompt_text], sampling)[0]
 
-            def gen_fn(prompt_text):
-                if model_name.startswith("openai/"):
-                    return llm.generate([prompt_text], sampling)[0]
-                else:
-                    raise NotImplementedError(
-                        f"Only Azure OpenAI models supported currently. Got model_name={model_name}"
-                    )
-
-            for prompt in prompts:
+            for sample, prompt in zip(test_data, prompts):
                 pred, raw_texts = try_generate_with_retries(
                     prompt=prompt,
                     generator_fn=gen_fn,
@@ -1264,272 +1951,52 @@ def evaluate_model_on_test_set(
                 all_preds.append(pred)
                 all_raw.append(raw_texts)
 
-                # self-reported confidence → treat conf_score as P(correct)
                 conf_bin, conf_score = None, None
                 if raw_texts:
-                    last_response = raw_texts[-1]
-                    conf_bin, conf_score = query_confidence_bin(llm, last_response, sampling)
-                default_confidence.append({"conf_bin": conf_bin, "conf_score": conf_score})
-                # for final AUROC/AUPRC, we need a flat list of confidences
-                # and define correctness = (pred == gold)
-                if conf_score is not None:
-                    all_conf_scores.append(conf_score)
+                    for response in reversed(raw_texts):
+                        if response and parse_output(response, task) is not None:
+                            conf_bin, conf_score = query_confidence_bin(llm, response, conf_sampling)
+                            break
 
-            confidence_table = wandb.Table(columns=[
-                "index", "prompt", "gold", "pred", "conf_bin", "conf_score", "emotion"
-            ])
-            for idx, (sample, conf_dict, pred) in enumerate(
-                zip(test_data, default_confidence, all_preds)
-            ):
-                bin_label  = conf_dict["conf_bin"] or "error"
-                score_val  = conf_dict["conf_score"] if conf_dict["conf_score"] is not None else None
-                confidence_table.add_data(
-                    idx,
-                    prompts[idx],
-                    sample["label"],
-                    pred,
-                    bin_label,
-                    score_val,
-                    sample["emotion"]
-                )
-            wandb.log({"confidence_table_default": confidence_table})
-            
-            y_and_conf = [
-                (1 if p == g else 0, conf)
-                for p, g, conf in zip(all_preds, [s["label"] for s in test_data], all_conf_scores)
-                if conf is not None
-            ]
-
-            if y_and_conf:
-                y_correct, confs = zip(*y_and_conf)
-                auroc = roc_auc_score(y_correct, confs)
-                auprc = average_precision_score(y_correct, confs)
-            else:
-                auroc = float("nan")
-                auprc = float("nan")
-
-            wandb.log({
-                "auroc": auroc,
-                "auprc": auprc
-            })
-        
-        elif reasoning_mode == "rasc":
-            all_conf_scores = []
-            rasc_confidence = []
-            for prompt in prompts:
-                pred, raw_texts, new_flags = run_rasc(
-                    prompt=prompt,
-                    task=task,
-                    llm=llm,
-                    max_samples=top_k,  # reuse top_k as max_samples
-                    max_tries=max_retries
-                )
-                all_preds.append(pred)
-                all_raw.append(raw_texts)
-                all_flagged.extend(new_flags)
-                conf_bin, conf_score = (None, None)
-                if pred is not None and isinstance(raw_texts, list) and len(raw_texts) > 0:
-                    last = raw_texts[-1]
-                    conf_bin, conf_score = query_confidence_bin(llm, last, SamplingParams(40, 0.0, 1.0, 1))
-
-                rasc_confidence.append({
-                    "raw_response": last if pred is not None else "",
+                default_confidence.append({
+                    "raw_response": (raw_texts[-1] if raw_texts else ""),
                     "conf_bin": conf_bin,
                     "conf_score": conf_score
                 })
-                # collect for AUROC/AUPRC as “confidence-as-corrector”
-                if conf_score is not None:
-                    all_conf_scores.append(conf_score)
-            confidence_rasc_table = wandb.Table(columns=[
-                "index", "prompt", "gold", "pred",
-                "raw_response", "conf_bin", "conf_score", "emotion"
+
+                if conf_score is not None and pred is not None:
+                    y_conf_pairs.append((1 if pred == sample["label"] else 0, conf_score))
+
+            confidence_default_table = wandb.Table(columns=[
+                "index", "prompt", "gold", "pred", "raw_response", "conf_bin", "conf_score", "emotion"
             ])
-            for idx, (sample, pred, conf_data) in enumerate(zip(test_data, all_preds, rasc_confidence)):
-                bin_label  = conf_dict["conf_bin"] or "error"
-                score_val  = conf_dict["conf_score"] if conf_dict["conf_score"] is not None else None
-                if conf_data is None:
-                    continue
-                confidence_rasc_table.add_data(
-                    idx,
-                    prompts[idx],
-                    sample["label"],
-                    pred,
-                    conf_data["raw_response"],
-                    bin_label,
-                    score_val,
+            for idx, (sample, pred, conf_data) in enumerate(zip(test_data, all_preds, default_confidence)):
+                confidence_default_table.add_data(
+                    idx, prompts[idx], sample["label"], pred,
+                    conf_data["raw_response"], conf_data["conf_bin"] or "error",
+                    conf_data["conf_score"] if conf_data["conf_score"] is not None else None,
                     sample["emotion"]
                 )
-            wandb.log({"confidence_table_rasc": confidence_rasc_table})
-            # log AUROC/AUPRC over confidence-vs-correctness
-            y_and_conf = [
-                (1 if p == g else 0, conf)
-                for p, g, conf in zip(all_preds, [s["label"] for s in test_data], all_conf_scores)
-                if conf is not None
-            ]
+            wandb.log({"confidence_table": confidence_default_table})
 
-            if y_and_conf:
-                y_correct, confs = zip(*y_and_conf)
+            if y_conf_pairs:
+                y_correct, confs = zip(*y_conf_pairs)
                 auroc = roc_auc_score(y_correct, confs)
                 auprc = average_precision_score(y_correct, confs)
             else:
-                auroc = float("nan")
-                auprc = float("nan")
-
-            wandb.log({
-                "auroc": auroc,
-                "auprc": auprc
-            })
-        
-        elif reasoning_mode == "rankcot":
-            # ── Local storage for confidence only ──
-            rankcot_confidence = []
-            all_conf_scores = []
-
-            # ── Hyperparameters ──
-            retrieval_k = args.top_k
-            cot_sampling = SamplingParams(150, 0.7, 0.95, 1)
-            refine_sampling= SamplingParams(100, 0.7, 0.95, 1)
-            final_sampling = SamplingParams( 80, 0.0, 0.95, 1)
-            conf_sampling  = SamplingParams( 40, 0.0, 1.00, 1)
-
-            for sample in test_data:
-                query   = sample["text"]
-                emotion = sample["emotion"]
-
-                # Step A: Retrieve top-k documents
-                docs = retrieve_docs(query)[:retrieval_k]
-
-                # Step B: Generate + optionally refine a CoT per doc
-                cots = []
-                for doc in docs:
-                    cot_prompt = (
-                        f"Context Document:\n{doc}\n\n"
-                        f"Question: {query}\n"
-                        f"Emotion: {emotion}\n"
-                        "Think step by step and generate your chain of thought."
-                    )
-                    cot_pred, cot_raws = try_generate_with_retries(
-                        prompt=cot_prompt,
-                        generator_fn=lambda p: llm.generate([p], cot_sampling)[0],
-                        task=task,
-                        max_retries=max_retries,
-                        flagged_list=all_flagged
-                    )
-                    cot = cot_raws[0].strip() if cot_raws else ""
-
-                    # optional self-refine
-                    refine_prompt = (
-                        f"{cot}\n\nReview your chain of thought above and improve it if needed:"
-                    )
-                    ref_pred, ref_raws = try_generate_with_retries(
-                        prompt=refine_prompt,
-                        generator_fn=lambda p: llm.generate([p], refine_sampling)[0],
-                        task=task,
-                        max_retries=max_retries,
-                        flagged_list=all_flagged
-                    )
-                    refined = ref_raws[0].strip() if ref_raws else cot
-
-                    cots.append(refined)
-
-                # Step C: Rank the CoTs (here: pick longest; swap in your own scorer)
-                best_idx = max(range(len(cots)), key=lambda i: len(cots[i].split()))
-                best_cot = cots[best_idx]
-
-                # Step D: Generate final answer conditioned on best CoT
-                final_prompt = (
-                    f"{best_cot}\n\n"
-                    "Based on the above reasoning, answer: "
-                    "'Answer: yes' or 'no' (binary), "
-                    "or 'Answer: 0-3' (intensity)."
-                )
-                final_pred, final_raws = try_generate_with_retries(
-                    prompt=final_prompt,
-                    generator_fn=lambda p: llm.generate([p], final_sampling)[0],
-                    task=task,
-                    max_retries=max_retries,
-                    flagged_list=all_flagged
-                )
-                final_out = final_raws[0].strip() if final_raws else ""
-                pred = parse_output(final_out, task)
-
-                # ── Append to global accumulators ──
-                all_preds.append(pred)
-                all_raw.append([best_cot, final_out])
-
-                # Step E: Self-report confidence on the final output
-                conf_bin, conf_score = query_confidence_bin(llm, final_out, conf_sampling)
-                rankcot_confidence.append({
-                    "best_doc_index": best_idx,
-                    "conf_bin":       conf_bin,
-                    "conf_score":     conf_score
-                })
-                if conf_score is not None:
-                    all_conf_scores.append(conf_score)
-
-            # ── Log RankCoT confidence only ──
-            table = wandb.Table(columns=[
-                "index", "prompt", "gold", "pred",
-                "best_doc_index", "conf_bin", "conf_score", "emotion"
-            ])
-            for idx, (sample, pred, diag) in enumerate(
-                zip(test_data, all_preds[-len(test_data):], rankcot_confidence)
-            ):
-                # note: all_preds[-len(test_data):] picks only this mode’s preds
-                bin_label  = conf_dict["conf_bin"] or "error"
-                score_val  = conf_dict["conf_score"] if conf_dict["conf_score"] is not None else None
-                table.add_data(
-                    idx,
-                    sample["text"],
-                    sample["label"],
-                    pred,
-                    diag["best_doc_index"],
-                    bin_label,
-                    score_val,
-                    sample["emotion"]
-                )
-            wandb.log({"confidence_table_rankcot": table})
-            y_and_conf = [
-                (1 if p == g else 0, conf)
-                for p, g, conf in zip(all_preds, [s["label"] for s in test_data], all_conf_scores)
-                if conf is not None
-            ]
-
-            if y_and_conf:
-                y_correct, confs = zip(*y_and_conf)
-                auroc = roc_auc_score(y_correct, confs)
-                auprc = average_precision_score(y_correct, confs)
-            else:
-                auroc = float("nan")
-                auprc = float("nan")
-
-            wandb.log({
-                "auroc": auroc,
-                "auprc": auprc
-            })
+                auroc = float("nan"); auprc = float("nan")
+            wandb.log({"auroc": auroc, "auprc": auprc})
 
         elif reasoning_mode == "self_consistency":
-            sampling_sc = SamplingParams(
-                max_tokens=80,
-                temperature=0.7,  # encourage diverse outputs
-                top_p=0.95, #Nucleus Sampling
-                n=top_k #number of prompt generation is depended on top_k
-            )
+            sc_confidence = []
+            conf_sampling = SamplingParams(160, 0.0, 1.0, 1)
+            y_conf_pairs = []
 
-            sc_conf_bins_all = []
-            sc_conf_scores_all = []
-            all_conf_scores = []
-
+            sampling_sc = SamplingParams(max_tokens=200, temperature=0.7, top_p=0.95, n=top_k)
             def gen_fn_sc(prompt_text: str):
-                if model_name.startswith("openai/"):
-                    return llm.generate([prompt_text], sampling_sc)[0]
-                else:
-                    raise NotImplementedError(f"Only Azure OpenAI models supported currently. Got model_name={model_name}")
-            
-            sc_conf_bins_all = []
-            sc_conf_scores_all = []
+                return llm.generate([prompt_text], sampling_sc)[0]
 
-            for prompt in prompts:
+            for sample, prompt in zip(test_data, prompts):
                 pred, raw_texts = try_generate_with_retries(
                     prompt=prompt,
                     generator_fn=gen_fn_sc,
@@ -1540,355 +2007,556 @@ def evaluate_model_on_test_set(
                 all_preds.append(pred)
                 all_raw.append(raw_texts)
 
-                chain_bins = []
-                chain_scores = []
-                for text in raw_texts or []:
-                    bin_letter, score = query_confidence_bin(llm, text, sampling_sc)
-                    chain_bins.append(bin_letter)
-                    chain_scores.append(score)
-                    if score is not None:
-                        all_conf_scores.append(score)
+                conf_bin, conf_score = None, None
+                if raw_texts:
+                    for response in reversed(raw_texts):
+                        if response and parse_output(response, task) is not None:
+                            conf_bin, conf_score = query_confidence_bin(llm, response, conf_sampling)
+                            break
 
-                sc_conf_bins_all.append(chain_bins)
-                sc_conf_scores_all.append(chain_scores)
-            confidence_sc_table = wandb.Table(columns=["index", "prompt", "gold", "pred", "conf_bins", "conf_scores", "avg_conf", "emotion"])
-            for idx, (sample, bins, scores, pred) in enumerate(zip(test_data, sc_conf_bins_all, sc_conf_scores_all, all_preds)):
-                avg_conf = np.mean([s for s in scores if s is not None]) if scores else None
-                confidence_sc_table.add_data(
-                    idx,
-                    prompts[idx],
-                    sample["label"],
-                    pred,
-                    str([b or "error" for b in bins]),  # mark missing bins
-                    str([s for s in scores]), 
-                    avg_conf,
-                    sample["emotion"]
-                )
-            wandb.log({"confidence_table_self_consistency": confidence_sc_table})
-            y_and_conf = [
-                (1 if p == g else 0, conf)
-                for p, g, conf in zip(all_preds, [s["label"] for s in test_data], all_conf_scores)
-                if conf is not None
-            ]
-
-            if y_and_conf:
-                y_true, confs = zip(*y_and_conf)
-                auroc = roc_auc_score(y_true, confs)
-                auprc = average_precision_score(y_true, confs)
-            else:
-                auroc = float("nan")
-                auprc = float("nan")
-
-            wandb.log({
-                "auroc": auroc,
-                "auprc": auprc
-            })
-        elif reasoning_mode == "self_refine":
-            self_refine_conf = []
-            all_conf_scores = []
-            for prompt in prompts:
-                pred, diagnostics = run_self_refine(prompt, task, llm, all_flagged, max_refinements=3, max_tries=max_retries)
-                if pred is not None:
-                    all_preds.append(parse_output(pred, task))
-                    all_raw.append([pred])
-                else:
-                    all_preds.append(None)
-                    all_raw.append([])
-                self_refine_conf.append(diagnostics)
-                if isinstance(diagnostics, dict):
-                    post_score = diagnostics.get("post_conf_score")
-                    if post_score is not None:
-                        all_conf_scores.append(post_score)
-            
-            confidence_refine_table = wandb.Table(columns=[
-                "index", "prompt", "gold", "pred",
-                "pre_conf_bin", "pre_conf_score",
-                "post_conf_bin", "post_conf_score",
-                "emotion"
-            ])
-            for idx, (sample, pred, diag) in enumerate(zip(test_data, all_preds, self_refine_conf)):
-                if not isinstance(diag, dict):
-                    # still log a row if you want to capture skips?
-                    continue
-
-                pre_bin   = diag.get("pre_conf_bin") or "error"
-                pre_score = diag.get("pre_conf_score")       # may be None
-                post_bin  = diag.get("post_conf_bin")  or "error"
-                post_score= diag.get("post_conf_score")      # may be None
-
-                confidence_refine_table.add_data(
-                    idx,
-                    prompts[idx],
-                    sample["label"],
-                    pred,
-                    pre_bin,
-                    pre_score,
-                    post_bin,
-                    post_score,
-                    sample["emotion"]
-                )
-            wandb.log({"confidence_table_self_refine": confidence_refine_table})
-            y_and_conf = [
-                (1 if p == s["label"] else 0, diag["post_conf_score"])
-                for p, s, diag in zip(all_preds, test_data, self_refine_conf)
-                if isinstance(diag, dict) and diag.get("post_conf_score") is not None
-            ]
-
-            if y_and_conf:
-                ys, cs = zip(*y_and_conf)
-                auroc = roc_auc_score(ys, cs)
-                auprc = average_precision_score(ys, cs)
-            else:
-                auroc = float("nan")
-                auprc = float("nan")
-
-            wandb.log({"auroc": auroc, "auprc": auprc})
-        
-        elif reasoning_mode == "tree_of_thoughts":
-            tot_conf_traces = []
-            all_conf_scores = []
-            for prompt, sample in zip(prompts, test_data):
-                final, conf_trace, new_flags = run_tree_of_thoughts(
-                prompt_base=prompt,
-                input_text=sample["text"],
-                emotion=sample["emotion"],
-                task=task,
-                llm=llm,
-                max_steps=max_steps,
-                beam_width=beam_width,
-                )
-                all_preds.append(final)
-                all_raw.append(None)
-                all_flagged.extend(new_flags)
-                tot_conf_traces.append(conf_trace)
-                if conf_trace:
-                    last_score = conf_trace[-1].get("conf_score")
-                    if last_score is not None:
-                        all_conf_scores.append(last_score)
-            confidence_curve_table = wandb.Table(columns=["index", "step", "beam", "text", "conf_bin", "conf_score", "emotion"])
-            for idx, (trace, sample) in enumerate(zip(tot_conf_traces, test_data)):
-                for item in trace:
-                    bin_label = item.get("conf_bin")   or "error"
-                    score_val = item.get("conf_score") # may be None
-                    confidence_curve_table.add_data(
-                        idx,
-                        item["step"],
-                        item["beam"],
-                        item["text"],
-                        bin_label,
-                        score_val,
-                        sample["emotion"]
-                    )
-            wandb.log({"confidence_curve_table": confidence_curve_table})
-            y_and_conf = [
-                (1 if p == s["label"] else 0, score)
-                for p, s, score in zip(all_preds, test_data, all_conf_scores)
-                if score is not None
-            ]
-            if y_and_conf:
-                ys, cs = zip(*y_and_conf)
-                auroc = roc_auc_score(ys, cs)
-                auprc = average_precision_score(ys, cs)
-            else:
-                auroc = float("nan")
-                auprc = float("nan")
-
-            wandb.log({"auroc": auroc, "auprc": auprc})
-        
-        elif reasoning_mode == "complexity_based":
-            cb_confidence = []
-            all_conf_scores = []
-            cbp_levels = ["cbp_simple", "cbp_medium", "cbp_complex"]
-            sampling_cbp = SamplingParams(
-                max_tokens=80,
-                temperature=0.7, #How much variance(0 none, 1 alot)
-                top_p=0.95, #Nucleus Sampling
-                n=1 #number of generations per prompt
-            )
-            for sample, base_prompt in zip(test_data, prompts):
-                cbp_preds = []
-                cbp_raws = []
-                for level in cbp_levels:
-                    cbp_template = TASK_CONFIGS[task]["prompt_variants"][level]
-                    cbp_prompt = construct_prompt(
-                        cbp_template,
-                        few_shot_examples_by_emotion[sample["emotion"]],
-                        sample["text"],
-                        sample["emotion"],
-                        task
-                    )
-
-                    def cbp_gen_fn(prompt_text):
-                        return llm.generate([prompt_text], sampling_cbp)[0]
-
-                    pred, raw_texts = try_generate_with_retries(
-                        prompt=cbp_prompt,
-                        generator_fn=cbp_gen_fn,
-                        task=task,
-                        max_retries=max_retries,
-                        flagged_list=all_flagged
-                    )
-                    conf_bin, conf_score = (None, None)
-                    if pred is not None and isinstance(raw_texts, list) and len(raw_texts) > 0:
-                        conf_bin, conf_score = query_confidence_bin(llm, raw_texts[-1], SamplingParams(40, 0.0, 1.0, 1))
-                    if conf_score is not None:
-                        all_conf_scores.append(conf_score)
-                    cb_confidence.append({
-                        "reasoning_mode": reasoning_mode,
-                        "prompt_variant": level,
-                        "conf_bin": conf_bin,
-                        "conf_score": conf_score,
-                        "raw_response": raw_texts[-1] if raw_texts else ""
-                    })
-                    if pred is not None:
-                        cbp_preds.append(pred)
-                    cbp_raws.append(raw_texts)
-
-                # Aggregate prediction (majority vote for binary, avg for intensity)
-                if cbp_preds:
-                    if task == "binary":
-                        final = max(set(cbp_preds), key=cbp_preds.count)
-                    else:
-                        final = round(sum(cbp_preds) / len(cbp_preds))
-                else:
-                    final = None
-
-                all_preds.append(final)
-                all_raw.append(cbp_raws)
-            confidence_cb_table = wandb.Table(columns=[
-                "index", "prompt", "gold", "pred", "raw_response",
-                "reasoning_mode", "prompt_variant", "conf_bin", "conf_score", "emotion"
-            ])
-            for idx, (sample, pred, diag) in enumerate(zip(test_data, all_preds, cb_confidence)):
-                if diag is None:
-                    continue
-                bin_label = diag.get("conf_bin")   or "error"
-                score_val = diag.get("conf_score") # may be None
-                confidence_cb_table.add_data(
-                    idx,
-                    prompts[idx],
-                    sample["label"],
-                    pred,
-                    diag["raw_response"],
-                    diag["reasoning_mode"],
-                    diag["prompt_variant"],
-                    bin_label,
-                    score_val,
-                    sample["emotion"]
-                )
-            wandb.log({"confidence_table_complexity_based": confidence_cb_table})
-            y_and_conf = [
-                (1 if p == s["label"] else 0, score)
-                for p, s, score in zip(all_preds, test_data, all_conf_scores)
-                if score is not None
-            ]
-            if y_and_conf:
-                ys, cs = zip(*y_and_conf)
-                auroc = roc_auc_score(ys, cs)
-                auprc = average_precision_score(ys, cs)
-            else:
-                auroc = float("nan")
-                auprc = float("nan")
-
-            wandb.log({"auroc": auroc, "auprc": auprc})
-        elif reasoning_mode == "plan_and_solve":
-            plan_and_solve_conf = []
-            all_conf_scores = []
-            for sample in test_data:
-                input_text = sample["text"]
-                emotion = sample["emotion"]
-
-                # Step 1: Generate a plan
-                plan_prompt = (
-                    f"Analyze the following text and create a high-level plan for determining the level of emotion.\n\n"
-                    f"Text: {input_text}\n"
-                    f"Emotion: {emotion}\n"
-                    f"Plan:"
-                )
-
-                sampling_plan = SamplingParams(max_tokens=100, temperature=0.7, top_p=0.95, n=1)
-                try:
-                    plan_result = llm.generate([plan_prompt], sampling_plan)[0]
-                    plan = plan_result.texts[0].strip()
-                except OpenAIError as e:
-                    action = handle_openai_error(e, all_flagged, plan_prompt, stage="plan_and_solve-plan")
-                    if action == "fatal":
-                        sys.exit(1)
-                    if action == "retry":
-                        time.sleep(2)
-                        # you might want to retry here or skip this sample
-                        continue
-                    if action == "flagged":
-                        # skip to next sample
-                        continue
-                    # treat as skip/unparseable → skip this sample
-                    plan_and_solve_conf.append(None)
-                    continue
-
-                # Step 2: Solve using the plan
-                if task == "binary":
-                    solve_prompt = f"...Conclude with 'Answer: yes' or 'no'."
-                else:
-                    solve_prompt = f"...Conclude with 'Answer: 0', 'Answer: 1', 'Answer: 2', or 'Answer: 3'."
-                pred, raw_texts = try_generate_with_retries(
-                    prompt=solve_prompt,
-                    generator_fn=lambda p: llm.generate([p], SamplingParams(max_tokens=80, temperature=0.7, top_p=0.95, n=top_k))[0],
-                    task=task,
-                    max_retries=max_retries,
-                    flagged_list=all_flagged,
-                )
-                conf_bin, conf_score = (None, None)
-                if pred is not None and isinstance(raw_texts, list) and len(raw_texts) > 0:
-                    conf_bin, conf_score = query_confidence_bin(llm, raw_texts[-1], SamplingParams(40, 0.0, 1.0, 1))
-                if conf_score is not None:
-                    all_conf_scores.append(conf_score)
-                plan_and_solve_conf.append({
-                    "plan": plan,
-                    "solve_response": raw_texts[-1] if raw_texts else "",
+                sc_confidence.append({
+                    "raw_response": (raw_texts[-1] if raw_texts else ""),
                     "conf_bin": conf_bin,
                     "conf_score": conf_score
                 })
 
-                all_preds.append(pred)
-                all_raw.append(raw_texts)
-            
-            confidence_plan_table = wandb.Table(columns=[
-                "index", "prompt", "gold", "pred",
-                "plan", "solve_text",
-                "conf_bin", "conf_score",
-                "emotion"
+                if conf_score is not None and pred is not None:
+                    y_conf_pairs.append((1 if pred == sample["label"] else 0, conf_score))
+
+            confidence_sc_table = wandb.Table(columns=[
+                "index", "prompt", "gold", "pred", "raw_response", "conf_bin", "conf_score", "emotion"
             ])
-            for idx, (sample, conf_data, pred) in enumerate(zip(test_data, plan_and_solve_conf, all_preds)):
-                if conf_data is None:
-                    continue
-                bin_label = diag.get("conf_bin")   or "error"
-                score_val = diag.get("conf_score") # may be None
-                confidence_plan_table.add_data(
-                    idx,
-                    prompts[idx],
-                    sample["label"],
-                    pred,
-                    conf_data["plan"],
-                    conf_data["solve_response"],
-                    bin_label,
-                    score_val,
+            for idx, (sample, pred, conf_data) in enumerate(zip(test_data, all_preds, sc_confidence)):
+                confidence_sc_table.add_data(
+                    idx, prompts[idx], sample["label"], pred,
+                    conf_data["raw_response"], conf_data["conf_bin"] or "error",
+                    conf_data["conf_score"] if conf_data["conf_score"] is not None else None,
                     sample["emotion"]
                 )
-            wandb.log({"confidence_table_plan_and_solve": confidence_plan_table})
-            y_and_conf = [
-                (1 if p == s["label"] else 0, score)
-                for p, s, score in zip(all_preds, test_data, all_conf_scores)
-                if score is not None
-            ]
-            if y_and_conf:
-                ys, cs = zip(*y_and_conf)
-                auroc = roc_auc_score(ys, cs)
-                auprc = average_precision_score(ys, cs)
-            else:
-                auroc = float("nan")
-                auprc = float("nan")
+            wandb.log({"confidence_table": confidence_sc_table})
 
+            if y_conf_pairs:
+                y_correct, confs = zip(*y_conf_pairs)
+                auroc = roc_auc_score(y_correct, confs)
+                auprc = average_precision_score(y_correct, confs)
+            else:
+                auroc = float("nan"); auprc = float("nan")
             wandb.log({"auroc": auroc, "auprc": auprc})
+
+        elif reasoning_mode == "tree_of_thoughts":
+            tot_confidence = []
+            y_conf_pairs = []
+            beam_bw = max(1, int(top_k)) if top_k is not None else 3
+
+            for sample, prompt in zip(test_data, prompts):
+                pred, raw, flagged = run_tree_of_thoughts(
+                    prompt_base=prompt,
+                    emotion=sample["emotion"],
+                    task=task,
+                    input_text=sample["text"],
+                    llm=llm,
+                    max_steps=max_steps,
+                    beam_width=beam_bw,
+                    max_retries=max_retries,
+                    search=tot_search or "bfs",
+                    vth=tot_vth if tot_vth is not None else 0.5,
+                    value_trials=tot_value_trials if tot_value_trials is not None else 1,
+                )
+
+                all_preds.append(pred)
+                all_raw.append(raw)                 # <- was [last_text]
+                all_flagged.extend(flagged or [])
+
+                 # Prefer the structured 'tot_confidence' record from run_tree_of_thoughts
+                conf_score = None
+                conf_bin   = None
+                raw_for_conf = ""
+                if isinstance(raw, list):
+                    # 1) read the structured record if present
+                    recs = [e for e in raw if isinstance(e, dict) and e.get("stage") == "tot_confidence"]
+                    if recs:
+                        rec = recs[-1]
+                        conf_score = rec.get("conf_tot")
+                        # keep a raw explanation handle — optional
+                        raw_for_conf = "tot_confidence"
+                        if conf_score is not None:
+                            conf_bin = _bin_from_score(conf_score)
+                    # 2) fallback to your previous proxy: max of any recorded scores
+                    if conf_score is None:
+                        best_score = None
+                        for entry in raw:
+                            s = entry.get("score")
+                            if s is not None and (best_score is None or s > best_score):
+                                best_score = s
+                                raw_for_conf = entry.get("prompt", raw_for_conf)
+                        conf_score = best_score
+                        conf_bin = _bin_from_score(conf_score) if conf_score is not None else None
+
+                tot_confidence.append({
+                    "raw_response": raw_for_conf,
+                    "conf_bin": conf_bin,
+                    "conf_score": conf_score
+                })
+
+                if conf_score is not None and pred is not None:
+                    y_conf_pairs.append((1 if pred == sample["label"] else 0, conf_score))
+
+            confidence_tot_table = wandb.Table(columns=[
+                "index", "prompt", "gold", "pred", "raw_response", "conf_bin", "conf_score", "emotion"
+            ])
+            for idx, (sample, pred, conf_data) in enumerate(zip(test_data, all_preds, tot_confidence)):
+                confidence_tot_table.add_data(
+                    idx, prompts[idx], sample["label"], pred,
+                    conf_data["raw_response"], conf_data["conf_bin"] or "error",
+                    conf_data["conf_score"] if conf_data["conf_score"] is not None else None,
+                    sample["emotion"]
+                )
+            wandb.log({"confidence_table": confidence_tot_table})
+
+            if y_conf_pairs:
+                y_correct, confs = zip(*y_conf_pairs)
+                auroc = roc_auc_score(y_correct, confs)
+                auprc = average_precision_score(y_correct, confs)
+            else:
+                auroc = float("nan"); auprc = float("nan")
+            wandb.log({"auroc": auroc, "auprc": auprc})
+        elif reasoning_mode == "self_refine":
+            sr_confidence = []
+            y_conf_pairs = []
+            # run_self_refine already queries pre/post confidence; reuse post if available
+            for sample, prompt in zip(test_data, prompts):
+                final_text, meta, new_flags = run_self_refine(
+                    prompt=prompt,
+                    task=task,
+                    llm=llm,
+                    flagged_prompts=all_flagged,
+                    max_refinements=self_refine_max_refinements if self_refine_max_refinements is not None else 3,
+                    max_tries=max_retries
+                )
+                all_flagged.extend(new_flags)
+                pred = parse_output(final_text or "", task)
+                all_preds.append(pred)
+                all_raw.append([final_text or ""])
+
+                conf_bin = meta.get("post_conf_bin")
+                conf_score = meta.get("post_conf_score")
+
+                sr_confidence.append({
+                    "raw_response": final_text or "",
+                    "conf_bin": conf_bin,
+                    "conf_score": conf_score
+                })
+
+                if conf_score is not None and pred is not None:
+                    y_conf_pairs.append((1 if pred == sample["label"] else 0, conf_score))
+
+            confidence_sr_table = wandb.Table(columns=[
+                "index", "prompt", "gold", "pred", "raw_response", "conf_bin", "conf_score", "emotion"
+            ])
+            for idx, (sample, pred, conf_data) in enumerate(zip(test_data, all_preds, sr_confidence)):
+                confidence_sr_table.add_data(
+                    idx, prompts[idx], sample["label"], pred,
+                    conf_data["raw_response"], conf_data["conf_bin"] or "error",
+                    conf_data["conf_score"] if conf_data["conf_score"] is not None else None,
+                    sample["emotion"]
+                )
+            wandb.log({"confidence_table": confidence_sr_table})
+
+            if y_conf_pairs:
+                y_correct, confs = zip(*y_conf_pairs)
+                auroc = roc_auc_score(y_correct, confs)
+                auprc = average_precision_score(y_correct, confs)
+            else:
+                auroc = float("nan"); auprc = float("nan")
+            wandb.log({"auroc": auroc, "auprc": auprc})
+
+        elif reasoning_mode == "complexity_based":
+            cb_confidence = []
+            conf_sampling = SamplingParams(160, 0.0, 1.0, 1)
+            y_conf_pairs = []
+            cb_rows = []
+
+            # routing table: level -> (prompt_variant_key, SamplingParams)
+            routing = {
+                "simple":  ("cbp_simple",  SamplingParams(180, 0.0, 0.95, 1)),
+                "medium":  ("cbp_medium",  SamplingParams(200, 0.5, 0.95, 2)),
+                "complex": ("cbp_complex", SamplingParams(220, 0.7, 0.95, 4)),
+            }
+
+            for idx, (sample, prompt_base) in enumerate(zip(test_data, prompts)):
+                # 1) complexity probe
+                if cbp_force_level in ("simple", "medium", "complex"):
+                    level = cbp_force_level
+                    level_score, raw_probe = None, ""   # no probe when forced
+                else:
+                    level, level_score, raw_probe = cbp_score_complexity(
+                        prompt_base, llm, conf_sampling, all_flagged
+                    )
+                variant_key, gen_sampling = routing.get(level, routing["medium"])
+
+                # 2) build a per-sample prompt using the selected CBP template
+                #    (reuse your emotion-specific few-shot pool)
+                fs = few_shot_examples_by_emotion[sample["emotion"]]
+                fs_filtered = [ex for ex in fs if ex["input"] != sample["text"]]
+                cbp_template = TASK_CONFIGS[task]["prompt_variants"][variant_key]
+                dyn_prompt = construct_prompt(
+                    cbp_template,
+                    fs_filtered,
+                    sample["text"],
+                    sample["emotion"],
+                    task
+                )
+
+                # 3) generate with scaled params (n varies by complexity)
+                def gen_fn_cb(prompt_text: str):
+                    return llm.generate([prompt_text], gen_sampling)[0]
+
+                pred, raw_texts = try_generate_with_retries(
+                    prompt=dyn_prompt,
+                    generator_fn=gen_fn_cb,
+                    task=task,
+                    max_retries=max_retries,
+                    flagged_list=all_flagged
+                )
+                all_preds.append(pred)
+                all_raw.append(raw_texts)
+
+                # confidence from the latest parseable response
+                conf_bin, conf_score = None, None
+                if raw_texts:
+                    for response in reversed(raw_texts):
+                        if response and parse_output(response, task) is not None:
+                            conf_bin, conf_score = query_confidence_bin(llm, response, conf_sampling)
+                            break
+
+                cb_confidence.append({
+                    "raw_response": (raw_texts[-1] if raw_texts else ""),
+                    "conf_bin": conf_bin,
+                    "conf_score": conf_score
+                })
+
+                # log row for CBP analysis
+                cb_rows.append({
+                    "index": idx,
+                    "prompt_variant": variant_key,
+                    "complexity_level": level,
+                    "complexity_score": level_score,
+                    "emotion": sample["emotion"],
+                    "gold": sample["label"],
+                    "pred": pred,
+                })
+
+                if conf_score is not None and pred is not None:
+                    y_conf_pairs.append((1 if pred == sample["label"] else 0, conf_score))
+
+            # W&B table for CBP runs
+            cbp_table = wandb.Table(columns=[
+                "index", "prompt", "gold", "pred",
+                "raw_response", "conf_bin", "conf_score",
+                "emotion", "complexity_level", "complexity_score", "prompt_variant"
+            ])
+            for (row, prompt_text, conf_data) in zip(cb_rows, prompts, cb_confidence):
+                cbp_table.add_data(
+                    row["index"], prompt_text, row["gold"], row["pred"],
+                    conf_data["raw_response"],
+                    conf_data["conf_bin"] or "error",
+                    conf_data["conf_score"] if conf_data["conf_score"] is not None else None,
+                    row["emotion"], row["complexity_level"], row["complexity_score"], row["prompt_variant"]
+                )
+            wandb.log({"cbp_table": cbp_table})
+
+            if y_conf_pairs:
+                y_correct, confs = zip(*y_conf_pairs)
+                auroc = roc_auc_score(y_correct, confs)
+                auprc = average_precision_score(y_correct, confs)
+            else:
+                auroc = float("nan"); auprc = float("nan")
+            wandb.log({"auroc": auroc, "auprc": auprc})
+
+        elif reasoning_mode == "plan_and_solve":
+            pas_confidence = []
+            conf_sampling = SamplingParams(160, 0.0, 1.0, 1)
+            y_conf_pairs = []
+
+            sampling_pas = SamplingParams(max_tokens=220, temperature=0.5, top_p=0.95, n=1)
+            def gen_fn_pas(prompt_text: str):
+                # Pass 1 — PLAN (slightly higher temp for diversity)
+                plan_trigger = "Let's first understand the problem and devise a plan to solve it. Then, let's carry out the plan step by step."
+                plan_prompt = f"{prompt_text}\n\n{plan_trigger}\n\nPlan:"
+                plan_sampling = SamplingParams(max_tokens=200, temperature=0.7, top_p=0.95, n=1)
+                plan_result = llm.generate([plan_prompt], plan_sampling)[0]
+                plan_text = (plan_result.texts[0] if getattr(plan_result, 'texts', None) else "").strip()
+
+                # Pass 2 — SOLVE (condition on the plan, low temp for accuracy)
+                solve_prompt = (
+                    f"{prompt_text}\n\nPlan:\n{plan_text}\n\n"
+                    "Now follow the plan carefully and produce the final answer.\n"
+                    "End with exactly 'Answer: 1' or 'Answer: 0' for binary, "
+                    "or 'Answer: 0/1/2/3' for intensity."
+                )
+                solve_sampling = SamplingParams(max_tokens=220, temperature=0.0, top_p=0.95, n=1)
+                return llm.generate([solve_prompt], solve_sampling)[0]
+
+            for sample, prompt in zip(test_data, prompts):
+                pred, raw_texts = try_generate_with_retries(
+                    prompt=prompt,
+                    generator_fn=gen_fn_pas,
+                    task=task,
+                    max_retries=max_retries,
+                    flagged_list=all_flagged
+                )
+                all_preds.append(pred)
+                all_raw.append(raw_texts)
+
+                conf_bin, conf_score = None, None
+                if raw_texts:
+                    for response in reversed(raw_texts):
+                        if response and parse_output(response, task) is not None:
+                            conf_bin, conf_score = query_confidence_bin(llm, response, conf_sampling)
+                            break
+
+                pas_confidence.append({
+                    "raw_response": (raw_texts[-1] if raw_texts else ""),
+                    "conf_bin": conf_bin,
+                    "conf_score": conf_score
+                })
+
+                if conf_score is not None and pred is not None:
+                    y_conf_pairs.append((1 if pred == sample["label"] else 0, conf_score))
+
+            confidence_pas_table = wandb.Table(columns=[
+                "index", "prompt", "gold", "pred", "raw_response", "conf_bin", "conf_score", "emotion"
+            ])
+            for idx, (sample, pred, conf_data) in enumerate(zip(test_data, all_preds, pas_confidence)):
+                confidence_pas_table.add_data(
+                    idx, prompts[idx], sample["label"], pred,
+                    conf_data["raw_response"], conf_data["conf_bin"] or "error",
+                    conf_data["conf_score"] if conf_data["conf_score"] is not None else None,
+                    sample["emotion"]
+                )
+            wandb.log({"confidence_table": confidence_pas_table})
+
+            if y_conf_pairs:
+                y_correct, confs = zip(*y_conf_pairs)
+                auroc = roc_auc_score(y_correct, confs)
+                auprc = average_precision_score(y_correct, confs)
+            else:
+                auroc = float("nan"); auprc = float("nan")
+            wandb.log({"auroc": auroc, "auprc": auprc})
+
+        elif reasoning_mode == "rasc":
+            rasc_confidence = []
+            conf_sampling = SamplingParams(160, 0.0, 1.0, 1)
+            y_conf_pairs = []
+
+            for sample, prompt in zip(test_data, prompts):
+                pred, meta, new_flags = run_rasc(
+                    prompt=prompt,
+                    task=task,
+                    llm=llm,
+                    max_samples=top_k,  # you already use top_k as samples
+                    min_conf=rasc_min_conf if rasc_min_conf is not None else 0.7,
+                    alpha=rasc_alpha if rasc_alpha is not None else 0.5,
+                    max_tries=max_retries
+                )
+                # For consistency with other modes, we also want the raw last response; run_rasc returns meta only.
+                # So we just log meta conf and leave raw_response blank (or you can include the best reasoning text if you return it).
+                all_preds.append(pred)
+                all_raw.append([""])  # placeholder
+                all_flagged.extend(new_flags)
+
+                conf_bin  = meta.get("conf_bin")
+                conf_score= meta.get("conf_score")
+
+                rasc_confidence.append({
+                    "raw_response": meta.get("winning_rationale", ""),
+                    "conf_bin": conf_bin,
+                    "conf_score": conf_score
+                })
+
+                if conf_score is not None and pred is not None:
+                    y_conf_pairs.append((1 if pred == sample["label"] else 0, conf_score))
+
+            confidence_rasc_table = wandb.Table(columns=[
+                "index", "prompt", "gold", "pred", "raw_response", "conf_bin", "conf_score", "emotion"
+            ])
+            for idx, (sample, pred, conf_data) in enumerate(zip(test_data, all_preds, rasc_confidence)):
+                confidence_rasc_table.add_data(
+                    idx, prompts[idx], sample["label"], pred,
+                    conf_data["raw_response"], conf_data["conf_bin"] or "error",
+                    conf_data["conf_score"] if conf_data["conf_score"] is not None else None,
+                    sample["emotion"]
+                )
+            wandb.log({"confidence_table": confidence_rasc_table})
+
+            if y_conf_pairs:
+                y_correct, confs = zip(*y_conf_pairs)
+                auroc = roc_auc_score(y_correct, confs)
+                auprc = average_precision_score(y_correct, confs)
+            else:
+                auroc = float("nan"); auprc = float("nan")
+            wandb.log({"auroc": auroc, "auprc": auprc})
+
+        elif reasoning_mode == "rankcot":
+            rk_confidence = []
+            y_conf_pairs = []
+            conf_sampling = SamplingParams(160, 0.0, 1.0, 1)
+            cot_sampling  = SamplingParams(220, 0.7, 0.95, 1)   # for generating CoTs
+            score_sampling = SamplingParams(160, 0.0, 1.0, 1)    # for scoring CoTs
+            answer_sampling = SamplingParams(160, 0.0, 0.95, 1) # for final answer
+
+            TOP_K_DOCS = 5
+            FUSE_TOP2 = False  # set True to concatenate top-2 CoTs before answering
+
+            rankcot_rows = []
+
+            for idx, (sample, prompt_base) in enumerate(zip(test_data, prompts)):
+                query_text = sample["text"]
+                docs = retrieve_docs(query_text, k=TOP_K_DOCS)
+
+                cots = []
+                scores = []
+                flagged_local = []
+
+                # 1) Generate one CoT per doc
+                for d in docs:
+                    cot_prompt = (
+                        f"{prompt_base}\n\n"
+                        f"Use ONLY the following retrieved information when reasoning:\n"
+                        f"=== RETRIEVED SNIPPET ===\n{d}\n=== END SNIPPET ===\n\n"
+                        "Think step by step using the snippet. End with an explicit 'Answer:' line."
+                    )
+                    try:
+                        cot_text = llm.generate([cot_prompt], cot_sampling)[0].texts[0].strip()
+                    except OpenAIError as e:
+                        action = handle_openai_error(e, flagged_local, cot_prompt, stage="rankcot_cot")
+                        if action in ("fatal", "flagged"):
+                            cot_text = ""
+                        else:
+                            cot_text = ""
+                    cots.append((d, cot_text))
+
+                # 2) Score each CoT for relevance+faithfulness
+                for (doc_text, cot_text) in cots:
+                    if not cot_text:
+                        scores.append(0.0)
+                        continue
+                    s = rankcot_score_cot(query_text, doc_text, cot_text, llm, score_sampling, flagged_local, alpha=0.5)
+                    scores.append(s)
+
+                # 3) Pick best (or fuse top-2)
+                best_idx = int(np.argmax(scores)) if scores else -1
+                if best_idx < 0 or not cots:
+                    # emergency fallback: plain prompt
+                    def gen_fn_rank_fallback(p: str):
+                        return llm.generate([p], answer_sampling)[0]
+                    pred, raw_texts = try_generate_with_retries(
+                        prompt=prompt_base,
+                        generator_fn=gen_fn_rank_fallback,
+                        task=task,
+                        max_retries=max_retries,
+                        flagged_list=all_flagged
+                    )
+                    all_preds.append(pred); all_raw.append(raw_texts); all_flagged.extend(flagged_local)
+                    # confidence
+                    conf_bin, conf_score = None, None
+                    if raw_texts:
+                        for response in reversed(raw_texts):
+                            if response and parse_output(response, task) is not None:
+                                conf_bin, conf_score = query_confidence_bin(llm, response, conf_sampling)
+                                break
+                    rk_confidence.append({"raw_response": (raw_texts[-1] if raw_texts else ""), "conf_bin": conf_bin, "conf_score": conf_score})
+                    # row
+                    rankcot_rows.append({
+                        "index": idx, "emotion": sample["emotion"], "gold": sample["label"],
+                        "pred": pred, "winning_cot": "", "winning_score": None
+                    })
+                    continue
+
+                # best or fused CoT
+                if FUSE_TOP2 and len(cots) >= 2:
+                    order = list(reversed(np.argsort(scores)))
+                    i1, i2 = order[0], order[1]
+                    winning_cot = (cots[i1][1] + "\n\n" + cots[i2][1]).strip()
+                    winning_score = float((scores[i1] + scores[i2]) / 2.0)
+                else:
+                    winning_cot = cots[best_idx][1]
+                    winning_score = float(scores[best_idx])
+
+                # 4) Ask for final answer conditioned on the winning CoT
+                final_prompt = (
+                    f"{prompt_base}\n\n"
+                    f"=== SELECTED CHAIN-OF-THOUGHT ===\n{winning_cot}\n=== END COT ===\n\n"
+                    "Now, produce ONLY the final decision. "
+                    "Binary: end with exactly 'Answer: 1' or 'Answer: 0'. "
+                    "Intensity: end with exactly 'Answer: 0/1/2/3'."
+                )
+                def gen_fn_rank_final(p: str):
+                    return llm.generate([p], answer_sampling)[0]
+
+                pred, raw_texts = try_generate_with_retries(
+                    prompt=final_prompt,
+                    generator_fn=gen_fn_rank_final,
+                    task=task,
+                    max_retries=max_retries,
+                    flagged_list=all_flagged
+                )
+                all_preds.append(pred)
+                all_raw.append(raw_texts)
+                all_flagged.extend(flagged_local)
+
+                # confidence from parseable response
+                conf_bin, conf_score = None, None
+                if raw_texts:
+                    for response in reversed(raw_texts):
+                        if response and parse_output(response, task) is not None:
+                            conf_bin, conf_score = query_confidence_bin(llm, response, conf_sampling)
+                            break
+
+                rk_confidence.append({
+                    "raw_response": winning_cot,
+                    "conf_bin": conf_bin,
+                    "conf_score": conf_score
+                })
+                rankcot_rows.append({
+                    "index": idx,
+                    "emotion": sample["emotion"],
+                    "gold": sample["label"],
+                    "pred": pred,
+                    "winning_cot": winning_cot,
+                    "winning_score": winning_score
+                })
+
+            # Log RankCoT table (mirrors other modes + extras)
+            rankcot_table = wandb.Table(columns=[
+                "index", "prompt", "gold", "pred",
+                "raw_response", "conf_bin", "conf_score",
+                "emotion", "winning_cot_score"
+            ])
+            for (row, prompt_text, conf_data) in zip(rankcot_rows, prompts, rk_confidence):
+                rankcot_table.add_data(
+                    row["index"], prompt_text, row["gold"], row["pred"],
+                    conf_data["raw_response"],
+                    conf_data["conf_bin"] or "error",
+                    conf_data["conf_score"] if conf_data["conf_score"] is not None else None,
+                    row["emotion"], row["winning_score"]
+                )
+            wandb.log({"rankcot_table": rankcot_table})
+
+            # AUROC/AUPRC like other modes
+            if rk_confidence:
+                y_conf_pairs = []
+                for (sample, row, conf_data) in zip(test_data, rankcot_rows, rk_confidence):
+                    pred = row["pred"]
+                    if pred is not None and (conf_data["conf_score"] is not None):
+                        y_conf_pairs.append((1 if pred == sample["label"] else 0, conf_data["conf_score"]))
+                if y_conf_pairs:
+                    y_correct, confs = zip(*y_conf_pairs)
+                    auroc = roc_auc_score(y_correct, confs)
+                    auprc = average_precision_score(y_correct, confs)
+                else:
+                    auroc = float("nan"); auprc = float("nan")
+                wandb.log({"auroc": auroc, "auprc": auprc})
         else:
             raise ValueError(f"Unsupported reasoning_mode: {reasoning_mode}")
 
@@ -1898,9 +2566,15 @@ def evaluate_model_on_test_set(
     
     if all_flagged:
         wandb.log({"flagged_prompts_count": len(all_flagged)})
-        flagged_table = wandb.Table(columns=["prompt", "reason", "stage"])
+        flagged_table = wandb.Table(columns=["prompt", "reason", "stage", "outputs"])
         for item in all_flagged:
-            flagged_table.add_data(item.get("prompt", ""), item.get("reason", ""), item.get("stage", ""))
+            flagged_table.add_data(
+            item.get("prompt",  ""),
+            item.get("reason",   ""),
+            item.get("stage",    ""),
+            # raw texts from the failed generation
+            str(item.get("outputs", []))
+        )
         wandb.log({"flagged_prompts": flagged_table})
 
 
@@ -1913,7 +2587,7 @@ def evaluate_model_on_test_set(
 
     emotion2refs = defaultdict(list)
     emotion2preds = defaultdict(list)
-    f1_per_emotion = {}
+ 
     for emo in emotion2refs:
         try:
             f1 = f1_score(emotion2refs[emo], emotion2preds[emo], zero_division=0)
@@ -1925,7 +2599,7 @@ def evaluate_model_on_test_set(
             continue
         emotion2refs[sample["emotion"]].append(sample["label"])
         emotion2preds[sample["emotion"]].append(pred)
-
+    f1_per_emotion = {}
     if task == "binary":
         all_preds_flat = []
         all_labels_flat = []
@@ -2067,6 +2741,11 @@ def evaluate_ablation(
     balanced,
     balancing_strategy,
 ):
+    prefix = ""
+    if isinstance(llm_engine, ErrorMockLLM):
+        prefix = "error_"
+    elif isinstance(llm_engine, MockLLM):
+        prefix = "mock_"
     if not args.skip_ablations:
         results = {}
         #Note when running evaulate model on test set here, we don't actaully give a directory that code can save all the results
@@ -2075,12 +2754,14 @@ def evaluate_ablation(
         print("=== Ablation: Prompt Variants ===")
         variant_results = {}
         for variant, tmpl in prompt_variants.items():
-            if reasoning_mode not in ["default", "self_consistency", "self_refine"]:
-                if variant.startswith("cbp_") or variant == "tree_of_thoughts":
-                    continue
+            # Only run CBP variants when in complexity_based; only run ToT when in tree_of_thoughts
+            if variant.startswith("cbp_") and reasoning_mode != "complexity_based":
+                continue
+            if variant == "tree_of_thoughts" and reasoning_mode != "tree_of_thoughts":
+                continue
 
             wandb_run_name = (
-                f"ablation_{model_name.replace('/', '-')}_{task}_{language}_{reasoning_mode}_prompt_variant={variant}"
+                f"{prefix}ablation_main_{args.model_name.replace('/', '-')}_{args.task}_{args.language or 'all'}_{args.reasoning_mode}_nshot{args.n_shot}_top_k{args.top_k}_samplesize{args.sample_size}_balancingstrategy{args.balancing_strategy}_promptvariant{args.prompt_variant}"
             )
             wandb.init(
                 entity="CongAndSiy",
@@ -2131,7 +2812,7 @@ def evaluate_ablation(
         few_shot_results = {}
         for n_shot in shot_counts:
             wandb_run_name = (
-                f"ablation_{model_name.replace('/', '-')}_{task}_{language}_{reasoning_mode}_n_shot={n_shot}"
+                f"{prefix}ablation_main_{args.model_name.replace('/', '-')}_{args.task}_{args.language or 'all'}_{args.reasoning_mode}_nshot{args.n_shot}_top_k{args.top_k}_samplesize{args.sample_size}_balancingstrategy{args.balancing_strategy}_promptvariant{args.prompt_variant}"
             )
             wandb.init(
                 entity="CongAndSiy",
@@ -2175,13 +2856,280 @@ def evaluate_ablation(
 
         results['few_shot'] = few_shot_results
 
+        if reasoning_mode == "tree_of_thoughts":
+            print("=== Ablation: ToT Beam Widths ===")
+            tot_bw_results = {}
+            for bw in [1, 2, 3, 4]:
+                wandb_run_name = (
+                    f"{prefix}ablation_main_{args.model_name.replace('/', '_')}"
+                    f"_task{task}_lang{language}_mode{reasoning_mode}"
+                    f"_bal{str(balanced).lower()}_strategy{args.balancing_strategy}"
+                    f"_promptvariant{args.prompt_variant}_totbw{bw}"
+                )
+                wandb.init(
+                    entity="CongAndSiy",
+                    project="emotion-eval",
+                    name=wandb_run_name,
+                    config={
+                        "ablation_type": "tot_beam_width",
+                        "beam_width": bw,
+                        "model": model_name,
+                        "task": task,
+                        "language": language,
+                        "reasoning_mode": reasoning_mode,
+                        "top_k": main_top_k,
+                        "n_shot": main_n_shot,
+                    },
+                    reinit=True
+                )
+                scores = evaluate_model_on_test_set(
+                    test_data=test_data,
+                    prompt_template=main_prompt,
+                    task=task,
+                    top_k=main_top_k,
+                    n_shot=main_n_shot,
+                    model_name=model_name,
+                    out_json="...",
+                    llm=llm,
+                    reasoning_mode=reasoning_mode,
+                    max_steps=max_steps,
+                    beam_width=bw
+                )
+                tot_bw_results[bw] = scores
+                wandb.log(scores)
+                wandb.finish()
+                score_val = scores["f1_macro"] if task == "binary" else scores["avg_pearson"]
+                print(f"  beam_width = {bw}: {score_val:.4f}")
+
+            print("=== Ablation: ToT Max Steps ===")
+            tot_steps_results = {}
+            for steps in [2, 3, 4]:
+                wandb_run_name = (
+                    f"{prefix}ablation_main_{args.model_name.replace('/', '_')}"
+                    f"_task{task}_lang{language}_mode{reasoning_mode}"
+                    f"_bal{str(balanced).lower()}_strategy{args.balancing_strategy}"
+                    f"_promptvariant{args.prompt_variant}_totsteps{steps}"
+                )
+                wandb.init(
+                    entity="CongAndSiy",
+                    project="emotion-eval",
+                    name=wandb_run_name,
+                    config={
+                        "ablation_type": "tot_max_steps",
+                        "max_steps": steps,
+                        "model": model_name,
+                        "task": task,
+                        "language": language,
+                        "reasoning_mode": reasoning_mode,
+                        "top_k": main_top_k,
+                        "n_shot": main_n_shot,
+                    },
+                    reinit=True
+                )
+                scores = evaluate_model_on_test_set(
+                    test_data=test_data,
+                    prompt_template=main_prompt,
+                    task=task,
+                    top_k=main_top_k,
+                    n_shot=main_n_shot,
+                    model_name=model_name,
+                    out_json="...",
+                    llm=llm,
+                    reasoning_mode=reasoning_mode,
+                    max_steps=steps,
+                    beam_width=tot_beam_width
+                )
+                tot_steps_results[steps] = scores
+                wandb.log(scores)
+                wandb.finish()
+                score_val = scores["f1_macro"] if task == "binary" else scores["avg_pearson"]
+                print(f"  max_steps = {steps}: {score_val:.4f}")
+
+            # keep results collected
+            results["tot_beam_width"] = tot_bw_results
+            results["tot_max_steps"] = tot_steps_results
+
+        if reasoning_mode == "self_refine":
+            print("=== Ablation: Self-Refine max_refinements ===")
+            sr_results = {}
+            for refinements in [1, 2, 3, 4]:
+                wandb.init(
+                    entity="CongAndSiy",
+                    project="emotion-eval",
+                    name=f"{prefix}ablation_sr_refinements_{refinements}",
+                    config={
+                        "ablation_type": "self_refine_max_refinements",
+                        "max_refinements": refinements,
+                        "model": model_name, "task": task, "language": language,
+                        "reasoning_mode": reasoning_mode, "top_k": main_top_k, "n_shot": main_n_shot,
+                    },
+                    reinit=True
+                )
+                scores = evaluate_model_on_test_set(
+                    test_data=test_data, prompt_template=main_prompt, task=task,
+                    top_k=main_top_k, n_shot=main_n_shot, model_name=model_name,
+                    out_json="...", llm=llm, reasoning_mode=reasoning_mode,
+                    max_steps=max_steps, beam_width=tot_beam_width,
+                    self_refine_max_refinements=refinements
+                )
+                sr_results[refinements] = scores
+                wandb.log(scores); wandb.finish()
+                val = scores["f1_macro"] if task == "binary" else scores["avg_pearson"]
+                print(f"  max_refinements = {refinements}: {val:.4f}")
+            results["self_refine_max_refinements"] = sr_results
+
+        if reasoning_mode == "rasc":
+            print("=== Ablation: RASC min_conf ===")
+            rasc_minconf = {}
+            for mc in [0.6, 0.7, 0.8]:
+                wandb.init(
+                    entity="CongAndSiy",
+                    project="emotion-eval",
+                    name=f"{prefix}ablation_rasc_minconf_{mc}",
+                    config={
+                        "ablation_type": "rasc_min_conf",
+                        "min_conf": mc,
+                        "model": model_name, "task": task, "language": language,
+                        "reasoning_mode": reasoning_mode, "n_shot": main_n_shot,
+                        "top_k": main_top_k,
+                    },
+                    reinit=True
+                )
+                scores = evaluate_model_on_test_set(
+                    test_data=test_data, prompt_template=main_prompt, task=task,
+                    top_k=main_top_k, n_shot=main_n_shot, model_name=model_name,
+                    out_json="...", llm=llm, reasoning_mode=reasoning_mode,
+                    max_steps=max_steps, beam_width=tot_beam_width,
+                    rasc_min_conf=mc
+                )
+                rasc_minconf[mc] = scores
+                wandb.log(scores); wandb.finish()
+                val = scores["f1_macro"] if task == "binary" else scores["avg_pearson"]
+                print(f"  min_conf = {mc}: {val:.4f}")
+            results["rasc_min_conf"] = rasc_minconf
+
+            print("=== Ablation: RASC alpha (QUALITY vs CONSISTENCY weight) ===")
+            rasc_alpha_res = {}
+            for a in [0.25, 0.5, 0.75]:
+                wandb.init(
+                    entity="CongAndSiy",
+                    project="emotion-eval",
+                    name=f"{prefix}ablation_rasc_alpha_{a}",
+                    config={
+                        "ablation_type": "rasc_alpha",
+                        "alpha": a,
+                        "model": model_name, "task": task, "language": language,
+                        "reasoning_mode": reasoning_mode, "n_shot": main_n_shot,
+                        "top_k": main_top_k,
+                    },
+                    reinit=True
+                )
+                scores = evaluate_model_on_test_set(
+                    test_data=test_data, prompt_template=main_prompt, task=task,
+                    top_k=main_top_k, n_shot=main_n_shot, model_name=model_name,
+                    out_json="...", llm=llm, reasoning_mode=reasoning_mode,
+                    max_steps=max_steps, beam_width=tot_beam_width,
+                    rasc_alpha=a
+                )
+                rasc_alpha_res[a] = scores
+                wandb.log(scores); wandb.finish()
+                val = scores["f1_macro"] if task == "binary" else scores["avg_pearson"]
+                print(f"  alpha = {a}: {val:.4f}")
+            results["rasc_alpha"] = rasc_alpha_res
+        if reasoning_mode == "complexity_based":
+            print("=== Ablation: CBP forced level (skip probe) ===")
+            cbp_forced = {}
+            for level in ["simple", "medium", "complex"]:
+                wandb.init(
+                    entity="CongAndSiy",
+                    project="emotion-eval",
+                    name=f"{prefix}ablation_cbp_forced_{level}",
+                    config={
+                        "ablation_type": "cbp_force_level",
+                        "level": level,
+                        "model": model_name, "task": task, "language": language,
+                        "reasoning_mode": reasoning_mode, "n_shot": main_n_shot,
+                        "top_k": main_top_k,
+                    },
+                    reinit=True
+                )
+                scores = evaluate_model_on_test_set(
+                    test_data=test_data, prompt_template=main_prompt, task=task,
+                    top_k=main_top_k, n_shot=main_n_shot, model_name=model_name,
+                    out_json="...", llm=llm, reasoning_mode=reasoning_mode,
+                    max_steps=max_steps, beam_width=tot_beam_width,
+                    cbp_force_level=level
+                )
+                cbp_forced[level] = scores
+                wandb.log(scores); wandb.finish()
+                val = scores["f1_macro"] if task == "binary" else scores["avg_pearson"]
+                print(f"  force_level = {level}: {val:.4f}")
+            results["cbp_force_level"] = cbp_forced
+
+        if reasoning_mode == "tree_of_thoughts":
+            print("=== Ablation: ToT search strategy ===")
+            tot_search_res = {}
+            for s in ["bfs", "dfs"]:
+                wandb.init(
+                    entity="CongAndSiy",
+                    project="emotion-eval",
+                    name=f"{prefix}ablation_tot_search_{s}",
+                    config={
+                        "ablation_type": "tot_search",
+                        "search": s,
+                        "model": model_name, "task": task, "language": language,
+                        "reasoning_mode": reasoning_mode, "n_shot": main_n_shot, "top_k": main_top_k,
+                    },
+                    reinit=True
+                )
+                scores = evaluate_model_on_test_set(
+                    test_data=test_data, prompt_template=main_prompt, task=task,
+                    top_k=main_top_k, n_shot=main_n_shot, model_name=model_name,
+                    out_json="...", llm=llm, reasoning_mode=reasoning_mode,
+                    max_steps=max_steps, beam_width=tot_beam_width,
+                    tot_search=s
+                )
+                tot_search_res[s] = scores
+                wandb.log(scores); wandb.finish()
+                val = scores["f1_macro"] if task == "binary" else scores["avg_pearson"]
+                print(f"  search = {s}: {val:.4f}")
+            results["tot_search"] = tot_search_res
+
+            print("=== Ablation: ToT value threshold vth ===")
+            tot_vth_res = {}
+            for v in [0.3, 0.5, 0.7]:
+                wandb.init(
+                    entity="CongAndSiy",
+                    project="emotion-eval",
+                    name=f"{prefix}ablation_tot_vth_{v}",
+                    config={
+                        "ablation_type": "tot_vth",
+                        "vth": v,
+                        "model": model_name, "task": task, "language": language,
+                        "reasoning_mode": reasoning_mode, "n_shot": main_n_shot, "top_k": main_top_k,
+                    },
+                    reinit=True
+                )
+                scores = evaluate_model_on_test_set(
+                    test_data=test_data, prompt_template=main_prompt, task=task,
+                    top_k=main_top_k, n_shot=main_n_shot, model_name=model_name,
+                    out_json="...", llm=llm, reasoning_mode=reasoning_mode,
+                    max_steps=max_steps, beam_width=tot_beam_width,
+                    tot_vth=v
+                )
+                tot_vth_res[v] = scores
+                wandb.log(scores); wandb.finish()
+                val = scores["f1_macro"] if task == "binary" else scores["avg_pearson"]
+                print(f"  vth = {v}: {val:.4f}")
+            results["tot_vth"] = tot_vth_res
+
         # 3. top_k
-        if reasoning_mode == "self_consistency":
+        if reasoning_mode in ("self_consistency", "rasc","tree_of_thoughts"):
             print("=== Ablation: Top_k Values (self_consistency only) ===")
             topk_results = {}
             for k in topk_list:
                 wandb_run_name = (
-                    f"ablation_{model_name.replace('/', '-')}_{task}_{language}_{reasoning_mode}_top_k={k}"
+                    f"{prefix}ablation_main_{args.model_name.replace('/', '-')}_{args.task}_{args.language or 'all'}_{args.reasoning_mode}_nshot{args.n_shot}_top_k{args.top_k}_samplesize{args.sample_size}_balancingstrategy{args.balancing_strategy}_promptvariant{args.prompt_variant}"
                 )
                 wandb.init(
                     entity="CongAndSiy",
@@ -2247,7 +3195,7 @@ def evaluate_ablation(
                 new_test_data = test_data[:size]
 
             wandb_run_name = (
-                f"ablation_{model_name.replace('/', '-')}_{task}_{language}_{reasoning_mode}_sample_size={size}"
+                f"{prefix}ablation_main_{args.model_name.replace('/', '-')}_{args.task}_{args.language or 'all'}_{args.reasoning_mode}_nshot{args.n_shot}_top_k{args.top_k}_samplesize{args.sample_size}_balancingstrategy{args.balancing_strategy}_promptvariant{args.prompt_variant}"
             )
             wandb.init(
                 entity="CongAndSiy",
@@ -2363,12 +3311,6 @@ if __name__ == "__main__":
         help="Max steps for tree_of_thoughts"
     )
     parser.add_argument(
-        "--tot_beam_width",
-        type=int,
-        default=3,
-        help="Beam width for tree_of_thoughts"
-    )
-    parser.add_argument(
         "--skip_ablations",
         action="store_true",
         help="If set, only run the main evaluation and skip all ablation loops.",
@@ -2378,9 +3320,27 @@ if __name__ == "__main__":
         action="store_true",
         help="If set, use ErrorMockLLM to randomly simulate API errors.",
     )
+    parser.add_argument(
+        "--tot_search",
+        choices=["bfs", "dfs"],
+        default="bfs",
+        help="Search policy for Tree of Thoughts (paper-style)"
+    )
+    parser.add_argument(
+            "--tot_vth",
+            type=float,
+            default=0.5,
+            help="Value threshold in [0,1] to prune weak branches"
+    )
+    parser.add_argument(
+            "--tot_value_trials",
+            type=int,
+            default=1,
+            help="Number of value (lookahead) trials per state before scoring"
+    )
     args = parser.parse_args()
     
-    if args.reasoning_mode not in ["self_consistency", "rasc", "rankcot"]:
+    if args.reasoning_mode not in ["self_consistency", "rasc", "rankcot", "tree_of_thoughts"]:
         print(f"[DEBUG] For reasoning_mode={args.reasoning_mode}, forcing top_k=1 (was {args.top_k})")
         args.top_k = 1
 
@@ -2393,7 +3353,7 @@ if __name__ == "__main__":
             llm_engine = MockLLM(reasoning_mode=args.reasoning_mode, task=args.task)
     else:
         openai.api_key = os.getenv("OPENAI_API_KEY")
-        llm_engine = AzureEngineWrapper(openai, args.model_name.replace("openai/", ""))
+        llm_engine = AzureEngineWrapper(args.model_name.replace("openai/", ""))
 
 
     prefix = ""
@@ -2405,7 +3365,7 @@ if __name__ == "__main__":
     wandb.init(
         entity="CongAndSiy",
         project="emotion-eval",  # Change if needed
-        name=f"{prefix}_main_{args.model_name.replace('/', '-')}_{args.task}_{args.language or 'all'}_{args.reasoning_mode}",
+        name=f"{prefix}_main_{args.model_name.replace('/', '-')}_{args.task}_{args.language or 'all'}_{args.reasoning_mode}_nshot{args.n_shot}_top_k{args.top_k}_samplesize{args.sample_size}_balancingstrategy{args.balancing_strategy}_promptvariant{args.prompt_variant}",
         config={
             "model": args.model_name,
             "task": args.task,
@@ -2504,6 +3464,10 @@ if __name__ == "__main__":
                     balanced=True,
                     balancing_strategy=args.balancing_strategy  # <-- ADD THIS
                 )
+                emotions_to_use = [
+                    emo for emo in EMOTIONS
+                    if emo in sampled_df.columns and sampled_df[emo].sum() > 0
+                ]
             else:  # intensity
                 sampled_df = sample_dataset_intensity(
                     csv_path,
@@ -2511,10 +3475,14 @@ if __name__ == "__main__":
                     balanced=True,
                     balancing_strategy=args.balancing_strategy  # <-- ADD THIS
                 )
+                emotions_to_use = [
+                    emo for emo in EMOTIONS
+                    if emo in sampled_df.columns and sampled_df[emo].max() > 0
+                ]
 
             data = []
             for row in sampled_df.itertuples(index=False):
-                for emo in EMOTIONS:
+                for emo in emotions_to_use:
                     val = getattr(row, emo, 0)
                     if args.task == "binary":
                         label = 1 if val == 1 else 0
@@ -2534,6 +3502,7 @@ if __name__ == "__main__":
                     balanced=args.balanced,
                     balancing_strategy=args.balancing_strategy
                 )
+                emotions_to_use = [emo for emo in EMOTIONS if emo in df.columns and df[emo].sum() > 0]
             elif args.task == "intensity":
                 csv_path = os.path.join(TEST_DIRS["intensity"], f"{args.language}.csv")
                 df = sample_dataset_intensity(
@@ -2542,9 +3511,10 @@ if __name__ == "__main__":
                     balanced=args.balanced,
                     balancing_strategy=args.balancing_strategy
                 )
+                emotions_to_use = [emo for emo in EMOTIONS if emo in df.columns and df[emo].max() > 0]
             data = []
             for row in df.itertuples(index=False):
-                for emo in EMOTIONS:
+                for emo in emotions_to_use:
                     label = (1 if getattr(row, emo, 0) == 1
                                 else 0 if args.task=="binary"
                                 else max(0, min(3, int(getattr(row, emo, 0)))))
@@ -2589,7 +3559,7 @@ if __name__ == "__main__":
             out_json=out_json,
             reasoning_mode=args.reasoning_mode,     
             max_steps=args.tot_steps,                
-            beam_width=args.tot_beam_width
+            beam_width=max(1, int(args.top_k)) if args.top_k is not None else 3
         )
         #wandb.log(main_res)
         # 1) Debug-print the raw values
@@ -2670,8 +3640,8 @@ if __name__ == "__main__":
                     language=lang,
                     llm=llm_engine,
                     reasoning_mode=args.reasoning_mode,
-                    max_steps=args.tot_steps,
-                    tot_beam_width=args.tot_beam_width,
+                    max_steps=max_steps,
+                    tot_beam_width=beam_width,
                     balanced= args.balanced,
                     balancing_strategy = args.balancing_strategy
                 )
