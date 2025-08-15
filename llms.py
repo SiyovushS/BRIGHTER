@@ -36,6 +36,48 @@ class SamplingParams:
         self.top_p = top_p
         self.n = n
 
+class VLLMEngineWrapper:
+    """
+    Thin adapter around vLLM so it matches our llm.generate(prompts, sampling_params)
+    contract and returns .texts just like AzureEngineWrapper/MockLLM.
+    """
+    def __init__(self, model_name: str, tensor_parallel_size: int = 1, dtype: str = "auto"):
+        from vllm import LLM
+        self.model_name = model_name
+        self.engine = LLM(
+            model=model_name,
+            tokenizer=model_name,
+            tensor_parallel_size=tensor_parallel_size,
+            dtype=dtype  # "auto" lets vLLM pick a good default (bf16/fp16)
+        )
+
+    def generate(self, prompts, sampling_params):
+        # map our SamplingParams -> vLLM.SamplingParams
+        from vllm import SamplingParams as VSamplingParams
+
+        vparams = VSamplingParams(
+            max_tokens=int(sampling_params.max_tokens or 128),
+            temperature=float(sampling_params.temperature),
+            top_p=float(sampling_params.top_p),
+            n=int(sampling_params.n or 1),
+            stop=None  # rely on your prompt “Answer: …” convention
+        )
+        outs = self.engine.generate(prompts, vparams)
+
+        class Result:
+            def __init__(self, texts):
+                self.texts = texts
+
+        results = []
+        for req_out in outs:
+            # vLLM returns a list of candidate outputs per prompt
+            texts = [o.text.strip() for o in (req_out.outputs or [])]
+            # Defensive fallback if model produced fewer than n candidates
+            if not texts:
+                texts = [""]
+            results.append(Result(texts))
+        return results
+
 class MockLLM:
     def __init__(self, reasoning_mode: str = "default", task: str = "binary"):
         self.reasoning_mode = reasoning_mode
@@ -3344,18 +3386,33 @@ if __name__ == "__main__":
         print(f"[DEBUG] For reasoning_mode={args.reasoning_mode}, forcing top_k=1 (was {args.top_k})")
         args.top_k = 1
 
-    if USE_MOCK_LLM:
+    engine_choice = "openai"
+if USE_MOCK_LLM:
+    engine_choice = "mock"
+elif not args.model_name.startswith("openai/") and not args.model_name.startswith("google/gemini"):
+    engine_choice = "vllm"
+
+    if engine_choice == "mock":
         if args.error_test:
             print("[DEBUG] Using ErrorMockLLM (error testing mode).")
             llm_engine = ErrorMockLLM(reasoning_mode=args.reasoning_mode, task=args.task)
         else:
             print("[DEBUG] Using MockLLM for offline testing.")
             llm_engine = MockLLM(reasoning_mode=args.reasoning_mode, task=args.task)
-    else:
+
+    elif engine_choice == "openai":
+        # your current Azure/OpenAI path
+        import openai
         openai.api_key = os.getenv("OPENAI_API_KEY")
-        llm_engine = AzureEngineWrapper(args.model_name.replace("openai/", ""))
+        llm_engine = AzureEngineWrapper(args.model_name.replace("openai/", ""))  # keeps your current behavior :contentReference[oaicite:1]{index=1}
 
-
+    else:  # vLLM
+        print("[DEBUG] Using vLLM engine.")
+        llm_engine = VLLMEngineWrapper(
+            model_name=args.model_name,
+            tensor_parallel_size=args.tensor_parallel_size,
+            dtype="auto"
+        )
     prefix = ""
     if isinstance(llm_engine, ErrorMockLLM):
         prefix = "error_"
