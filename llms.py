@@ -1834,7 +1834,7 @@ def rankcot_score_cot(query_text: str, doc_text: str, cot_text: str, llm, sampli
 ###########################################################
 def evaluate_model_on_test_set(
     model_name: str,
-    llm: Union["AzureEngineWrapper", "MockLLM"],
+    llm: Union["AzureEngineWrapper", "MockLLM", "VLLMEngineWrapper"],
     test_data: List[dict],
     prompt_template: str,
     task: str,
@@ -3386,33 +3386,25 @@ if __name__ == "__main__":
         print(f"[DEBUG] For reasoning_mode={args.reasoning_mode}, forcing top_k=1 (was {args.top_k})")
         args.top_k = 1
 
-    engine_choice = "openai"
-if USE_MOCK_LLM:
-    engine_choice = "mock"
-elif not args.model_name.startswith("openai/") and not args.model_name.startswith("google/gemini"):
-    engine_choice = "vllm"
+    if USE_MOCK_LLM:
+        engine_choice = "mock"
+    elif args.model_name.startswith("openai/") or args.model_name.startswith("google/gemini"):
+        engine_choice = "openai"
+    else:
+        engine_choice = "vllm"
 
-    if engine_choice == "mock":
-        if args.error_test:
-            print("[DEBUG] Using ErrorMockLLM (error testing mode).")
-            llm_engine = ErrorMockLLM(reasoning_mode=args.reasoning_mode, task=args.task)
-        else:
-            print("[DEBUG] Using MockLLM for offline testing.")
-            llm_engine = MockLLM(reasoning_mode=args.reasoning_mode, task=args.task)
-
-    elif engine_choice == "openai":
-        # your current Azure/OpenAI path
-        import openai
-        openai.api_key = os.getenv("OPENAI_API_KEY")
-        llm_engine = AzureEngineWrapper(args.model_name.replace("openai/", ""))  # keeps your current behavior :contentReference[oaicite:1]{index=1}
-
-    else:  # vLLM
-        print("[DEBUG] Using vLLM engine.")
+    if engine_choice == "openai":
+        llm_engine = AzureEngineWrapper(model_name=args.model_name)
+    elif engine_choice == "mock":
+        llm_engine = MockLLM()
+    elif engine_choice == "vllm":
         llm_engine = VLLMEngineWrapper(
             model_name=args.model_name,
             tensor_parallel_size=args.tensor_parallel_size,
-            dtype="auto"
+            dtype="auto",
         )
+    else:
+        raise ValueError(f"Unknown engine choice: {engine_choice}")
     prefix = ""
     if isinstance(llm_engine, ErrorMockLLM):
         prefix = "error_"
@@ -3434,16 +3426,6 @@ elif not args.model_name.startswith("openai/") and not args.model_name.startswit
             "balanced": args.balanced
         }
     )
-
-
-
-    if args.model_name.startswith("openai/"):
-        vllm_engine = None
-    else:
-        from vllm import LLM, SamplingParams
-        vllm_engine = LLM(model=args.model_name,
-                          tokenizer=args.model_name,
-                          tensor_parallel_size=args.tensor_parallel_size)
     
     # Dry‑run: just construct & print a prompt for each variant, then exit
     if args.dry_run:
@@ -3470,15 +3452,19 @@ elif not args.model_name.startswith("openai/") and not args.model_name.startswit
     model_name = args.model_name
     safe_model = model_name.replace("/", "_")
     print(f"\n>>> Loading LLM: {model_name} ")
-    if not args.model_name.startswith("openai/") and not args.model_name.startswith("google/gemini"):
-       from vllm import LLM, SamplingParams
-       engine = LLM(
-           model=model_name,
-           tokenizer=model_name,
-           tensor_parallel_size=args.tensor_parallel_size
-       )
-    else:
-       engine = None
+    data = []
+    for row in sampled_df.itertuples(index=False):
+        for emo in emotions_to_use:
+            val = getattr(row, emo, 0)
+            if args.task == "binary":
+                label = 1 if int(val) > 0 else 0
+            else:
+                label = max(0, min(3, int(val)))
+            data.append({
+                "text": getattr(row, "text"),
+                "emotion": emo,
+                "label": label
+            })
     print(" LLM engine loaded.\n")
 
     langs_to_run = [args.language] if args.language else ALL_LANGUAGES
