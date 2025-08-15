@@ -3583,8 +3583,7 @@ if __name__ == "__main__":
 
         elif args.task == "intensity":
             pearson = float(main_res.get("avg_pearson", 0.0))
-            spearman = float(main_res.get("avg_spearman", 0.0))
-            mse = float(main_res.get("mse", 0.0))
+            spearman = float(main_res.get("spearman", 0.0))
             rmse = float(main_res.get("rmse", 0.0))
             mae = float(main_res.get("mae", 0.0))
             auroc = float(main_res.get("auroc", 0.0))

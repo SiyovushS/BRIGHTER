@@ -1,0 +1,57 @@
+# ===== BRIGHTER Setup in WSL with Conda =====
+
+# 1) Make sure conda is loaded in WSL
+source ~/.bashrc
+conda --version
+
+# If conda not found, initialize it (adjust path if needed):
+# eval "$($HOME/miniconda3/bin/conda shell.bash hook)"
+# conda init
+# exec bash
+
+# 2) Activate your environment
+conda activate brighter-llm
+
+# 3) Go to your projects folder (create if needed)
+mkdir -p ~/projects
+cd ~/projects
+
+# 4) Clone the BRIGHTER repo
+git clone git@github.com:SiyovushS/BRIGHTER.git
+cd BRIGHTER
+
+# 5) Fetch all branches and switch to 'Siy'
+git fetch --all --prune
+git checkout -b Siy origin/Siy
+
+# 6) Open the project in VS Code (Remote - WSL must be installed in VS Code)
+code .
+
+# ----- Daily Git Workflow -----
+# Before starting work:
+git pull
+
+# After making changes in VS Code:
+git status            # see what changed
+git add -A            # stage all changes
+git commit -m "Your commit message here"
+git push              # send changes to GitHub
+
+# If first push after creating a new branch:
+# git push -u origin Siy
+
+# ----- Helpful Git commands -----
+# See current branch
+git branch
+
+# See branches (local + remote)
+git branch -a
+
+# Switch branch
+git checkout other-branch
+
+# Merge latest main into Siy
+git fetch origin
+git merge origin/main
+
+# ================================
