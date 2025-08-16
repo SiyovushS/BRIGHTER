@@ -3312,6 +3312,12 @@ if __name__ == "__main__":
     parser.add_argument("--compute_dtype", type=str, default="bfloat16",
                         choices=["float16", "bfloat16", "float32"],
                         help="Compute dtype (ignored in vLLM example).")
+    parser.add_argument(
+        "--dtype",
+        default="auto",
+        choices=["half", "float16", "auto", "bfloat16"],
+        help="Model compute dtype for vLLM. Use 'half' (fp16) on Turing/Volta GPUs and for GPTQ."
+    )
     parser.add_argument("--language", type=str, default=None,
                     help="Language code to run on (e.g., 'eng', 'ptbr'). If not set, will run on all languages.")
     parser.add_argument("--skip_existing", action="store_true",
@@ -3401,7 +3407,7 @@ if __name__ == "__main__":
         llm_engine = VLLMEngineWrapper(
             model_name=args.model_name,
             tensor_parallel_size=args.tensor_parallel_size,
-            dtype="auto",
+            dtype=args.dtype, 
         )
     else:
         raise ValueError(f"Unknown engine choice: {engine_choice}")

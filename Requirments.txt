@@ -1,0 +1,10 @@
+# only possible for linux devices
+pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0
+
+# only possible for linux devices
+pip install vllm==0.8.3
+
+# Core Libraries that are needed completly 
+pip install transformers datasets scikit-learn numpy pandas scipy tqdm wandb pillow pyzmq \
+            fastapi prometheus-client prometheus-fastapi-instrumentator tiktoken \
+            einops cloudpickle msgspec partial-json-parser lark xgrammar
