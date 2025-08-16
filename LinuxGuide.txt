@@ -22,7 +22,7 @@ cd BRIGHTER
 
 # 5) Fetch all branches and switch to 'Siy'
 git fetch --all --prune
-git checkout -b Siy origin/Siy
+git checkout Siy
 
 # 6) Open the project in VS Code (Remote - WSL must be installed in VS Code)
 code .
