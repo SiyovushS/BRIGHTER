@@ -1,3 +1,7 @@
+#Required Mini Conda
+conda create -n brighter-llm python=3.12 -y
+conda activate brighter-llm
+
 # only possible for linux devices
 pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0
 
