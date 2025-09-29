@@ -416,49 +416,49 @@ TASK_CONFIGS = {
 }
 
 rankcot_docs = [
-    # Document 1: Greater Good Science Center - Reading Emotions in Text Messages https://greatergood.berkeley.edu/article/item/six_tips_for_reading_emotions_in_text_messages?utm_source=chatgpt.com
+    # Document 1: Greater Good Science Center - Reading Emotions in Text Messages https://greatergood.berkeley.edu/article/item/six_tips_for_reading_emotions_in_text_messages
     """
     How do we know what a person is feeling when they don’t tell us? Here are six tips to help you better detect emotions in text messages—or, failing that, prevent yourself from jumping to conclusions based on scant evidence. Keep in mind that texts are a difficult medium for communicating emotion. We have no facial expressions, tone of voice, or conversation to give us more information.
 
     The words people use often have emotional undertones. Think about some common words, like love, hate, wonderful, hard, work, explore, or kitten. If a text reads, ‘I love this wonderful kitten,’ we can easily conclude that it is expressing positive emotion. But if it reads, ‘This wonderful kitten is hard work,’ what emotion do we think is being conveyed? Exploring the emotional cores of individual words helps anchor our interpretations.
     """,
 
-    # Document 2: Frontiers in Psychology - Mimicking Spoken Pauses in Text Messages https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2025.1410698/full?utm_source=chatgpt.com
+    # Document 2: Frontiers in Psychology - Mimicking Spoken Pauses in Text Messages https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2025.1410698/full
     """
     In contrast with face-to-face conversations, text messages lack important extralinguistic cues such as tone of voice and gestures. We ask how texters are able to communicate the same nuanced social and emotional meaning without access to this rich set of multimodal cues.
 
     The inclusion of a period after a single-word text (e.g., ‘yup.’) can convey abruptness or insincerity. All of these cues—prosodic and nonverbal—can significantly influence meaning. Texters strategically use punctuation, spacing, and ‘textisms’ to stand in for missing vocal and facial signals.
     """,
 
-    # Document 3: WIRED - The Meaning of All Caps https://www.wired.com/story/all-caps-because-internet-gretchen-mcculloch/?utm_source=chatgpt.com
+    # Document 3: WIRED - The Meaning of All Caps https://www.wired.com/story/all-caps-because-internet-gretchen-mcculloch/
     """
     WHEN YOU WRITE IN ALL CAPS IT SOUNDS LIKE YOU’RE SHOUTING. Using capital letters to indicate strong feeling may be the most famous example of typographical tone of voice.
 
     A single capped word, on the other hand, is simply EMPHATIC. Examples like ‘NOT’, ‘ALL’, ‘YOU’, and ‘SO’ are often the same kinds of words we stress in spoken conversation (or commercials). All-caps is a typographic way of conveying the cues of louder, faster, or higher-pitched speech.
     """,
 
-    # Document 4: Purdue OWL - Tone, Mood, and Audience https://owl.purdue.edu/owl/general_writing/writing_style/diction/tone_mood_audience.html?utm_source=chatgpt.com
+    # Document 4: Purdue OWL - Tone, Mood, and Audience https://owl.purdue.edu/owl/general_writing/writing_style/diction/tone_mood_audience.html
     """
     Tone is the author’s attitude toward the subject. In written English, it is conveyed through word choice (diction) and the details an author includes or omits. To identify tone, look for words that carry strong connotations—positive, negative, or neutral—and consider why the author chose them.
 
     Sentence structure also shapes tone. Short, clipped sentences often feel abrupt or urgent; long, flowing sentences can feel reflective or lyrical. By mapping patterns of diction and syntax, readers can infer the author’s stance and emotional coloring.
     """,
 
-    # Document 5: Writers.com - What Is Tone in Literature? https://writers.com/what-is-tone-in-literature?utm_source=chatgpt.com
+    # Document 5: Writers.com - What Is Tone in Literature? https://writers.com/what-is-tone-in-literature
     """
     Tone is the author’s stance toward a story’s events and characters. It emerges when you examine the words the author selects—whether they’re harsh, playful, formal, or colloquial—and how those words make you feel as a reader.
 
     To detect tone, ask yourself: What details does the narrator emphasize? Are descriptions vivid or restrained? Do word choices carry irony, warmth, or distance? Close‐reading those elements reveals the undercurrent of feeling guiding the narrative.
     """,
 
-    # Document 6: Albert.io Blog - How To Identify Author’s Tone https://www.albert.io/blog/how-to-identify-authors-tone/?utm_source=chatgpt.com
+    # Document 6: Albert.io Blog - How To Identify Author’s Tone https://www.albert.io/blog/how-to-identify-authors-tone/
     """
     Start with word choice. Look for exaggerated adjectives ("brilliant," "terrifying") or adverbs ("eagerly," "coldly") that signal an attitude. Ask: Are these words inflating the positive or negative aspects of the subject?
 
     Next, examine sentence patterns. Rhetorical questions, exclamations, and varied punctuation (dashes, ellipses) all create shifts in pace and emphasis, which in turn mirror shifts in the author’s emotional stance. Track how these devices recur to pinpoint tone.
     """,
 
-    # Document 7: MasterClass - Examples of Tone Words in Writing https://www.masterclass.com/articles/examples-of-tone-words-in-writing?utm_source=chatgpt.com
+    # Document 7: MasterClass - Examples of Tone Words in Writing https://www.masterclass.com/articles/examples-of-tone-words-in-writing
     """
     Authors convey tone through diction that evokes specific emotions—solemn, satirical, earnest, sarcastic. Recognizing these ‘tone words’ in context helps readers label the underlying attitude.
 
