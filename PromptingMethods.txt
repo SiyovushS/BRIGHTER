@@ -1,0 +1,22 @@
+Prompting Methods 
+Self Refine: Iterative refinement with Self Feedback
+
+SELF-CONSISTENCY IMPROVES CHAIN OF THOUGHT
+REASONING IN LANGUAGE MODELS
+
+Tree of Thoughts: Deliberate Problem Solving
+with Large Language Models
+
+REAC T : SYNERGIZING REASONING AND ACTING IN
+LANGUAGE MODELS
+
+COMPLEXITY-BASED PROMPTING FOR MULTI-STEP
+REASONING
+
+Of Intrest
+https://arxiv.org/pdf/2402.13514
+Self-DC: When to Reason and When to Act Self Divide-and-Conquer for Compositional Questions
+
+https://arxiv.org/pdf/2410.22499
+Anticipating Future with Large Language Model for Simultaneous
+Machine Translation

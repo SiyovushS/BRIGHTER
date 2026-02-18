@@ -1,0 +1,299 @@
+[
+  {
+    "index": 685,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: UDa Sa ubona besenethuba lokudlala kweyokuhlunga yeGladAfrica\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 685,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: UDa Sa ubona besenethuba lokudlala kweyokuhlunga yeGladAfrica\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 1787,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of surprise.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: @Madlala_TM @eNCA In the mean time babusy to pleases abanye abantu behlulwa ukusiza abantu babo(thina) ungafunga ukuthi khona okukhulu okufihlwayo esingakwazi thina it is soooo annoying to think about it\ud83d\ude2b\ud83d\ude20\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': False, 'severity': 'safe'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': True, 'severity': 'high'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 1787,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of surprise.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: @Madlala_TM @eNCA In the mean time babusy to pleases abanye abantu behlulwa ukusiza abantu babo(thina) ungafunga ukuthi khona okukhulu okufihlwayo esingakwazi thina it is soooo annoying to think about it\ud83d\ude2b\ud83d\ude20\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 2238,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of anger.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: Utholwe ehhotela eshonile umculi we-kwaito\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': False, 'severity': 'safe'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': True, 'severity': 'high'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 2238,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of anger.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: Utholwe ehhotela eshonile umculi we-kwaito\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 2239,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: Utholwe ehhotela eshonile umculi we-kwaito\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'medium'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 2239,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: Utholwe ehhotela eshonile umculi we-kwaito\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 2856,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of anger.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: \"awu Lacoste aw'dedele nigga..hawe hawe Lacoste hawe..ishu ishuuuuuuuuuu ishu ishu ishu..akasashoni ke phansi manje umaLacoste angazi yin'nda- ishuuuuu..correct correct maLacoste.\" \ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02 omajitha awanalo iqiniso, uphenduka inyoni ek'seeeeeni! // cc @JabulaniJay_Jay\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 2856,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of anger.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: \"awu Lacoste aw'dedele nigga..hawe hawe Lacoste hawe..ishu ishuuuuuuuuuu ishu ishu ishu..akasashoni ke phansi manje umaLacoste angazi yin'nda- ishuuuuu..correct correct maLacoste.\" \ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02 omajitha awanalo iqiniso, uphenduka inyoni ek'seeeeeni! // cc @JabulaniJay_Jay\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 2857,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: \"awu Lacoste aw'dedele nigga..hawe hawe Lacoste hawe..ishu ishuuuuuuuuuu ishu ishu ishu..akasashoni ke phansi manje umaLacoste angazi yin'nda- ishuuuuu..correct correct maLacoste.\" \ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02 omajitha awanalo iqiniso, uphenduka inyoni ek'seeeeeni! // cc @JabulaniJay_Jay\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 2857,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: \"awu Lacoste aw'dedele nigga..hawe hawe Lacoste hawe..ishu ishuuuuuuuuuu ishu ishu ishu..akasashoni ke phansi manje umaLacoste angazi yin'nda- ishuuuuu..correct correct maLacoste.\" \ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02 omajitha awanalo iqiniso, uphenduka inyoni ek'seeeeeni! // cc @JabulaniJay_Jay\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 2858,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of fear.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: \"awu Lacoste aw'dedele nigga..hawe hawe Lacoste hawe..ishu ishuuuuuuuuuu ishu ishu ishu..akasashoni ke phansi manje umaLacoste angazi yin'nda- ishuuuuu..correct correct maLacoste.\" \ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02 omajitha awanalo iqiniso, uphenduka inyoni ek'seeeeeni! // cc @JabulaniJay_Jay\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 2858,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of fear.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: \"awu Lacoste aw'dedele nigga..hawe hawe Lacoste hawe..ishu ishuuuuuuuuuu ishu ishu ishu..akasashoni ke phansi manje umaLacoste angazi yin'nda- ishuuuuu..correct correct maLacoste.\" \ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02 omajitha awanalo iqiniso, uphenduka inyoni ek'seeeeeni! // cc @JabulaniJay_Jay\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 2859,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of joy.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: \"awu Lacoste aw'dedele nigga..hawe hawe Lacoste hawe..ishu ishuuuuuuuuuu ishu ishu ishu..akasashoni ke phansi manje umaLacoste angazi yin'nda- ishuuuuu..correct correct maLacoste.\" \ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02 omajitha awanalo iqiniso, uphenduka inyoni ek'seeeeeni! // cc @JabulaniJay_Jay\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 2859,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of joy.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: \"awu Lacoste aw'dedele nigga..hawe hawe Lacoste hawe..ishu ishuuuuuuuuuu ishu ishu ishu..akasashoni ke phansi manje umaLacoste angazi yin'nda- ishuuuuu..correct correct maLacoste.\" \ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02 omajitha awanalo iqiniso, uphenduka inyoni ek'seeeeeni! // cc @JabulaniJay_Jay\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 2860,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of sadness.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: \"awu Lacoste aw'dedele nigga..hawe hawe Lacoste hawe..ishu ishuuuuuuuuuu ishu ishu ishu..akasashoni ke phansi manje umaLacoste angazi yin'nda- ishuuuuu..correct correct maLacoste.\" \ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02 omajitha awanalo iqiniso, uphenduka inyoni ek'seeeeeni! // cc @JabulaniJay_Jay\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 2860,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of sadness.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: \"awu Lacoste aw'dedele nigga..hawe hawe Lacoste hawe..ishu ishuuuuuuuuuu ishu ishu ishu..akasashoni ke phansi manje umaLacoste angazi yin'nda- ishuuuuu..correct correct maLacoste.\" \ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02 omajitha awanalo iqiniso, uphenduka inyoni ek'seeeeeni! // cc @JabulaniJay_Jay\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 2861,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of surprise.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: \"awu Lacoste aw'dedele nigga..hawe hawe Lacoste hawe..ishu ishuuuuuuuuuu ishu ishu ishu..akasashoni ke phansi manje umaLacoste angazi yin'nda- ishuuuuu..correct correct maLacoste.\" \ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02 omajitha awanalo iqiniso, uphenduka inyoni ek'seeeeeni! // cc @JabulaniJay_Jay\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 2861,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of surprise.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: \"awu Lacoste aw'dedele nigga..hawe hawe Lacoste hawe..ishu ishuuuuuuuuuu ishu ishu ishu..akasashoni ke phansi manje umaLacoste angazi yin'nda- ishuuuuu..correct correct maLacoste.\" \ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02\ud83d\ude02 omajitha awanalo iqiniso, uphenduka inyoni ek'seeeeeni! // cc @JabulaniJay_Jay\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 4315,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: UBusiswa usezokwethula iGqom Nation\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 4315,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: UBusiswa usezokwethula iGqom Nation\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 5233,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: Ukhiphe ingoma angenavalo ngayo ongenise ngomculo we-Afro Soul\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 5233,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: Ukhiphe ingoma angenavalo ngayo ongenise ngomculo we-Afro Soul\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 6169,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: \u2018Ngijabulile kufika  uMosimane\u2019\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 6169,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: \u2018Ngijabulile kufika  uMosimane\u2019\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 6170,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of fear.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: \u2018Ngijabulile kufika  uMosimane\u2019\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 6170,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of fear.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: \u2018Ngijabulile kufika  uMosimane\u2019\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 8359,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: Nongenalo ngisho ukhamba nje lolu senithi lezulu\u26a1\ufe0f\u26c8\ud83c\udf29inina\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 8359,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: Nongenalo ngisho ukhamba nje lolu senithi lezulu\u26a1\ufe0f\u26c8\ud83c\udf29inina\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 8691,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of joy.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: @MmQwashu Musa ukudakelwa @Julius_S_Malema wena manje enzenjani ahlale emjondolo izingane zakhe zingafundi? Wena wenzenjani ngempilo yakho nomndeni wakho?? Yeka ukusangana Bafo \ud83e\udd1e\ud83c\udffc Kusho ukuthi uyajabula njengoba kubalawa abantu abamnyama njengo cyril\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': False, 'severity': 'safe'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': True, 'severity': 'high'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 8691,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of joy.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: @MmQwashu Musa ukudakelwa @Julius_S_Malema wena manje enzenjani ahlale emjondolo izingane zakhe zingafundi? Wena wenzenjani ngempilo yakho nomndeni wakho?? Yeka ukusangana Bafo \ud83e\udd1e\ud83c\udffc Kusho ukuthi uyajabula njengoba kubalawa abantu abamnyama njengo cyril\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 8693,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of surprise.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: @MmQwashu Musa ukudakelwa @Julius_S_Malema wena manje enzenjani ahlale emjondolo izingane zakhe zingafundi? Wena wenzenjani ngempilo yakho nomndeni wakho?? Yeka ukusangana Bafo \ud83e\udd1e\ud83c\udffc Kusho ukuthi uyajabula njengoba kubalawa abantu abamnyama njengo cyril\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': False, 'severity': 'safe'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': True, 'severity': 'high'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 8693,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of surprise.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: @MmQwashu Musa ukudakelwa @Julius_S_Malema wena manje enzenjani ahlale emjondolo izingane zakhe zingafundi? Wena wenzenjani ngempilo yakho nomndeni wakho?? Yeka ukusangana Bafo \ud83e\udd1e\ud83c\udffc Kusho ukuthi uyajabula njengoba kubalawa abantu abamnyama njengo cyril\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 8881,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: ULaSizwe ugubhe olwezithandani nesoka elisha\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 8881,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: ULaSizwe ugubhe olwezithandani nesoka elisha\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 10531,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: Kuhlaselwe ikhansela kwashiswa nomuzi walo lilele nezingane\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': False, 'severity': 'safe'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': True, 'severity': 'high'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 10531,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: Kuhlaselwe ikhansela kwashiswa nomuzi walo lilele nezingane\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 10532,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of fear.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: Kuhlaselwe ikhansela kwashiswa nomuzi walo lilele nezingane\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': False, 'severity': 'safe'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': True, 'severity': 'high'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 10532,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of fear.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: Kuhlaselwe ikhansela kwashiswa nomuzi walo lilele nezingane\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 10535,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of surprise.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: Kuhlaselwe ikhansela kwashiswa nomuzi walo lilele nezingane\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': False, 'severity': 'safe'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': True, 'severity': 'high'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 10535,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of surprise.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: Kuhlaselwe ikhansela kwashiswa nomuzi walo lilele nezingane\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 11970,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of anger.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: Kunecala elingathikameza ukusongwa kweyeGladAfrica\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 11970,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of anger.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: Kunecala elingathikameza ukusongwa kweyeGladAfrica\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 11971,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: Kunecala elingathikameza ukusongwa kweyeGladAfrica\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 11971,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of disgust.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: Kunecala elingathikameza ukusongwa kweyeGladAfrica\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 11972,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of fear.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: Kunecala elingathikameza ukusongwa kweyeGladAfrica\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': True, 'severity': 'high'}}}}}"
+  },
+  {
+    "index": 11972,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of fear.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: Kunecala elingathikameza ukusongwa kweyeGladAfrica\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 11973,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of joy.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: Kunecala elingathikameza ukusongwa kweyeGladAfrica\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 11973,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of joy.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: Kunecala elingathikameza ukusongwa kweyeGladAfrica\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 11974,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of sadness.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: Kunecala elingathikameza ukusongwa kweyeGladAfrica\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 11974,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of sadness.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: Kunecala elingathikameza ukusongwa kweyeGladAfrica\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  },
+  {
+    "index": 11975,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of surprise.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: Kunecala elingathikameza ukusongwa kweyeGladAfrica\n",
+    "error": "Error code: 400 - {'error': {'message': \"The response was filtered due to the prompt triggering Azure OpenAI's content management policy. Please modify your prompt and retry. To learn more about our content filtering policies please read our documentation: https://go.microsoft.com/fwlink/?linkid=2198766\", 'type': None, 'param': 'prompt', 'code': 'content_filter', 'status': 400, 'innererror': {'code': 'ResponsibleAIPolicyViolation', 'content_filter_result': {'hate': {'filtered': True, 'severity': 'high'}, 'self_harm': {'filtered': False, 'severity': 'safe'}, 'sexual': {'filtered': False, 'severity': 'safe'}, 'violence': {'filtered': False, 'severity': 'safe'}}}}}"
+  },
+  {
+    "index": 11975,
+    "prompt": "### Task ###\nAnalyze the text below for the presence of surprise.\nExplain your reasoning briefly and conclude with 'Answer:' followed by either 'yes' or 'no'.\n### Your Turn ###\nInput: Kunecala elingathikameza ukusongwa kweyeGladAfrica\n",
+    "reason": "Max retries reached with unparseable output after 5 attempts.",
+    "last_output": ""
+  }
+]

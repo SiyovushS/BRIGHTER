@@ -1,0 +1,144 @@
+# ===== BRIGHTER Setup in WSL with Conda =====
+
+1. Windows Subsystem for Linux (WSL2) – Best Local Option
+
+Lets you run a full Linux environment inside Windows without dual-booting.
+
+Supports GPU passthrough if you have an NVIDIA GPU (WSL2 + CUDA).
+
+Works well with Python virtual environments and pip install vllm.
+
+Setup steps (short version):
+
+Enable WSL2:
+
+wsl --install
+
+
+Install Ubuntu from Microsoft Store.
+
+Open Ubuntu after making an account and password 
+Update and install Python:
+
+sudo apt update && sudo apt upgrade
+sudo apt install python3 python3-venv python3-pip
+
+
+# Download Miniconda
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+# When installing say yes to all
+# Install it
+bash Miniconda3-latest-Linux-x86_64.sh
+
+conda create -n brighter-llm python=3.12 -y
+conda activate brighter-llm
+
+# 1) Make sure conda is loaded in WSL
+source ~/.bashrc
+conda --version
+
+# If conda not found, initialize it (adjust path if needed):
+# eval "$($HOME/miniconda3/bin/conda shell.bash hook)"
+# conda init
+# exec bash
+
+# 2) Activate your environment
+conda activate brighter-llm
+
+# 3) Go to your projects folder (create if needed)
+mkdir -p ~/projects
+cd ~/projects
+
+1) Set up Git + SSH inside WSL
+
+Open your Ubuntu terminal (WSL):
+
+# Essentials
+sudo apt update && sudo apt -y install git git-lfs curl
+
+# Git identity
+git config --global user.name "Your Name"
+git config --global user.email "you@example.com"
+
+# Line endings (avoid CRLF issues)
+git config --global core.autocrlf input
+
+# Initialize Git LFS
+git lfs install
+
+# Create SSH key for GitHub
+ssh-keygen -t ed25519 -C "you@example.com" -f ~/.ssh/id_ed25519 -N ""
+
+# Start agent & add key
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_ed25519
+
+
+Copy your public key to clipboard (either way works):
+
+# If clip.exe is available in WSL:
+cat ~/.ssh/id_ed25519.pub | clip.exe
+
+# Or just print and copy manually:
+cat ~/.ssh/id_ed25519.pub
+
+
+Add that key to GitHub → Settings > SSH and GPG keys > New SSH key. Then test:
+
+ssh -T git@github.com
+# Expect: "Hi <username>! You've successfully authenticated..."
+
+2) Where to keep your code
+
+Prefer WSL home (e.g., ~/projects) for performance:
+
+mkdir -p ~/projects && cd ~/projects
+
+You can work in Windows folders via /mnt/c/..., but it’s slower and can cause file-watcher issues.
+
+3) VS Code (nice to have)
+
+Install Remote – WSL in VS Code on Windows.
+
+From Ubuntu: code . in your repo root to open the WSL workspace.
+
+
+# 4) Clone the BRIGHTER repo
+git clone git@github.com:SiyovushS/BRIGHTER.git
+cd BRIGHTER
+
+# 5) Fetch all branches and switch to 'Siy'
+git fetch --all --prune
+git checkout Siy
+
+# 6) Open the project in VS Code (Remote - WSL must be installed in VS Code)
+code .
+
+# ----- Daily Git Workflow -----
+# Before starting work:
+git pull
+
+# After making changes in VS Code:
+git status            # see what changed
+git add -A            # stage all changes
+git commit -m "Your commit message here"
+git push              # send changes to GitHub
+
+# If first push after creating a new branch:
+# git push -u origin Siy
+
+# ----- Helpful Git commands -----
+# See current branch
+git branch
+
+# See branches (local + remote)
+git branch -a
+
+# Switch branch
+git checkout other-branch
+
+# Merge latest main into Siy
+git fetch origin
+git merge origin/main
+
+# ================================

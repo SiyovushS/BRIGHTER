@@ -1,0 +1,20 @@
+{
+    "task": "binary",
+    "language": "xho",
+    "model_name": "openai/gpt-4",
+    "n_shot": 4,
+    "prompt_variant": "v2",
+    "top_k": 1,
+    "main_result": {
+        "f1_per_emotion": {
+            "anger": 0.3401360544217687,
+            "disgust": 0.1411764705882353,
+            "fear": 0.10650887573964497,
+            "joy": 0.8076923076923077,
+            "sadness": 0.8285109386026818,
+            "surprise": 0.38926174496644295
+        },
+        "macro_f1": 0.4355477320018469
+    },
+    "ablation": {}
+}

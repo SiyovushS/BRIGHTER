@@ -1,0 +1,20 @@
+{
+    "task": "intensity",
+    "language": "chn",
+    "model_name": "openai/gpt-4",
+    "n_shot": 4,
+    "prompt_variant": "v2",
+    "top_k": 1,
+    "main_result": {
+        "pearson_per_emotion": {
+            "anger": 0.7516510039864994,
+            "disgust": 0.423385807409545,
+            "fear": 0.4079798347514131,
+            "joy": 0.8454185561144414,
+            "sadness": 0.42151938592838056,
+            "surprise": 0.40943052626432386
+        },
+        "avg_pearson": 0.5432308524091006
+    },
+    "ablation": {}
+}

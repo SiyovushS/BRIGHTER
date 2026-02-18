@@ -2,6 +2,7 @@ import os
 import glob
 import json
 import pandas as pd
+import argparse
 
 ###############################################################################
 # 1. Model Name Mapping & Desired Order
@@ -11,7 +12,10 @@ model_name_map = {
     "final_bothTasks_databricks_dolly-v2-12b": "Dolly-v2-12B",
     "final_bothTasks_meta-llama_Llama-3.3-70B-Instruct": "Llama-3.3-70B",
     "final_bothTasks_mistralai_Mixtral-8x7B-Instruct-v0.1": "Mixtral-8x7B",
-    "final_bothTasks_deepseek-ai_DeepSeek-R1-Distill-Llama-70B": "DeepSeek-R1-70B"
+    "final_bothTasks_deepseek-ai_DeepSeek-R1-Distill-Llama-70B": "DeepSeek-R1-70B",
+    "final_bothTasks_openai_gpt-4": "ChatGPT-GPT4",
+    "final_bothTasks_google_gemini-2F":"Google Gemini2Flash"
+
 }
 
 desired_model_order = [
@@ -19,7 +23,9 @@ desired_model_order = [
     "Dolly-v2-12B",
     "Llama-3.3-70B",
     "Mixtral-8x7B",
-    "DeepSeek-R1-70B"
+    "DeepSeek-R1-70B",
+    "ChatGPT-GPT4",
+    "Google Gemini2Flash"
 ]
 
 def get_short_model_name_from_data(data):
@@ -40,9 +46,15 @@ def load_data(json_path):
     try:
         with open(json_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
-        return data
-    except Exception:
+    except (OSError, json.JSONDecodeError) as e:
+        print(f"[DEBUG] load_data failed on {json_path}: {e!r}")
         return None
+
+    if not isinstance(data, dict):
+        print(f"[DEBUG] load_data skipping {json_path}: top‑level is a {type(data).__name__}, not dict")
+        return None
+
+    return data
 
 ###############################################################################
 # 3. Ablation Tables for the Binary Task 
@@ -61,7 +73,7 @@ def collect_prompt_variant_eng(all_files):
 
     for path in all_files:
         data = load_data(path)
-        if not data or data.get("task") != "binary":
+        if not isinstance(data, dict) or data.get("task") != "binary":
             continue
         # Only consider English files for this table
         if data.get("language", "").lower() != "eng":
@@ -101,8 +113,11 @@ def collect_few_shot_eng(all_files):
 
     for path in all_files:
         data = load_data(path)
-        if not data or data.get("task") != "binary":
+        if data is None or data.get("task") != "binary":
+            print(f"[DEBUG] SKIPPED {path} → load_data returned None")
             continue
+        else:
+            print(f"[DEBUG] LOADED  {path} → OK (type={type(data).__name__})")
         if data.get("language", "").lower() != "eng":
             continue
 
@@ -233,21 +248,38 @@ def collect_english_vs_native(all_files):
 ###############################################################################
 # 4. Main Results Tables for 'binary' & 'intensity'
 ###############################################################################
-def collect_main_results(all_files, task="binary"):
+def collect_main_results(all_files, task="binary", n_shot=None, prompt_variant=None, top_k=None):
     """
-    For each file whose task matches (binary or intensity),
-    extract the main_result->macro_f1 value. (Each file is for one language.)
-    Build a table with rows = languages and columns = models.
-    Multiply by 100 and round.
+    Extract main_result (macro_f1 or avg_pearson) filtered by optional metadata:
+      - n_shot (int)
+      - prompt_variant (str)
+      - top_k (int)
+
+    Builds table with rows=languages, columns=models.
     """
     all_langs = set()
     data_by_model = {}
 
     for path in all_files:
         data = load_data(path)
-        if not data or data.get("task") != task:
+        if data is None:
+            print(f"[DEBUG main] SKIPPING {path}: load_data → None")
             continue
-
+        print(f"[DEBUG main] LOADED   {path} → task={data.get('task')!r}, lang={data.get('language')!r}, n_shot={data.get('n_shot')!r}, variant={data.get('prompt_variant')!r}, top_k={data.get('top_k')!r}")
+        if not data or data.get("task") != task:
+            print(f"[DEBUG main] SKIPPING {path}: wrong task {data.get('task')!r} (expected {task!r})")
+            continue
+        # Check metadata filters if specified
+        if n_shot is not None and data.get("n_shot") != n_shot:
+            print(f"[DEBUG main] SKIPPING {path}: n_shot={data.get('n_shot')!r} (expected {n_shot})")
+            continue
+        if prompt_variant is not None and data.get("prompt_variant") != prompt_variant:
+            print(f"[DEBUG main] SKIPPING {path}: prompt_variant={data.get('prompt_variant')!r} (expected {prompt_variant!r})")
+            continue
+        if top_k is not None and data.get("top_k") != top_k:
+            print(f"[DEBUG main] SKIPPING {path}: top_k={data.get('top_k')!r} (expected {top_k})")
+            continue
+        print(f"[DEBUG main] INCLUDING {path}")
         model_name = get_short_model_name_from_data(data)
         language = data.get("language", "")
         main_result = data.get("main_result", {})
@@ -272,7 +304,7 @@ def collect_main_results(all_files, task="binary"):
             val = data_by_model[model].get(lang, float('nan'))
             row.append(val)
         matrix.append(row)
-    
+
     df = pd.DataFrame(matrix, index=sorted_langs, columns=sorted_models)
     df = df * 100
     df = df.round(2)
@@ -281,9 +313,17 @@ def collect_main_results(all_files, task="binary"):
 ###############################################################################
 # 5. main()
 ###############################################################################
-def main():
+def main(task, n_shot, prompt_variant, top_k):
+    os.makedirs("llm_track_ab_results", exist_ok=True)
     # 1. Gather all JSON files from the results folder.
-    all_files = glob.glob("llm_track_ab_results/*.json")
+    all_files = [
+    p for p in glob.glob("llm_track_ab_results/*.json")
+    if os.path.basename(p).startswith("results_")
+    ]
+    print("\n[DEBUG] Found result files:")
+    for p in all_files:
+        print("  ", p)
+    print(f"[DEBUG] Total files found: {len(all_files)}\n")
 
     # 2. Construct ablation tables for the binary task.
     df_prompt_variant = collect_prompt_variant_eng(all_files)
@@ -292,10 +332,16 @@ def main():
     df_eng_vs_native = collect_english_vs_native(all_files)
 
     # 3. Construct main results tables.
-    df_main_binary = collect_main_results(all_files, task="binary")
-    df_main_intensity = collect_main_results(all_files, task="intensity")
+    df_main = collect_main_results(
+        all_files,
+        task=task,
+        n_shot=n_shot,
+        prompt_variant=prompt_variant,
+        top_k=top_k
+    )
 
     # 4. Output ablation tables (CSV + LaTeX)
+    os.makedirs("llm_track_ab_results", exist_ok=True)
     df_prompt_variant.to_csv("llm_track_ab_results/table_prompt_variant.csv", float_format="%.2f")
     df_few_shot.to_csv("llm_track_ab_results/table_few_shot.csv", float_format="%.2f")
     df_top_k.to_csv("llm_track_ab_results/table_top_k.csv", float_format="%.2f")
@@ -311,15 +357,42 @@ def main():
         f.write(df_eng_vs_native.to_latex(float_format="%.2f", multirow=True))
 
     # 5. Output main results tables (CSV + LaTeX)
-    df_main_binary.to_csv("llm_track_ab_results/table_main_binary.csv", float_format="%.2f")
-    df_main_intensity.to_csv("llm_track_ab_results/table_main_intensity.csv", float_format="%.2f")
-
-    with open("llm_track_ab_results/table_main_binary.tex", "w") as f:
-        f.write(df_main_binary.to_latex(float_format="%.2f"))
-    with open("llm_track_ab_results/table_main_intensity.tex", "w") as f:
-        f.write(df_main_intensity.to_latex(float_format="%.2f"))
+    csv_name = f"table_main_{task}_{n_shot}shot_{prompt_variant}_topk{top_k}.csv"
+    tex_name = csv_name.replace(".csv", ".tex")
+    df_main.to_csv(f"llm_track_ab_results/{csv_name}", float_format="%.2f")
+    with open(f"llm_track_ab_results/{tex_name}", "w") as f:
+        f.write(df_main.to_latex(float_format="%.2f"))
 
     print("All tables have been saved to CSV and LaTeX files in llm_track_ab_results/.")
+    # 6. Collect flagged prompts if any
+    flagged_files = glob.glob("llm_track_ab_results/*_flagged.json")
+    all_flagged = []
+    for path in flagged_files:
+        with open(path, "r", encoding="utf-8") as f:
+            flagged = json.load(f)
+            for entry in flagged:
+                entry["source_file"] = os.path.basename(path)
+            all_flagged.extend(flagged)
+
+    # Save as CSV for review
+    if all_flagged:
+        flagged_df = pd.DataFrame(all_flagged)
+        flagged_df.to_csv("llm_track_ab_results/flagged_prompts.csv", index=False)
+        print(f"{len(all_flagged)} flagged prompts saved to flagged_prompts.csv.")
+    else:
+        print("No flagged prompts found.")
 
 if __name__ == "__main__":
-    main()
+    p = argparse.ArgumentParser()
+    p.add_argument("--task",           choices=["binary","intensity"], default="binary")
+    p.add_argument("--n_shot",         type=int,          default=4)
+    p.add_argument("--prompt_variant", type=str,          default="v2")
+    p.add_argument("--top_k",          type=int,          default=1)
+    args = p.parse_args()
+
+    main(
+        task=args.task,
+        n_shot=args.n_shot,
+        prompt_variant=args.prompt_variant,
+        top_k=args.top_k
+    )
